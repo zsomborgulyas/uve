@@ -13,7 +13,7 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 
-public class UveService extends Service implements UveDeviceCallbackListener {
+public class UveService extends Service implements UveDeviceStatuskListener {
 
 	public enum IntentType {
 		connect, start, stop
@@ -70,14 +70,15 @@ public class UveService extends Service implements UveDeviceCallbackListener {
 				isFound = true;
 				UveLogger.Info("Device found: " + address);
 				try {
-					u.mBtDevice = mBtAdapter.getRemoteDevice(address);
+					u.setDevice(mBtAdapter.getRemoteDevice(address));
 					UveLogger.Info(address + " got BluetoothDevice");
-					u.mSocket = u.mBtDevice
-							.createRfcommSocketToServiceRecord(MY_UUID);
+					u.setSocket(u.mBtDevice
+							.createRfcommSocketToServiceRecord(MY_UUID));
 					UveLogger.Info(address + " got BluetoothSocket");
-					u.mSocket.connect();
+					
+					u.getSocket().connect();
 					UveLogger.Info(address + " connected");
-					u.setCallback(this);
+					u.setStatusCallback(this);
 					u.connectStreams();
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -88,11 +89,15 @@ public class UveService extends Service implements UveDeviceCallbackListener {
 		if (!isFound) {
 			UveDevice u = new UveDevice();
 			try {
-				u.mBtDevice = mBtAdapter.getRemoteDevice(address);
-				u.mSocket = u.mBtDevice
-						.createRfcommSocketToServiceRecord(MY_UUID2);
-				u.mSocket.connect();
-				u.setCallback(this);
+				u.setDevice(mBtAdapter.getRemoteDevice(address));
+				UveLogger.Info(address + " got BluetoothDevice");
+				u.setSocket(u.mBtDevice
+						.createRfcommSocketToServiceRecord(MY_UUID));
+				UveLogger.Info(address + " got BluetoothSocket");
+				
+				u.getSocket().connect();
+				UveLogger.Info(address + " connected");
+				u.setStatusCallback(this);
 				u.connectStreams();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -104,6 +109,9 @@ public class UveService extends Service implements UveDeviceCallbackListener {
 		return mBtAdapter.getBondedDevices();
 	}
 
+	public ArrayList<UveDevice> getUveDevices(){
+		return mDevices;
+	}
 
 	@Override
 	public void onDataReaded(String add, Question quest, Bundle data) {
@@ -118,23 +126,31 @@ public class UveService extends Service implements UveDeviceCallbackListener {
 	}
 
 	@Override
-	public void onWakeUpAlert(String add, Bundle data) {
+	public void onWakeUpAlert(String add, int intense) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void onChildUpAlert(String add, Bundle data) {
+	public void onChildUpAlert(String add, boolean isWater) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void onUVAlert(String add, Bundle data) {
+	public void onUVAlert(String add, boolean isFront) {
 		// TODO Auto-generated method stub
 
 	}
 
 
+	public void ask(String addr, Question q, Bundle response){
+		
+	}
 
+	@Override
+	public void onUVFeedback(String add, int intense) {
+		// TODO Auto-generated method stub
+		
+	}
 }
