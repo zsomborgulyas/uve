@@ -87,7 +87,11 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 			}
 		}
 		if (!isFound) {
+			UveLogger.Info("Device not found: " + address);
 			UveDevice u = new UveDevice();
+			u.setAddress(address);
+			mDevices.add(u);
+			u=mDevices.get(mDevices.size()-1);
 			try {
 				u.setDevice(mBtAdapter.getRemoteDevice(address));
 				UveLogger.Info(address + " got BluetoothDevice");
@@ -96,9 +100,12 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 				UveLogger.Info(address + " got BluetoothSocket");
 				
 				u.getSocket().connect();
+				u.setAddress(address);
 				UveLogger.Info(address + " connected");
 				u.setStatusCallback(this);
 				u.connectStreams();
+				
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

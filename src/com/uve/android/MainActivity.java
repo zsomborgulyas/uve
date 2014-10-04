@@ -17,8 +17,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.uve.android.service.UveDevice;
+import com.uve.android.service.UveDeviceAnswerListener;
 import com.uve.android.service.UveService;
 import com.uve.android.service.UveService.IntentType;
+import com.uve.android.service.UveService.Question;
 
 public class MainActivity extends Activity implements
 		android.view.View.OnClickListener {
@@ -120,6 +123,12 @@ public class MainActivity extends Activity implements
 					if (deviceBTName.toLowerCase().contains("uve")) {
 						String address = device.getAddress();
 						mService.connectToDevice(address);
+						
+						
+						
+						mService.getUveDevices();
+						
+						
 						break;
 					}
 				}
@@ -128,6 +137,21 @@ public class MainActivity extends Activity implements
 
 			
 
+			break;
+		case R.id.button2:
+			mService.getUveDevices().get(0).getAnswer(this, Question.Serial, new UveDeviceAnswerListener(){
+
+				@Override
+				public void onComplete(String add, Question quest,
+						Bundle data, boolean isSuccesful) {
+					if(isSuccesful){
+						String serial=data.getString(UveDevice.ANS_SERIAL);
+						Toast.makeText(MainActivity.this, serial, Toast.LENGTH_SHORT).show();
+					}
+					
+				}}
+
+				);
 			break;
 
 		}

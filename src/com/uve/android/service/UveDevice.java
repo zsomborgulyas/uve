@@ -7,6 +7,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -42,125 +43,125 @@ public class UveDevice {
 	
 	
 	//answer constants
-	static final String ANS_SERIAL = "ans_serial";
-	static final String ANS_MEASURE_UV = "ans_measureuv";
-	static final String ANS_DAILY_DOSE_COUNT = "ans_dosec";
-	static final String ANS_DAILY_DOSE_1 = "ans_dose1";
-	static final String ANS_DAILY_DOSE_2 = "ans_dose2";
-	static final String ANS_DAILY_DOSE_3 = "ans_dose3";
-	static final String ANS_DAILY_DOSE_4 = "ans_dose4";
-	static final String ANS_DAILY_DOSE_FROM = "ans_dose_from";
-	static final String ANS_DAILY_INTENSE_COUNT = "ans_intc";
-	static final String ANS_DAILY_INTENSE_PREFIX = "ans_int";
-	static final String ANS_PREVIOUS_MELANIN = "ans_pmel";
-	static final String ANS_MESURE_MELANIN = "ans_mel";
-	static final String ANS_PREVIOUS_ERITEMA = "ans_peri";
-	static final String ANS_MESURE_ERITEMA = "ans_eri";
-	static final String ANS_BATTERY_LP = "ans_batlp";
-	static final String ANS_BATTERY_SC = "ans_batsc";
-	static final String ANS_TIME_DAY = "ans_td";
-	static final String ANS_TIME_HOUR = "ans_th";
-	static final String ANS_TIME_MIN = "ans_tm";
-	static final String ANS_TIME_SEC = "ans_ts";
+	public static final String ANS_SERIAL = "ans_serial";
+	public static final String ANS_MEASURE_UV = "ans_measureuv";
+	public static final String ANS_DAILY_DOSE_COUNT = "ans_dosec";
+	public static final String ANS_DAILY_DOSE_1 = "ans_dose1";
+	public static final String ANS_DAILY_DOSE_2 = "ans_dose2";
+	public static final String ANS_DAILY_DOSE_3 = "ans_dose3";
+	public static final String ANS_DAILY_DOSE_4 = "ans_dose4";
+	public static final String ANS_DAILY_DOSE_FROM = "ans_dose_from";
+	public static final String ANS_DAILY_INTENSE_COUNT = "ans_intc";
+	public static final String ANS_DAILY_INTENSE_PREFIX = "ans_int";
+	public static final String ANS_PREVIOUS_MELANIN = "ans_pmel";
+	public static final String ANS_MESURE_MELANIN = "ans_mel";
+	public static final String ANS_PREVIOUS_ERITEMA = "ans_peri";
+	public static final String ANS_MESURE_ERITEMA = "ans_eri";
+	public static final String ANS_BATTERY_LP = "ans_batlp";
+	public static final String ANS_BATTERY_SC = "ans_batsc";
+	public static final String ANS_TIME_DAY = "ans_td";
+	public static final String ANS_TIME_HOUR = "ans_th";
+	public static final String ANS_TIME_MIN = "ans_tm";
+	public static final String ANS_TIME_SEC = "ans_ts";
 	
-	static final String ANS_ALTER_DOSE = "ans_mado";
-	static final String ANS_ALTER_MODE = "ans_mamo";
-	static final String ANS_ALTER_MELANIN_FRONT = "ans_mafr";
-	static final String ANS_ALTER_MELANIN_BACK = "ans_maba";
+	public static final String ANS_ALTER_DOSE = "ans_mado";
+	public static final String ANS_ALTER_MODE = "ans_mamo";
+	public static final String ANS_ALTER_MELANIN_FRONT = "ans_mafr";
+	public static final String ANS_ALTER_MELANIN_BACK = "ans_maba";
 	
-	static final String ANS_PING = "ans_ping";
+	public static final String ANS_PING = "ans_ping";
 	
-	static final String ANS_DUMP_TIME_DAY = "ans_wudtd";
-	static final String ANS_DUMP_TIME_HOUR = "ans_wudth";
-	static final String ANS_DUMP_TIME_MIN = "ans_wudtm";
-	static final String ANS_DUMP_TIME_SEC = "ans_wudts";
+	public static final String ANS_DUMP_TIME_DAY = "ans_wudtd";
+	public static final String ANS_DUMP_TIME_HOUR = "ans_wudth";
+	public static final String ANS_DUMP_TIME_MIN = "ans_wudtm";
+	public static final String ANS_DUMP_TIME_SEC = "ans_wudts";
 
 	//commands, that are not waiting for response
-	static final int COMS_ENERGY = 10;
-	static final String COM_ENERGY = "com_energy";
+	public static final int COMS_ENERGY = 10;
+	public static final String COM_ENERGY = "com_energy";
 	
-	static final int COMS_TIMEOUT = 11;
-	static final String COM_TIMEOUT = "com_timeout";
+	public static final int COMS_TIMEOUT = 11;
+	public static final String COM_TIMEOUT = "com_timeout";
 	
-	static final int COMS_MEASURETYPE = 12;
-	static final String COM_MEASURETYPE = "com_mtype";
+	public static final int COMS_MEASURETYPE = 12;
+	public static final String COM_MEASURETYPE = "com_mtype";
 	
-	static final int COMS_MEASUREMANUAL = 13;
-	static final String COM_MEASUREMANUAL = "com_mman";
+	public static final int COMS_MEASUREMANUAL = 13;
+	public static final String COM_MEASUREMANUAL = "com_mman";
 	
-	static final int COMS_RESTART_MEASURE = 14;
+	public static final int COMS_RESTART_MEASURE = 14;
 	
-	static final int COMS_DELETE_MESAURES = 15;
+	public static final int COMS_DELETE_MESAURES = 15;
 	
-	static final int COMS_TIME = 17;
-	static final String COM_TIME_DAY = "com_td";
-	static final String COM_TIME_HOUR = "com_th";
-	static final String COM_TIME_MIN = "com_tm";
-	static final String COM_TIME_SEC = "com_ts";
+	public static final int COMS_TIME = 17;
+	public static final String COM_TIME_DAY = "com_td";
+	public static final String COM_TIME_HOUR = "com_th";
+	public static final String COM_TIME_MIN = "com_tm";
+	public static final String COM_TIME_SEC = "com_ts";
 	
-	static final int COMS_TIMED_TIME = 18;
-	static final String COM_TIMED_TIME_DAY = "com_ttd";
-	static final String COM_TIMED_TIME_HOUR = "com_tth";
-	static final String COM_TIMED_TIME_MIN = "com_ttm";
-	static final String COM_TIMED_TIME_SEC = "com_tts";
+	public static final int COMS_TIMED_TIME = 18;
+	public static final String COM_TIMED_TIME_DAY = "com_ttd";
+	public static final String COM_TIMED_TIME_HOUR = "com_tth";
+	public static final String COM_TIMED_TIME_MIN = "com_ttm";
+	public static final String COM_TIMED_TIME_SEC = "com_tts";
 	
-	static final int COMS_SOFT_RESET = 19;
+	public static final int COMS_SOFT_RESET = 19;
 	
-	static final int COMS_DELETE_UV_DOSE = 20;
+	public static final int COMS_DELETE_UV_DOSE = 20;
 	
-	static final int COMS_FEEDBACK = 22;
-	static final String COM_FEEDBACK = "com_feedback";
+	public static final int COMS_FEEDBACK = 22;
+	public static final String COM_FEEDBACK = "com_feedback";
 	
-	static final int COMS_ILLNESS = 23;
-	static final String COM_ILLNESS_1 = "com_ill1";
-	static final String COM_ILLNESS_2 = "com_ill2";
-	static final String COM_ILLNESS_3 = "com_ill3";
-	static final String COM_ILLNESS_4 = "com_ill4";
-	static final String COM_ILLNESS_INTENSE = "com_illi";
-	static final String COM_ILLNESS_REGEN = "com_illr";
+	public static final int COMS_ILLNESS = 23;
+	public static final String COM_ILLNESS_1 = "com_ill1";
+	public static final String COM_ILLNESS_2 = "com_ill2";
+	public static final String COM_ILLNESS_3 = "com_ill3";
+	public static final String COM_ILLNESS_4 = "com_ill4";
+	public static final String COM_ILLNESS_INTENSE = "com_illi";
+	public static final String COM_ILLNESS_REGEN = "com_illr";
 	
-	static final int COMS_ALERTTYPE = 24;
-	static final String COM_ALERTTYPE = "com_alerttype";
+	public static final int COMS_ALERTTYPE = 24;
+	public static final String COM_ALERTTYPE = "com_alerttype";
 	
-	static final int COMS_WAKEUP = 25;
-	static final String COM_WAKEUP = "com_wu";
+	public static final int COMS_WAKEUP = 25;
+	public static final String COM_WAKEUP = "com_wu";
 	
-	static final int COMS_WAKEUP_PARAMS = 26;
-	static final String COM_WAKEUP_DAY = "com_wud";
-	static final String COM_WAKEUP_HOUR = "com_wuh";
-	static final String COM_WAKEUP_MIN = "com_wum";
-	static final String COM_WAKEUP_SEC = "com_wus";
-	static final String COM_WAKEUP_ALERTTYPE = "com_wualerttype";
-	static final String COM_WAKEUP_REPEATTYPE = "com_wurepeat";
-	static final String COM_WAKEUP_SNOOZE5SEC = "com_wusnooze";
+	public static final int COMS_WAKEUP_PARAMS = 26;
+	public static final String COM_WAKEUP_DAY = "com_wud";
+	public static final String COM_WAKEUP_HOUR = "com_wuh";
+	public static final String COM_WAKEUP_MIN = "com_wum";
+	public static final String COM_WAKEUP_SEC = "com_wus";
+	public static final String COM_WAKEUP_ALERTTYPE = "com_wualerttype";
+	public static final String COM_WAKEUP_REPEATTYPE = "com_wurepeat";
+	public static final String COM_WAKEUP_SNOOZE5SEC = "com_wusnooze";
 	
-	static final int COMS_CHILD = 27;
-	static final String COM_CHILD = "com_child";
+	public static final int COMS_CHILD = 27;
+	public static final String COM_CHILD = "com_child";
 	
-	static final String COM_MELANIN_PRE_FRONT = "com_mpfront";
-	static final String COM_MELANIN_PRE_BACK = "com_mpback";
-	static final String COM_MODE = "com_mpmode";
+	public static final String COM_MELANIN_PRE_FRONT = "com_mpfront";
+	public static final String COM_MELANIN_PRE_BACK = "com_mpback";
+	public static final String COM_MODE = "com_mpmode";
 	
-	static final int COMS_NIGHT = 30;
-	static final String COM_NIGHT = "com_night";
+	public static final int COMS_NIGHT = 30;
+	public static final String COM_NIGHT = "com_night";
 	
-	static final int COMS_VIBRATE = 31;
-	static final String COM_VIBRATE = "com_vibrate";
+	public static final int COMS_VIBRATE = 31;
+	public static final String COM_VIBRATE = "com_vibrate";
 	
-	static final int COMS_RGB = 32;
-	static final String COM_RGB_R = "com_rgbr";
-	static final String COM_RGB_G = "com_rgbg";
-	static final String COM_RGB_B = "com_rgbb";
-	static final String COM_RGB_TIME = "com_rgbt";
+	public static final int COMS_RGB = 32;
+	public static final String COM_RGB_R = "com_rgbr";
+	public static final String COM_RGB_G = "com_rgbg";
+	public static final String COM_RGB_B = "com_rgbb";
+	public static final String COM_RGB_TIME = "com_rgbt";
 	
-	static final int COMS_BUZZER = 33;
-	static final String COM_BUZZER_FREQ = "com_buzzerf";
-	static final String COM_BUZZER_TIME = "com_buzzert";
+	public static final int COMS_BUZZER = 33;
+	public static final String COM_BUZZER_FREQ = "com_buzzerf";
+	public static final String COM_BUZZER_TIME = "com_buzzert";
 	
-	static final int COMS_TORCH = 35;
-	static final String COM_TORCH = "com_buzzerf";
+	public static final int COMS_TORCH = 35;
+	public static final String COM_TORCH = "com_buzzerf";
 	
-	static final int COMS_DISABLE_WAKEUPS = 37;
+	public static final int COMS_DISABLE_WAKEUPS = 37;
 	
 	
 	String mName;
@@ -229,7 +230,8 @@ public class UveDevice {
 	}
 
 	public UveDevice() {
-
+		mISReaded = new ArrayList<Integer>();
+		mISStatusReaded = new ArrayList<Integer>();
 	}
 
 	public UveDevice(BluetoothAdapter ad, BluetoothSocket soc,
@@ -245,6 +247,7 @@ public class UveDevice {
 		mStatusListener = l;
 
 		mISReaded = new ArrayList<Integer>();
+		mISStatusReaded = new ArrayList<Integer>();
 
 		connectStreams();
 	}
@@ -295,7 +298,7 @@ public class UveDevice {
 			while (readFlag) {
 				try {
 					int readed = mIS.read();
-					
+					UveLogger.Info("Got: "+readed);
 
 					if (!mIsAnswering) {
 						if (mISStatusReaded.size() == 0) {
@@ -481,22 +484,25 @@ public class UveDevice {
 				mOS.write(data.getInt(COM_MODE));
 				break;
 			case AlterPlannedMeasureParameters:
-				getAnswer(Question.StartPlannedMeasure, new UveDeviceAnswerListener(){
+				getAnswer(null, Question.StartPlannedMeasure, new UveDeviceAnswerListener(){
 
 					@Override
 					public void onComplete(String add, Question quest,
-							Bundle data) {
-						
-						try{
-							mOS.write(data.getInt(COM_MELANIN_PRE_FRONT));
-							mOS.write(data.getInt(COM_MELANIN_PRE_BACK));
-							mOS.write(data.getInt(COM_MODE));
-						} catch (Exception e) {
-							panic();
-							e.printStackTrace();
+							Bundle data, boolean succ) {
+						if(succ){
+							try{
+								mOS.write(data.getInt(COM_MELANIN_PRE_FRONT));
+								mOS.write(data.getInt(COM_MELANIN_PRE_BACK));
+								mOS.write(data.getInt(COM_MODE));
+							} catch (Exception e) {
+								panic();
+								e.printStackTrace();
+							}
 						}
 
-					}});
+					}
+
+					});
 				break;
 			default:
 			
@@ -508,8 +514,32 @@ public class UveDevice {
 			e.printStackTrace();
 		}
 	}
+	
+	void answer(Activity a, final Bundle b, final Question q, final UveDeviceAnswerListener cb){
+		a.runOnUiThread(new Runnable(){
 
-	public void getAnswer(final Question q, final UveDeviceAnswerListener cb) {
+			@Override
+			public void run() {
+				cb.onComplete(mAddress, q, b, true);
+				
+			}});
+	}
+	
+	void answerError(Activity a, final Bundle b, final Question q, final UveDeviceAnswerListener cb){
+		if(a!=null){
+			a.runOnUiThread(new Runnable(){
+
+				@Override
+				public void run() {
+					cb.onComplete(mAddress, q, b, false);
+					
+				}});
+		}
+	}
+	
+
+
+	public void getAnswer(final Activity a, final Question q, final UveDeviceAnswerListener cb) {
 		Timer sendTimer = new Timer();
 		TimerTask sendTimerTask = new TimerTask() {
 
@@ -524,6 +554,8 @@ public class UveDevice {
 						ArrayList<Integer> got = waitForBytes(4);
 						if (got == null) {
 							panic();
+							answerError(a, b, q, cb);
+								
 							break;
 						}
 						String s = "";
@@ -531,7 +563,9 @@ public class UveDevice {
 							s = s + i;
 							b.putString(ANS_SERIAL, s);
 						}
-						cb.onComplete(mAddress, q, b);
+						
+						answer(a, b, q, cb);
+						
 						break;
 					default:
 						break;
