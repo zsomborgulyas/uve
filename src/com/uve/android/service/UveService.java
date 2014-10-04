@@ -3,7 +3,11 @@ package com.uve.android.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
+
+import com.uve.android.MainActivity;
 
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -39,6 +43,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	
 	private static final UUID MY_UUID2 = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
 	
+	private MainActivity mActivity; 
+	
 	private final IBinder mBinder = new MyBinder();
 	
 	public class MyBinder extends Binder {
@@ -46,6 +52,10 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	      return UveService.this;
 	    }
 	  }
+	
+	public void setActivity(MainActivity m){
+		mActivity=m;
+	}
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
@@ -62,54 +72,92 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		return mBinder;
 	}
 
-	public void connectToDevice(String address) {
-		UveLogger.Info("onConnect to " + address);
-		boolean isFound = false;
-		for (UveDevice u : mDevices) {
-			if (u.mAddress.equals(address)) {
-				isFound = true;
-				UveLogger.Info("Device found: " + address);
-				try {
-					u.setDevice(mBtAdapter.getRemoteDevice(address));
-					UveLogger.Info(address + " got BluetoothDevice");
-					u.setSocket(u.mBtDevice
-							.createRfcommSocketToServiceRecord(MY_UUID));
-					UveLogger.Info(address + " got BluetoothSocket");
-					
-					u.getSocket().connect();
-					UveLogger.Info(address + " connected");
-					u.setStatusCallback(this);
-					u.connectStreams();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+	public void connectToDevice(final String address, final UveDeviceConnectListener cl) {
+		Timer connTimer = new Timer();
+		TimerTask connTimerTask = new TimerTask(){
 
-			}
-		}
-		if (!isFound) {
-			UveLogger.Info("Device not found: " + address);
-			UveDevice u = new UveDevice();
-			u.setAddress(address);
-			mDevices.add(u);
-			u=mDevices.get(mDevices.size()-1);
-			try {
-				u.setDevice(mBtAdapter.getRemoteDevice(address));
-				UveLogger.Info(address + " got BluetoothDevice");
-				u.setSocket(u.mBtDevice
-						.createRfcommSocketToServiceRecord(MY_UUID));
-				UveLogger.Info(address + " got BluetoothSocket");
+			@Override
+			public void run() {
+				UveLogger.Info("onConnect to " + address);
+				boolean isFound = false;
+				for (UveDevice u : mDevices) {
+					if (u.mAddress.equals(address)) {
+						isFound = true;
+						UveLogger.Info("Device found: " + address);
+						try {
+							u.setDevice(mBtAdapter.getRemoteDevice(address));
+							UveLogger.Info(address + " got BluetoothDevice");
+							u.setSocket(u.mBtDevice
+									.createRfcommSocketToServiceRecord(MY_UUID));
+							UveLogger.Info(address + " got BluetoothSocket");
+							
+							u.getSocket().connect();
+							UveLogger.Info(address + " connected");
+							u.setStatusCallback(UveService.this);
+							u.connectStreams();
+							mActivity.runOnUiThread(new Runnable(){
+
+								@Override
+								public void run() {
+									cl.onConnect(address, true);
+									
+								}});
+						} catch (IOException e) {
+							mActivity.runOnUiThread(new Runnable(){
+
+								@Override
+								public void run() {
+									cl.onConnect(address, false);
+									
+								}});
+							e.printStackTrace();
+						}
+
+					}
+				}
+				if (!isFound) {
+					UveLogger.Info("Device not found: " + address);
+					UveDevice u = new UveDevice();
+					u.setAddress(address);
+					mDevices.add(u);
+					u=mDevices.get(mDevices.size()-1);
+					try {
+						u.setDevice(mBtAdapter.getRemoteDevice(address));
+						UveLogger.Info(address + " got BluetoothDevice");
+						u.setSocket(u.mBtDevice
+								.createRfcommSocketToServiceRecord(MY_UUID));
+						UveLogger.Info(address + " got BluetoothSocket");
+						
+						u.getSocket().connect();
+						u.setAddress(address);
+						UveLogger.Info(address + " connected");
+						u.setStatusCallback(UveService.this);
+						u.connectStreams();
+						mActivity.runOnUiThread(new Runnable(){
+
+							@Override
+							public void run() {
+								cl.onConnect(address, true);
+								
+							}});
+						
+					} catch (IOException e) {
+						mActivity.runOnUiThread(new Runnable(){
+
+							@Override
+							public void run() {
+								cl.onConnect(address, false);
+								
+							}});
+						e.printStackTrace();
+					}
+				}
 				
-				u.getSocket().connect();
-				u.setAddress(address);
-				UveLogger.Info(address + " connected");
-				u.setStatusCallback(this);
-				u.connectStreams();
-				
-				
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+			}};
+			
+		connTimer.schedule(connTimerTask, 0);
+			
+		
 	}
 	
 	public Set<BluetoothDevice> getPairedDevices(){

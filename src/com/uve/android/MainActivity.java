@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.uve.android.service.UveDevice;
 import com.uve.android.service.UveDeviceAnswerListener;
+import com.uve.android.service.UveDeviceConnectListener;
 import com.uve.android.service.UveService;
 import com.uve.android.service.UveService.IntentType;
 import com.uve.android.service.UveService.Question;
@@ -99,8 +100,6 @@ public class MainActivity extends Activity implements
 		super.onResume();
 		Intent intent = new Intent(this, UveService.class);
 		bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-	
-	
 	}
 
 	@Override
@@ -122,11 +121,20 @@ public class MainActivity extends Activity implements
 					String deviceBTName = device.getName();
 					if (deviceBTName.toLowerCase().contains("uve")) {
 						String address = device.getAddress();
-						mService.connectToDevice(address);
+						button2.setVisibility(View.INVISIBLE);
+						mService.connectToDevice(address, new UveDeviceConnectListener(){
+
+							@Override
+							public void onConnect(String addr,
+									boolean isSuccessful) {
+								if(isSuccessful){
+									button2.setVisibility(View.VISIBLE);
+								}
+								
+							}});
 						
 						
-						
-						mService.getUveDevices();
+					
 						
 						
 						break;
@@ -143,8 +151,8 @@ public class MainActivity extends Activity implements
 
 				@Override
 				public void onComplete(String add, Question quest,
-						Bundle data, boolean isSuccesful) {
-					if(isSuccesful){
+						Bundle data, boolean isSuccessful) {
+					if(isSuccessful){
 						String serial=data.getString(UveDevice.ANS_SERIAL);
 						Toast.makeText(MainActivity.this, serial, Toast.LENGTH_SHORT).show();
 					}
@@ -162,6 +170,7 @@ public class MainActivity extends Activity implements
 		public void onServiceConnected(ComponentName className, IBinder binder) {
 			UveService.MyBinder b = (UveService.MyBinder) binder;
 			mService = b.getService();
+			mService.setActivity(MainActivity.this);
 			Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT)
 					.show();
 		}
