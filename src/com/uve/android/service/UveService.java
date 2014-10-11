@@ -80,7 +80,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 			public void run() {
 				UveLogger.Info("onConnect to " + address);
 				boolean isFound = false;
-				for (UveDevice u : mDevices) {
+				for (final UveDevice u : mDevices) {
 					if (u.mAddress.equals(address)) {
 						isFound = true;
 						UveLogger.Info("Device found: " + address);
@@ -91,6 +91,42 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 									.createRfcommSocketToServiceRecord(MY_UUID));
 							UveLogger.Info(address + " got BluetoothSocket");
 							
+							if(u.isConnected()){
+								u.getAnswer(null, Question.Ping, new UveDeviceAnswerListener(){
+
+									@Override
+									public void onComplete(String add,
+											Question quest, Bundle data,
+											boolean isSuccessful) {
+										if(isSuccessful){
+											mActivity.runOnUiThread(new Runnable(){
+
+												@Override
+												public void run() {
+													cl.onConnect(address, true);
+													u.setConnected(true);
+												}});
+										} else {
+											try{
+												u.getSocket().connect();
+												UveLogger.Info(address + " connected");
+												u.setStatusCallback(UveService.this);
+												u.connectStreams();
+											} catch (IOException e) {
+												mActivity.runOnUiThread(new Runnable(){
+
+													@Override
+													public void run() {
+														cl.onConnect(address, false);
+														u.setConnected(false);
+													}});
+												e.printStackTrace();
+											}
+										}
+										
+									}});
+							}else {
+							
 							u.getSocket().connect();
 							UveLogger.Info(address + " connected");
 							u.setStatusCallback(UveService.this);
@@ -100,15 +136,16 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 								@Override
 								public void run() {
 									cl.onConnect(address, true);
-									
+									u.setConnected(true);
 								}});
+							}
 						} catch (IOException e) {
 							mActivity.runOnUiThread(new Runnable(){
 
 								@Override
 								public void run() {
 									cl.onConnect(address, false);
-									
+									u.setConnected(false);
 								}});
 							e.printStackTrace();
 						}

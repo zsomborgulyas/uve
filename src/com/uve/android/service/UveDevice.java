@@ -22,6 +22,8 @@ public class UveDevice {
 	BluetoothSocket mSocket;
 	String mAddress;
 	BluetoothDevice mBtDevice;
+	boolean mIsConnected;
+	
 	static final UUID MY_UUID = UUID
 			.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
@@ -205,6 +207,15 @@ public class UveDevice {
 		mAddress = a;
 	}
 
+	public boolean isConnected() {
+		return mIsConnected;
+	}
+
+	public void setConnected(boolean b) {
+		mIsConnected = b;
+	}
+
+	
 	public BluetoothDevice getDevice() {
 		return mBtDevice;
 	}
@@ -275,6 +286,7 @@ public class UveDevice {
 			mISReaderTask = new ISReaderTask();
 
 			mTimer.schedule(mISReaderTask, 0);
+			setConnected(true);
 			UveLogger.Info(mAddress + " got IS/OS");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -283,7 +295,7 @@ public class UveDevice {
 	}
 
 	void panic() {
-
+		setConnected(false);
 	}
 
 	void readed(Integer r) {
@@ -516,6 +528,7 @@ public class UveDevice {
 	}
 	
 	void answer(Activity a, final Bundle b, final Question q, final UveDeviceAnswerListener cb){
+		if(a!=null){
 		a.runOnUiThread(new Runnable(){
 
 			@Override
@@ -523,6 +536,9 @@ public class UveDevice {
 				cb.onComplete(mAddress, q, b, true);
 				
 			}});
+		} else {
+			cb.onComplete(mAddress, q, b, true);
+		}
 	}
 	
 	void answerError(Activity a, final Bundle b, final Question q, final UveDeviceAnswerListener cb){
@@ -534,6 +550,8 @@ public class UveDevice {
 					cb.onComplete(mAddress, q, b, false);
 					
 				}});
+		}else {
+			cb.onComplete(mAddress, q, b, false);
 		}
 	}
 	
@@ -548,10 +566,11 @@ public class UveDevice {
 				mIsAnswering = true;
 				Bundle b = new Bundle();
 				try {
+					ArrayList<Integer> got;
 					switch (q) {
 					case Serial:
-						mOS.write(0);
-						ArrayList<Integer> got = waitForBytes(4);
+						mOS.write(QUE_SERIAL);
+						got = waitForBytes(4);
 						if (got == null) {
 							panic();
 							answerError(a, b, q, cb);
@@ -566,6 +585,21 @@ public class UveDevice {
 						
 						answer(a, b, q, cb);
 						
+						break;
+					case Ping:
+						mOS.write(QUE_PING);
+						got = waitForBytes(1);
+						if (got == null) {
+							panic();
+							answerError(a, b, q, cb);
+								
+							break;
+						}
+						
+						b.putString(ANS_PING, ""+got.get(0));
+						
+						
+						answer(a, b, q, cb);
 						break;
 					default:
 						break;
