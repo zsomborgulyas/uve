@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="background">#aa000000</color>
+    <color name="tv_background">#ad000000</color>
+    <color name="background_light">#33000000</color>
+    <color name="background_dialog_light">#DDFFFFFF</color>
+    <color name="text_dialog">#ff000000</color>
+    <color name="text_contrast">#ffffffff</color>
+    <color name="yellow1">#FCDB00</color>
+    <color name="yellow2">#FCB702</color>
+    <color name="gray1">#454545</color>
+    <color name="gray2">#3C3C3C</color>
+
+</resources>
