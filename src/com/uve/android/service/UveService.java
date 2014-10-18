@@ -108,7 +108,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 												}});
 										} else {
 											try{
-												u.getSocket().connect();
+												if(!u.getSocket().isConnected())
+													u.getSocket().connect();
 												UveLogger.Info(address + " connected");
 												u.setStatusCallback(UveService.this);
 												u.connectStreams();
@@ -125,9 +126,9 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 										}
 										
 									}});
-							}else {
-							
-							u.getSocket().connect();
+							} else {
+							if(!u.getSocket().isConnected())
+								u.getSocket().connect();
 							UveLogger.Info(address + " connected");
 							u.setStatusCallback(UveService.this);
 							u.connectStreams();
@@ -165,7 +166,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 								.createRfcommSocketToServiceRecord(MY_UUID));
 						UveLogger.Info(address + " got BluetoothSocket");
 						
-						u.getSocket().connect();
+						if(!u.getSocket().isConnected())
+							u.getSocket().connect();
 						u.setAddress(address);
 						UveLogger.Info(address + " connected");
 						u.setStatusCallback(UveService.this);
