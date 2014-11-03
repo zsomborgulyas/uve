@@ -24,9 +24,10 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.Window;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,7 +37,6 @@ import com.uve.android.service.UveDeviceAnswerListener;
 import com.uve.android.service.UveDeviceConnectListener;
 import com.uve.android.service.UveLogger;
 import com.uve.android.service.UveService;
-import com.uve.android.service.UveService.Command;
 import com.uve.android.service.UveService.Question;
 import com.uve.android.tools.WeatherCallback;
 import com.uve.android.tools.WeatherGetter;
@@ -47,9 +47,7 @@ public class MainActivity extends Activity implements
 	BroadcastReceiver mBroadcastReceiver;
 
 	boolean read = false;
-	private Button button1;
-	private Button button2;
-	private Button button3;
+
 	
 	ImageView mWeatherImage;
 	TextView mWeatherMain, mWeatherTemp, mWeatherMisc;
@@ -60,6 +58,15 @@ public class MainActivity extends Activity implements
 	
 	public UveDevice mCurrentUveDevice;
 
+	RelativeLayout mUveLayout, mNoUveLayout;
+	
+	ImageView mUveStatus;
+	TextView mUveName;
+	ImageView mUveBty;
+	ImageView mUveChild;
+	ImageView mUveSolar;
+	ProgressBar mUveProgress;
+	
 	BluetoothAdapter mAdapter;
 	SharedPreferences mPreferences;
 	Editor mEditor;
@@ -68,6 +75,9 @@ public class MainActivity extends Activity implements
 	
 	Timer mWeatherTimer;
 	TimerTask mWeatherTimerTask;
+	
+	Timer mDeviceTimer;
+	TimerTask mDeviceTimerTask;
 	
 	
 	/** Called when the activity is first created. */
@@ -93,16 +103,27 @@ public class MainActivity extends Activity implements
 
 			}
 		};
-
+		
+		mUveLayout=(RelativeLayout)findViewById(R.id.uveLayout);
+		mNoUveLayout=(RelativeLayout)findViewById(R.id.noUveLayout);
 
 
 		mWeatherImage=(ImageView)findViewById(R.id.weatherImage);
 		mWeatherMain=(TextView)findViewById(R.id.weatherMain);
 		mWeatherTemp=(TextView)findViewById(R.id.weatherTemp);
 		mWeatherMisc=(TextView)findViewById(R.id.weatherMisc);
-		mNodevice=(TextView)findViewById(R.id.noDeviceText);
 		
-		mNodevice.setOnClickListener(this);
+		mUveStatus=(ImageView)findViewById(R.id.uveTopStatus);
+		mUveName=(TextView)findViewById(R.id.uveTopName);
+		mUveBty=(ImageView)findViewById(R.id.uveTopBattery);
+		mUveChild=(ImageView)findViewById(R.id.uveTopStatus);
+		mUveSolar=(ImageView)findViewById(R.id.uveTopBatterySolar);
+		mUveProgress=(ProgressBar)findViewById(R.id.uveTopProgress);
+		
+		
+		
+		
+		mNoUveLayout.setOnClickListener(this);
 		
 		mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 		
@@ -148,8 +169,7 @@ public class MainActivity extends Activity implements
 													public void onConnect(String addr,
 															boolean isSuccessful) {
 														if (isSuccessful) {
-															button2.setVisibility(View.VISIBLE);
-															button2.setText(value);
+
 														}
 
 													}
@@ -176,8 +196,7 @@ public class MainActivity extends Activity implements
 									public void onConnect(String addr,
 											boolean isSuccessful) {
 										if (isSuccessful) {
-											button2.setVisibility(View.VISIBLE);
-											button2.setText(savedName);
+
 										}
 
 									}
@@ -189,8 +208,10 @@ public class MainActivity extends Activity implements
 			}
 		}
 		
-		if(uveCounter==0)
-			mNodevice.setVisibility(View.VISIBLE);
+		if(uveCounter==0){
+			mUveLayout.setVisibility(View.GONE);
+			mNoUveLayout.setVisibility(View.VISIBLE);
+		}
 		else {
 			showADevice(0);
 		}
@@ -199,21 +220,62 @@ public class MainActivity extends Activity implements
 	}
 	
 	public void showADevice(int index){
-		findViewById(R.id.noDeviceText).setVisibility(View.GONE);
-		UveDevice u=getADevice(index);
+		mUveLayout.setVisibility(View.VISIBLE);
+		mNoUveLayout.setVisibility(View.GONE);
+
+		final UveDevice u=getADevice(index);
 		if(u!=null){
 			mCurrentUveDevice=u;
-			Toast.makeText(this, mCurrentUveDevice.getName(), Toast.LENGTH_SHORT).show();
-			u.getAnswer(this, Question.Battery, new UveDeviceAnswerListener(){
+			mUveName.setText(u.getName());
+			mUveProgress.setVisibility(View.VISIBLE);
+			mUveStatus.setVisibility(View.INVISIBLE);
+			//mUveStatus.setImageResource(R.drawable.status_trying);
+			
+			mService.connectToDevice(u,
+					new UveDeviceConnectListener() {
+
+						@Override
+						public void onConnect(String addr,
+								boolean isSuccessful) {
+							mUveProgress.setVisibility(View.GONE);
+							mUveStatus.setVisibility(View.VISIBLE);
+							if (isSuccessful) {
+								mUveStatus.setImageResource(R.drawable.status_on);
+							} else mUveStatus.setImageResource(R.drawable.status_off);
+						}
+					});
+			
+			mDeviceTimer=new Timer();
+			mDeviceTimerTask = new TimerTask() {
 
 				@Override
-				public void onComplete(String add, Question quest, Bundle data,
-						boolean isSuccessful) {
-					if(isSuccessful){
-						Toast.makeText(getApplicationContext(), "BTY lipol:"+data.getInt(UveDevice.ANS_BATTERY_LP)+" solar:"+data.getInt(UveDevice.ANS_BATTERY_SC), Toast.LENGTH_LONG).show();
-					}
-					
-				}});
+				public void run() {
+					//PINGING (getting battery)
+					u.getAnswer(MainActivity.this, Question.Battery,
+							new UveDeviceAnswerListener() {
+
+								@Override
+								public void onComplete(String add, Question quest, Bundle data, boolean isSuccessful) {
+									if(u.isConnected()){
+										mUveStatus.setImageResource(R.drawable.status_on);
+									} else mUveStatus.setImageResource(R.drawable.status_off);
+									
+									int lipol=data.getInt(UveDevice.ANS_BATTERY_LP);
+									int solar=data.getInt(UveDevice.ANS_BATTERY_SC);
+									
+									if(solar>0) mUveSolar.setVisibility(View.VISIBLE);
+									else mUveSolar.setVisibility(View.GONE);
+									
+									if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
+									if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
+									if(lipol<190 && lipol>=128) mUveBty.setImageResource(R.drawable.bty_50);
+									if(lipol<128 && lipol>=64) mUveBty.setImageResource(R.drawable.bty_25);
+									if(lipol<64) mUveBty.setImageResource(R.drawable.bty_0);
+								}
+							});
+				}
+			};
+			mDeviceTimer.scheduleAtFixedRate(mDeviceTimerTask, 0, 2000);
 		}
 	}
 	
@@ -322,7 +384,7 @@ public class MainActivity extends Activity implements
 	public void onClick(View arg0) {
 
 		switch (arg0.getId()) {
-		case R.id.noDeviceText:
+		case R.id.noUveLayout:
 			loadDevices();
 			break;
 		/*case R.id.button2:

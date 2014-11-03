@@ -72,6 +72,10 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		return mBinder;
 	}
 
+	public void connectToDevice(UveDevice u, final UveDeviceConnectListener cl){
+		connectToDevice(u.getAddress(), u.getName(), cl);
+	}
+	
 	public void connectToDevice(final String address, final String name, final UveDeviceConnectListener cl) {
 		Timer connTimer = new Timer();
 		TimerTask connTimerTask = new TimerTask(){
