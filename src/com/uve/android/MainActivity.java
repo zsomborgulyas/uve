@@ -1,6 +1,8 @@
 package com.uve.android;
 
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -14,6 +16,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -21,6 +26,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +34,7 @@ import com.uve.android.model.Weather;
 import com.uve.android.service.UveDevice;
 import com.uve.android.service.UveDeviceAnswerListener;
 import com.uve.android.service.UveDeviceConnectListener;
+import com.uve.android.service.UveLogger;
 import com.uve.android.service.UveService;
 import com.uve.android.service.UveService.Command;
 import com.uve.android.service.UveService.Question;
@@ -35,7 +42,7 @@ import com.uve.android.tools.WeatherCallback;
 import com.uve.android.tools.WeatherGetter;
 
 public class MainActivity extends Activity implements
-		android.view.View.OnClickListener {
+		android.view.View.OnClickListener, LocationListener {
 	TextView out;
 	BroadcastReceiver mBroadcastReceiver;
 
@@ -43,6 +50,13 @@ public class MainActivity extends Activity implements
 	private Button button1;
 	private Button button2;
 	private Button button3;
+	
+	ImageView mWeatherImage;
+	TextView mWeatherMain, mWeatherTemp, mWeatherMisc;
+	TextView mNodevice;
+	
+	LocationManager mLocationManager;
+	Location currentLocation;
 	
 	public UveDevice mCurrentUveDevice;
 
@@ -52,6 +66,10 @@ public class MainActivity extends Activity implements
 	private UveService mService;
 	WeatherGetter mWeatherGetter;
 	
+	Timer mWeatherTimer;
+	TimerTask mWeatherTimerTask;
+	
+	
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -60,15 +78,7 @@ public class MainActivity extends Activity implements
 		setContentView(R.layout.activity_main);
 
 		mWeatherGetter=new WeatherGetter(this);
-		mWeatherGetter.getWeather(new WeatherCallback(){
-
-			@Override
-			public void onGotWeather(Weather w, boolean isSuccessful) {
-				if(isSuccessful){
-					Toast.makeText(MainActivity.this, w.getMain()+" "+w.getTemperature(), Toast.LENGTH_SHORT).show();
-				}
-				
-			}},47.498333,19.040833);
+		
 		
 		mBroadcastReceiver = new BroadcastReceiver() {
 
@@ -84,41 +94,46 @@ public class MainActivity extends Activity implements
 			}
 		};
 
-		out = (TextView) findViewById(R.id.out);
 
-		button1 = (Button) findViewById(R.id.button1);
-		button2 = (Button) findViewById(R.id.button2);
-		button1.setOnClickListener(this);
-		button2.setOnClickListener(this);
-		button3 = (Button) findViewById(R.id.button3);
-		button3.setOnClickListener(this);
-		// mAdapter = BluetoothAdapter.getDefaultAdapter();
 
+		mWeatherImage=(ImageView)findViewById(R.id.weatherImage);
+		mWeatherMain=(TextView)findViewById(R.id.weatherMain);
+		mWeatherTemp=(TextView)findViewById(R.id.weatherTemp);
+		mWeatherMisc=(TextView)findViewById(R.id.weatherMisc);
+		mNodevice=(TextView)findViewById(R.id.noDeviceText);
+		
+		mNodevice.setOnClickListener(this);
+		
+		mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+		
 		Intent intent = new Intent(this, UveService.class);
 		startService(intent);
 	}
 
 	public void loadDevices() {
+		int uveCounter=0;
 		Set<BluetoothDevice> pairedDevices = mService.getPairedDevices();
 
 		if (pairedDevices.size() > 0) {
 			for (BluetoothDevice device : pairedDevices) {
 				String deviceBTName = device.getName();
 				if (deviceBTName.toLowerCase().contains("uve")) {
+					
 					final String address = device.getAddress();
 					final String savedName = mPreferences.getString("Name"+address, "");
 					if (savedName.equals("")) {
 						AlertDialog.Builder alert = new AlertDialog.Builder(
 								this);
 
-						alert.setTitle("Title");
-						alert.setMessage("Message");
-
+						alert.setTitle(getResources().getString(R.string.new_device_title));
+						alert.setMessage(getResources().getString(R.string.new_device_msg));
+						alert.setCancelable(true);
+						
 						// Set an EditText view to get user input
 						final EditText input = new EditText(this);
 						alert.setView(input);
 
-						alert.setPositiveButton("Ok",
+						alert.setPositiveButton(getResources().getString(R.string.gen_ok),
 								new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog,
 											int whichButton) {
@@ -143,7 +158,7 @@ public class MainActivity extends Activity implements
 									}
 								});
 
-						alert.setNegativeButton("Cancel",
+						alert.setNegativeButton(getResources().getString(R.string.gen_notnow),
 								new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog,
 											int whichButton) {
@@ -153,7 +168,7 @@ public class MainActivity extends Activity implements
 
 						alert.show();
 					} else {
-						
+						uveCounter++;
 						mService.connectToDevice(address, savedName,
 								new UveDeviceConnectListener() {
 
@@ -173,10 +188,18 @@ public class MainActivity extends Activity implements
 				}
 			}
 		}
-		showADevice(0);
+		
+		if(uveCounter==0)
+			mNodevice.setVisibility(View.VISIBLE);
+		else {
+			showADevice(0);
+		}
+
+		
 	}
 	
 	public void showADevice(int index){
+		findViewById(R.id.noDeviceText).setVisibility(View.GONE);
 		UveDevice u=getADevice(index);
 		if(u!=null){
 			mCurrentUveDevice=u;
@@ -216,6 +239,9 @@ public class MainActivity extends Activity implements
 			}
 		}
 	}
+	
+
+	
 
 	@Override
 	public void onStart() {
@@ -223,25 +249,83 @@ public class MainActivity extends Activity implements
 
 	}
 
+	public Location getLocation(){
+		if (currentLocation == null){
+		currentLocation = mLocationManager
+				.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		}
+		return currentLocation;
+	}
+	
 	@Override
 	protected void onResume() {
 		super.onResume();
 		Intent intent = new Intent(this, UveService.class);
 		bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+		
+		
+		String provider;
+
+		if (mLocationManager
+				.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+			provider = LocationManager.NETWORK_PROVIDER;
+		else
+			provider = LocationManager.PASSIVE_PROVIDER;
+
+		UveLogger.Info("MainActivity chosen location provider: "
+				+ provider);
+		mLocationManager.requestLocationUpdates(provider, 600000, 100,
+				MainActivity.this);
+		
+
+		
+		mWeatherTimer=new Timer();
+		mWeatherTimerTask=new TimerTask(){
+
+			@Override
+			public void run() {
+				findViewById(R.id.weatherProgress).setVisibility(View.VISIBLE);
+				mWeatherImage.setImageDrawable(null);
+				mWeatherMain.setText("");
+				mWeatherTemp.setText("");
+				mWeatherMisc.setText("");
+				
+				mWeatherGetter.getWeather(new WeatherCallback(){
+
+					@Override
+					public void onGotWeather(Weather w, boolean isSuccessful) {
+						if(isSuccessful){
+							findViewById(R.id.weatherProgress).setVisibility(View.GONE);
+							mWeatherImage.setImageResource(w.getDrawable());
+							mWeatherMain.setText(w.getMain());
+							mWeatherTemp.setText(w.getTemperature());
+							mWeatherMisc.setText("min:" +w.getTemperatureMin()+"  max: "+w.getTemperatureMax()+", "+w.getHumidity()+", "+w.getWind()+"km/h");
+						}
+						
+					}},getLocation().getLatitude(),getLocation().getLongitude());
+				
+			}};
+		mWeatherTimer.scheduleAtFixedRate(mWeatherTimerTask, 0, 600000);
 	}
 
 	@Override
 	public void onPause() {
 		super.onPause();
 		unbindService(mConnection);
+		
+		mWeatherTimerTask.cancel();
+		mWeatherTimer.cancel();
+		mWeatherTimer.purge();
 	}
 
 	@Override
 	public void onClick(View arg0) {
 
 		switch (arg0.getId()) {
-		
-		case R.id.button2:
+		case R.id.noDeviceText:
+			loadDevices();
+			break;
+		/*case R.id.button2:
 			mService.getUveDevices()
 					.get(0)
 					.getAnswer(this, Question.Serial,
@@ -271,7 +355,7 @@ public class MainActivity extends Activity implements
 					.get(0)
 					.sendCommand(Command.Torch, b);
 
-			break;
+			break;*/
 		}
 	}
 
@@ -281,8 +365,7 @@ public class MainActivity extends Activity implements
 			UveService.MyBinder b = (UveService.MyBinder) binder;
 			mService = b.getService();
 			mService.setActivity(MainActivity.this);
-			Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT)
-					.show();
+			//Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show();
 
 			mPreferences = PreferenceManager
 					.getDefaultSharedPreferences(mService);
@@ -295,4 +378,29 @@ public class MainActivity extends Activity implements
 			mService = null;
 		}
 	};
+
+
+	@Override
+	public void onLocationChanged(Location location) {
+		currentLocation = location;
+		
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onProviderEnabled(String provider) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onProviderDisabled(String provider) {
+		// TODO Auto-generated method stub
+		
+	}
 }
