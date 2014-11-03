@@ -384,6 +384,7 @@ public class UveDevice {
 	}
 	
 	public void sendCommand(Command c, Bundle data){
+		UveLogger.Info("sending: "+c);
 		try {
 			switch (c) { 
 			case EnergySaver:
@@ -570,6 +571,7 @@ public class UveDevice {
 					switch (q) {
 					case Serial:
 						mOS.write(QUE_SERIAL);
+						UveLogger.Info("sent: QUE_SERIAL");
 						got = waitForBytes(4);
 						if (got == null) {
 							panic();
@@ -588,6 +590,7 @@ public class UveDevice {
 						break;
 					case Ping:
 						mOS.write(QUE_PING);
+						UveLogger.Info("sent: QUE_PING");
 						got = waitForBytes(1);
 						if (got == null) {
 							panic();
@@ -600,6 +603,23 @@ public class UveDevice {
 						
 						
 						answer(a, b, q, cb);
+						break;
+					case Battery:
+						mOS.write(QUE_BATTERY);
+						UveLogger.Info("sent: QUE_BATTERY");
+						got = waitForBytes(2);
+						if (got == null) {
+							panic();
+							answerError(a, b, q, cb);
+								
+							break;
+						}
+						b.putInt(ANS_BATTERY_LP, got.get(0));
+						b.putInt(ANS_BATTERY_SC, got.get(1));
+						
+						
+						answer(a, b, q, cb);
+						
 						break;
 					default:
 						break;

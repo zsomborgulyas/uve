@@ -72,7 +72,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		return mBinder;
 	}
 
-	public void connectToDevice(final String address, final UveDeviceConnectListener cl) {
+	public void connectToDevice(final String address, final String name, final UveDeviceConnectListener cl) {
 		Timer connTimer = new Timer();
 		TimerTask connTimerTask = new TimerTask(){
 
@@ -103,7 +103,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 
 												@Override
 												public void run() {
-													cl.onConnect(address, true);
+													if(cl!=null)
+														cl.onConnect(address, true);
 													u.setConnected(true);
 												}});
 										} else {
@@ -118,7 +119,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 
 													@Override
 													public void run() {
-														cl.onConnect(address, false);
+														if(cl!=null)
+															cl.onConnect(address, false);
 														u.setConnected(false);
 													}});
 												e.printStackTrace();
@@ -136,7 +138,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 
 								@Override
 								public void run() {
-									cl.onConnect(address, true);
+									if(cl!=null)
+										cl.onConnect(address, true);
 									u.setConnected(true);
 								}});
 							}
@@ -145,7 +148,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 
 								@Override
 								public void run() {
-									cl.onConnect(address, false);
+									if(cl!=null)
+										cl.onConnect(address, false);
 									u.setConnected(false);
 								}});
 							e.printStackTrace();
@@ -156,6 +160,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 				if (!isFound) {
 					UveLogger.Info("Device not found: " + address);
 					UveDevice u = new UveDevice();
+					u.setName(name);
 					u.setAddress(address);
 					mDevices.add(u);
 					u=mDevices.get(mDevices.size()-1);
@@ -176,7 +181,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 
 							@Override
 							public void run() {
-								cl.onConnect(address, true);
+								if(cl!=null)
+									cl.onConnect(address, true);
 								
 							}});
 						

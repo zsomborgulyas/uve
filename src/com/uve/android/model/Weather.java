@@ -1,6 +1,5 @@
 package com.uve.android.model;
 
-import android.graphics.drawable.Drawable;
 
 public class Weather {
 	int mID;

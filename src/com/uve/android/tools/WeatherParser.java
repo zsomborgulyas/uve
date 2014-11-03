@@ -21,10 +21,59 @@ public class WeatherParser {
 			JSONArray weatherArray=root.getJSONArray("weather");
 			w.setID(weatherArray.getJSONObject(0).getInt("id"));
 			w.setMain(c.getResources().getString(getNameId(weatherArray.getJSONObject(0).getInt("id"))));
-			w.setClouds(root.getJSONObject("clouds").getInt("all")+"%");
-			//w.set setClouds(root.getJSONObject("clouds").getInt("all")+"%");
+			//w.setClouds(root.getJSONObject("clouds").getInt("all")+"%");
+			w.setDrawable(getIcon(weatherArray.getJSONObject(0).getString("icon")));
+			w.setHumidity(""+root.getJSONObject("main").getInt("humidity")+"%");
+			w.setTemperature(""+root.getJSONObject("main").getDouble("temp")+"°C");
+			w.setTemperatureMax(""+root.getJSONObject("main").getDouble("temp_max")+"°C");
+			w.setTemperatureMin(""+root.getJSONObject("main").getDouble("temp_min")+"°C");
+			w.setWind(""+root.getJSONObject("wind").getDouble("speed"));
+
 		} catch(Exception e){}
 		return w;
+	}
+	
+	static int getIcon(String id){
+		int res = -1;
+		switch (id) {
+		case "01d":
+			return R.drawable.w01d;
+		case "01n":
+			return R.drawable.w01n;
+		case "02d":
+			return R.drawable.w02d;
+		case "02n":
+			return R.drawable.w02n;
+		case "03d":
+			return R.drawable.w03d;
+		case "03n":
+			return R.drawable.w03n;
+		case "04d":
+			return R.drawable.w04d;
+		case "04n":
+			return R.drawable.w04n;
+		case "09d":
+			return R.drawable.w09d;
+		case "09n":
+			return R.drawable.w09n;
+		case "10d":
+			return R.drawable.w10d;
+		case "10n":
+			return R.drawable.w10n;
+		case "11d":
+			return R.drawable.w11d;
+		case "11n":
+			return R.drawable.w11n;
+		case "13d":
+			return R.drawable.w13d;
+		case "13n":
+			return R.drawable.w13n;
+		case "50d":
+			return R.drawable.w50d;
+		case "50n":
+			return R.drawable.w50n;
+		}
+		return res;
 	}
 	
 	static int getNameId(int id){

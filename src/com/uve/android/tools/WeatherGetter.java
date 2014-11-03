@@ -28,7 +28,7 @@ public class WeatherGetter {
 		mContext=c;
 	}
 	
-	public void getWeather(final WeatherCallback callback) {
+	public void getWeather(final WeatherCallback callback, double lat, double lon) {
 		AsyncTask<Double, Void, Weather> asyncTask = new AsyncTask<Double, Void, Weather>() {
 
 			@Override
@@ -46,7 +46,7 @@ public class WeatherGetter {
 			}
 		};
 
-		asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+		asyncTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, lat, lon);
 	}
 	
 	
