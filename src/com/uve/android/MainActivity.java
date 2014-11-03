@@ -275,6 +275,7 @@ public class MainActivity extends Activity implements
 							});
 				}
 			};
+			
 			mDeviceTimer.scheduleAtFixedRate(mDeviceTimerTask, 0, 2000);
 		}
 	}

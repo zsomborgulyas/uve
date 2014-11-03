@@ -13,7 +13,7 @@
    height="1052.3622047"
    id="svg3007"
    version="1.1"
-   inkscape:version="0.48.2 r9819"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="imgs.svg">
   <defs
      id="defs3009" />
@@ -24,14 +24,14 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.49497475"
-     inkscape:cx="296.36264"
-     inkscape:cy="886.58966"
+     inkscape:zoom="1.979899"
+     inkscape:cx="199.19791"
+     inkscape:cy="1060.1589"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1600"
-     inkscape:window-height="837"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1" />
@@ -184,14 +184,17 @@
        inkscape:export-ydpi="150.00999" />
     <path
        sodipodi:type="arc"
-       style="opacity:0.95999995;fill:#666666;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       style="opacity:0.95999995000000005;fill:#ffff00;fill-opacity:1;fill-rule:nonzero;stroke:none"
        id="path3926"
        sodipodi:cx="80.714287"
        sodipodi:cy="220.93361"
        sodipodi:rx="26.428572"
        sodipodi:ry="31.428572"
        d="m 107.14286,220.93361 a 26.428572,31.428572 0 1 1 -52.857145,0 26.428572,31.428572 0 1 1 52.857145,0 z"
-       transform="matrix(1.5135134,0,0,1.2727273,22.204056,-356.7983)" />
+       transform="matrix(1.5135134,0,0,1.2727273,22.204056,-356.7983)"
+       inkscape:export-filename="D:\git\uve\uve\res\drawable\bty_solar.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        sodipodi:type="arc"
        style="opacity:0.95999995;fill:#666666;fill-opacity:1;fill-rule:nonzero;stroke:none"
@@ -224,36 +227,54 @@
        style="fill:#717578;fill-opacity:1;stroke:#717578;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 126.92824,-110.96109 -13.38452,60.104067"
        id="path3980"
-       inkscape:connector-curvature="0" />
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="D:\git\uve\uve\res\drawable\bty_solar.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        style="fill:#717578;fill-opacity:1;stroke:#717578;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 139.42888,-114.62291 -16.41497,72.730987"
        id="path3980-2"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cc" />
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="D:\git\uve\uve\res\drawable\bty_solar.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        style="fill:#717578;fill-opacity:1;stroke:#717578;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 152.30832,-114.24411 -17.80393,76.771597"
        id="path3980-2-4"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cc" />
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="D:\git\uve\uve\res\drawable\bty_solar.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        style="fill:#717578;fill-opacity:1;stroke:#717578;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 163.9882,-109.69841 -17.42512,73.488597"
        id="path3980-2-4-6"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cc" />
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="D:\git\uve\uve\res\drawable\bty_solar.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        style="fill:#717578;fill-opacity:1;stroke:#717578;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 174.15287,-101.04897 -14.26839,61.871837"
        id="path3980-2-4-6-1"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cc" />
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="D:\git\uve\uve\res\drawable\bty_solar.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
-       style="fill:#ffffff;fill-opacity:1;stroke:none"
+       style="fill:#1a1a1a;fill-opacity:1;stroke:none"
        d="m 158.92858,-101.03067 -25.71428,3.214287 -6.78572,28.57143 18.92857,-3.21429 -12.14285,23.21429 29.64285,-31.42857 -25.35714,0 z"
        id="path3976"
-       inkscape:connector-curvature="0" />
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="D:\git\uve\uve\res\drawable\bty_solar.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        style="fill:#78e256;fill-opacity:1;stroke:#000000;stroke-width:2.9000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        d="m 313.01844,-67.569584 c 6.32162,-63.840676 46.61583,-101.769476 80.52175,-119.206276 19.69171,62.59845 -34.09998,108.318046 -80.35715,119.285726"
