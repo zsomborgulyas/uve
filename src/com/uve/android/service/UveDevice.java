@@ -570,13 +570,20 @@ public class UveDevice {
 					ArrayList<Integer> got;
 					switch (q) {
 					case Serial:
-						mOS.write(QUE_SERIAL);
-						UveLogger.Info("sent: QUE_SERIAL");
+						try{
+							mOS.write(QUE_SERIAL);
+							UveLogger.Info("sent: QUE_SERIAL");
+						} catch(Exception e){
+							e.printStackTrace();
+							panic();
+							answerError(a, b, q, cb);
+							break;
+						}
+						
 						got = waitForBytes(4);
 						if (got == null) {
 							panic();
 							answerError(a, b, q, cb);
-								
 							break;
 						}
 						String s = "";
@@ -589,8 +596,16 @@ public class UveDevice {
 						
 						break;
 					case Ping:
-						mOS.write(QUE_PING);
-						UveLogger.Info("sent: QUE_PING");
+						try{
+							mOS.write(QUE_PING);
+							UveLogger.Info("sent: QUE_PING");
+						} catch(Exception e){
+							e.printStackTrace();
+							panic();
+							answerError(a, b, q, cb);
+							break;
+						}
+						
 						got = waitForBytes(1);
 						if (got == null) {
 							panic();
@@ -605,8 +620,16 @@ public class UveDevice {
 						answer(a, b, q, cb);
 						break;
 					case Battery:
-						mOS.write(QUE_BATTERY);
-						UveLogger.Info("sent: QUE_BATTERY");
+						try{
+							mOS.write(QUE_BATTERY);
+							UveLogger.Info("sent: QUE_BATTERY");
+						} catch(Exception e){
+							e.printStackTrace();
+							panic();
+							answerError(a, b, q, cb);
+							break;
+						}
+						
 						got = waitForBytes(2);
 						if (got == null) {
 							panic();

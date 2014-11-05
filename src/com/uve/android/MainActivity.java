@@ -213,6 +213,7 @@ public class MainActivity extends Activity implements
 			mNoUveLayout.setVisibility(View.VISIBLE);
 		}
 		else {
+			while(getADevice(0)==null){}
 			showADevice(0);
 		}
 
@@ -224,6 +225,8 @@ public class MainActivity extends Activity implements
 		mNoUveLayout.setVisibility(View.GONE);
 
 		final UveDevice u=getADevice(index);
+		//UveLogger.Info("showdevice: "+u.getName());
+		
 		if(u!=null){
 			mCurrentUveDevice=u;
 			mUveName.setText(u.getName());
@@ -258,19 +261,26 @@ public class MainActivity extends Activity implements
 								public void onComplete(String add, Question quest, Bundle data, boolean isSuccessful) {
 									if(u.isConnected()){
 										mUveStatus.setImageResource(R.drawable.status_on);
-									} else mUveStatus.setImageResource(R.drawable.status_off);
+										int lipol=data.getInt(UveDevice.ANS_BATTERY_LP);
+										int solar=data.getInt(UveDevice.ANS_BATTERY_SC);
+										
+										if(solar>0) mUveSolar.setVisibility(View.VISIBLE);
+										else mUveSolar.setVisibility(View.GONE);
+										mUveBty.setVisibility(View.VISIBLE);
+										if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
+										if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
+										if(lipol<190 && lipol>=128) mUveBty.setImageResource(R.drawable.bty_50);
+										if(lipol<128 && lipol>=64) mUveBty.setImageResource(R.drawable.bty_25);
+										if(lipol<64) mUveBty.setImageResource(R.drawable.bty_0);
+									} 
 									
-									int lipol=data.getInt(UveDevice.ANS_BATTERY_LP);
-									int solar=data.getInt(UveDevice.ANS_BATTERY_SC);
+									else {
+										mUveStatus.setImageResource(R.drawable.status_off);
+										mUveBty.setVisibility(View.GONE);
+										mUveSolar.setVisibility(View.GONE);
+									}
 									
-									if(solar>0) mUveSolar.setVisibility(View.VISIBLE);
-									else mUveSolar.setVisibility(View.GONE);
 									
-									if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
-									if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
-									if(lipol<190 && lipol>=128) mUveBty.setImageResource(R.drawable.bty_50);
-									if(lipol<128 && lipol>=64) mUveBty.setImageResource(R.drawable.bty_25);
-									if(lipol<64) mUveBty.setImageResource(R.drawable.bty_0);
 								}
 							});
 				}
@@ -347,28 +357,44 @@ public class MainActivity extends Activity implements
 
 			@Override
 			public void run() {
-				findViewById(R.id.weatherProgress).setVisibility(View.VISIBLE);
-				mWeatherImage.setImageDrawable(null);
-				mWeatherMain.setText("");
-				mWeatherTemp.setText("");
-				mWeatherMisc.setText("");
+				runOnUiThread(new Runnable(){
+
+					@Override
+					public void run() {
+						findViewById(R.id.weatherProgress).setVisibility(View.VISIBLE);
+						mWeatherImage.setImageDrawable(null);
+						mWeatherMain.setText("");
+						mWeatherTemp.setText("");
+						mWeatherMisc.setText("");
+						
+					}});
+				
+				
 				
 				mWeatherGetter.getWeather(new WeatherCallback(){
 
 					@Override
-					public void onGotWeather(Weather w, boolean isSuccessful) {
+					public void onGotWeather(final Weather w, boolean isSuccessful) {
 						if(isSuccessful){
-							findViewById(R.id.weatherProgress).setVisibility(View.GONE);
-							mWeatherImage.setImageResource(w.getDrawable());
-							mWeatherMain.setText(w.getMain());
-							mWeatherTemp.setText(w.getTemperature());
-							mWeatherMisc.setText("min:" +w.getTemperatureMin()+"  max: "+w.getTemperatureMax()+", "+w.getHumidity()+", "+w.getWind()+"km/h");
-						}
-						
+							
+							runOnUiThread(new Runnable(){
+
+								@Override
+								public void run() {
+									findViewById(R.id.weatherProgress).setVisibility(View.GONE);
+									mWeatherImage.setImageResource(w.getDrawable());
+									mWeatherMain.setText(w.getMain());
+									mWeatherTemp.setText(w.getTemperature());
+									mWeatherMisc.setText("min:" +w.getTemperatureMin()+"  max: "+w.getTemperatureMax()+", "+w.getHumidity()+", "+w.getWind()+"km/h");
+								}});
+							}
 					}},getLocation().getLatitude(),getLocation().getLongitude());
-				
 			}};
 		mWeatherTimer.scheduleAtFixedRate(mWeatherTimerTask, 0, 600000);
+		
+		/*try{
+			loadDevices();
+		} catch(Exception e){}*/
 	}
 
 	@Override
