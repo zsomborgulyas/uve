@@ -2,6 +2,7 @@ package com.uve.android.service;
 
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import android.app.Service;
@@ -24,7 +25,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 
 	public enum Question {
-		Serial, StartUV, DailyDose, DailyInteses, PreviousMelanin, MeasureMelanin, PreviousEritema, MeasureEritema, Battery, DeviceTime, ChildProtection, StartPlannedMeasure, AlterPlannedMeasure, Ping, WakeupDump
+		Serial, StartUV, DailyDose, DailyInteses, PreviousMelanin, MeasureMelanin, PreviousEritema, MeasureEritema, Battery, DeviceTime, ChildProtection, StartPlannedMeasure, AlterPlannedMeasure, Ping, WakeupDump, Statuses
 	}
 
 	public enum Command {
@@ -32,7 +33,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 
 	public enum AlertType {
-		MornignAlert, UVFront, UVBack
+		MornignAlert, UVFront, UVBack, Child
 	}
 
 	private static final int REQUEST_ENABLE_BT = 1;
@@ -72,6 +73,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		
 		loadDevicesFromAdapter();
 		tryConnectToEachBondedDevice();
+		startPingingAllDevices();
 		
 		return Service.START_NOT_STICKY;
 	}
@@ -228,8 +230,52 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		
 	}
 	
-
+	public void startPingingAllDevices(){
+		for(UveDevice u : mDevices){
+			startPinging(u);
+		}
+	}
 	
+	public void startPinging(final UveDevice u){
+		if(u.getPingTimerTask()!=null){
+			u.getPingTimerTask().cancel();
+		}
+		if(u.getPingTimer()!=null){
+			u.getPingTimer().cancel();
+			u.getPingTimer().purge();
+		}
+		
+		u.setPingTimerTask(new TimerTask(){
+
+			@Override
+			public void run() {
+				u.getAnswer(null, Question.Battery, new UveDeviceAnswerListener(){
+
+					@Override
+					public void onComplete(String add, Question quest, Bundle data,
+							boolean isSuccessful) {
+						if(isSuccessful){
+							u.setBatteryLevel(data.getInt(UveDeviceConstants.ANS_BATTERY_LP));
+							u.setSolarBattery(data.getInt(UveDeviceConstants.ANS_BATTERY_SC));
+						} else {
+							connectToDevice(u);
+						}	
+					}});			
+			}});
+		
+		u.getPingTimer().scheduleAtFixedRate(u.getPingTimerTask(), 0, 60000);
+	}
+	
+	public void stopPinging(UveDevice u){
+		if(u.getPingTimerTask()!=null){
+			u.getPingTimerTask().cancel();
+		}
+		if(u.getPingTimer()!=null){
+			u.getPingTimer().cancel();
+			u.getPingTimer().purge();
+		}
+	}
+		
 	
 	public Set<BluetoothDevice> getPairedDevices(){
 		return mBtAdapter.getBondedDevices();

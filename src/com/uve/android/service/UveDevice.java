@@ -16,6 +16,7 @@ import android.os.Bundle;
 
 import com.uve.android.service.UveService.Command;
 import com.uve.android.service.UveService.Question;
+import com.uve.android.service.UveDeviceConstants;
 
 public class UveDevice {
 	BluetoothAdapter mAdapter = null;
@@ -24,146 +25,248 @@ public class UveDevice {
 	BluetoothDevice mBtDevice;
 	boolean mIsConnected;
 
-	static final UUID MY_UUID = UUID
-			.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-	// question commands
-	static final int QUE_SERIAL = 0;
-	static final int QUE_MEASURE_UV = 1;
-	static final int QUE_DAILY_DOSE = 2;
-	static final int QUE_DAILY_INTENSE = 3;
-	static final int QUE_PREVIOUS_MELANIN = 4;
-	static final int QUE_MESURE_MELANIN = 5;
-	static final int QUE_PREVIOUS_ERITEMA = 6;
-	static final int QUE_MESURE_ERITEMA = 7;
-	static final int QUE_BATTERY = 9;
-	static final int QUE_TIME = 16;
-	static final int QUE_PLANNED_MEASURE = 28;
-	static final int QUE_ALTER_PLANNED_MEASURE = 29;
-	static final int QUE_PING = 34;
-	static final int QUE_WAKEUP_DUMP = 36;
+	
+	
+	int mMelaninIndex;
+	int mEritemaIndex;
+	int mDailyDose;
+	int mDailyDoseLimit;
+	int mUVLimit;
+	int mSkinRegenerationTime;
+	int mMeasureStart;
+	int mTimeBetweenMeasures;
+	int mMeasureMode;
+	int mManual;
+	int mRealtimeFeedback;
+	int mAlertType;
+	int mMorningAlertType;
+	int mSnooze;
+	int mMorningAlertStatus;
+	int mMorningUVAlertStatus;
+	int mChildProtectionStatus;
+	int mPlannedModeStatus;
+	int mEnergySaverNightStatus;
+	int mDelayedMeasureStatus;
+	int mIllnessSet;
+	int mBatteryLevel;
+	int mSolarBattery;
+	
+	
+	public int getMelaninIndex() {
+		return mMelaninIndex;
+	}
 
-	// answer constants
-	public static final String ANS_SERIAL = "ans_serial";
-	public static final String ANS_MEASURE_UV = "ans_measureuv";
-	public static final String ANS_DAILY_DOSE_COUNT = "ans_dosec";
-	public static final String ANS_DAILY_DOSE_1 = "ans_dose1";
-	public static final String ANS_DAILY_DOSE_2 = "ans_dose2";
-	public static final String ANS_DAILY_DOSE_3 = "ans_dose3";
-	public static final String ANS_DAILY_DOSE_4 = "ans_dose4";
-	public static final String ANS_DAILY_DOSE_FROM = "ans_dose_from";
-	public static final String ANS_DAILY_INTENSE_COUNT = "ans_intc";
-	public static final String ANS_DAILY_INTENSE_PREFIX = "ans_int";
-	public static final String ANS_PREVIOUS_MELANIN = "ans_pmel";
-	public static final String ANS_MESURE_MELANIN = "ans_mel";
-	public static final String ANS_PREVIOUS_ERITEMA = "ans_peri";
-	public static final String ANS_MESURE_ERITEMA = "ans_eri";
-	public static final String ANS_BATTERY_LP = "ans_batlp";
-	public static final String ANS_BATTERY_SC = "ans_batsc";
-	public static final String ANS_TIME_DAY = "ans_td";
-	public static final String ANS_TIME_HOUR = "ans_th";
-	public static final String ANS_TIME_MIN = "ans_tm";
-	public static final String ANS_TIME_SEC = "ans_ts";
+	public void setMelaninIndex(int mMelaninIndex) {
+		this.mMelaninIndex = mMelaninIndex;
+	}
 
-	public static final String ANS_ALTER_DOSE = "ans_mado";
-	public static final String ANS_ALTER_MODE = "ans_mamo";
-	public static final String ANS_ALTER_MELANIN_FRONT = "ans_mafr";
-	public static final String ANS_ALTER_MELANIN_BACK = "ans_maba";
+	public int getEritemaIndex() {
+		return mEritemaIndex;
+	}
 
-	public static final String ANS_PING = "ans_ping";
+	public void setEritemaIndex(int mEritemaIndex) {
+		this.mEritemaIndex = mEritemaIndex;
+	}
 
-	public static final String ANS_DUMP_TIME_DAY = "ans_wudtd";
-	public static final String ANS_DUMP_TIME_HOUR = "ans_wudth";
-	public static final String ANS_DUMP_TIME_MIN = "ans_wudtm";
-	public static final String ANS_DUMP_TIME_SEC = "ans_wudts";
+	public int getDailyDose() {
+		return mDailyDose;
+	}
 
-	// commands, that are not waiting for response
-	public static final int COMS_ENERGY = 10;
-	public static final String COM_ENERGY = "com_energy";
+	public void setDailyDose(int mDailyDose) {
+		this.mDailyDose = mDailyDose;
+	}
 
-	public static final int COMS_TIMEOUT = 11;
-	public static final String COM_TIMEOUT = "com_timeout";
+	public int getDailyDoseLimit() {
+		return mDailyDoseLimit;
+	}
 
-	public static final int COMS_MEASURETYPE = 12;
-	public static final String COM_MEASURETYPE = "com_mtype";
+	public void setDailyDoseLimit(int mDailyDoseLimit) {
+		this.mDailyDoseLimit = mDailyDoseLimit;
+	}
 
-	public static final int COMS_MEASUREMANUAL = 13;
-	public static final String COM_MEASUREMANUAL = "com_mman";
+	public int getUVLimit() {
+		return mUVLimit;
+	}
 
-	public static final int COMS_RESTART_MEASURE = 14;
+	public void setUVLimit(int mUVLimit) {
+		this.mUVLimit = mUVLimit;
+	}
 
-	public static final int COMS_DELETE_MESAURES = 15;
+	public int getSkinRegenerationTime() {
+		return mSkinRegenerationTime;
+	}
 
-	public static final int COMS_TIME = 17;
-	public static final String COM_TIME_DAY = "com_td";
-	public static final String COM_TIME_HOUR = "com_th";
-	public static final String COM_TIME_MIN = "com_tm";
-	public static final String COM_TIME_SEC = "com_ts";
+	public void setSkinRegenerationTime(int mSkinRegenerationTime) {
+		this.mSkinRegenerationTime = mSkinRegenerationTime;
+	}
 
-	public static final int COMS_TIMED_TIME = 18;
-	public static final String COM_TIMED_TIME_DAY = "com_ttd";
-	public static final String COM_TIMED_TIME_HOUR = "com_tth";
-	public static final String COM_TIMED_TIME_MIN = "com_ttm";
-	public static final String COM_TIMED_TIME_SEC = "com_tts";
+	public int getMeasureStart() {
+		return mMeasureStart;
+	}
 
-	public static final int COMS_SOFT_RESET = 19;
+	public void setMeasureStart(int mMeasureStart) {
+		this.mMeasureStart = mMeasureStart;
+	}
 
-	public static final int COMS_DELETE_UV_DOSE = 20;
+	public int getTimeBetweenMeasures() {
+		return mTimeBetweenMeasures;
+	}
 
-	public static final int COMS_FEEDBACK = 22;
-	public static final String COM_FEEDBACK = "com_feedback";
+	public void setTimeBetweenMeasures(int mTimeBetweenMeasures) {
+		this.mTimeBetweenMeasures = mTimeBetweenMeasures;
+	}
 
-	public static final int COMS_ILLNESS = 23;
-	public static final String COM_ILLNESS_1 = "com_ill1";
-	public static final String COM_ILLNESS_2 = "com_ill2";
-	public static final String COM_ILLNESS_3 = "com_ill3";
-	public static final String COM_ILLNESS_4 = "com_ill4";
-	public static final String COM_ILLNESS_INTENSE = "com_illi";
-	public static final String COM_ILLNESS_REGEN = "com_illr";
+	public int getMeasureMode() {
+		return mMeasureMode;
+	}
 
-	public static final int COMS_ALERTTYPE = 24;
-	public static final String COM_ALERTTYPE = "com_alerttype";
+	public void setMeasureMode(int mMeasureMode) {
+		this.mMeasureMode = mMeasureMode;
+	}
 
-	public static final int COMS_WAKEUP = 25;
-	public static final String COM_WAKEUP = "com_wu";
+	public int getManual() {
+		return mManual;
+	}
 
-	public static final int COMS_WAKEUP_PARAMS = 26;
-	public static final String COM_WAKEUP_DAY = "com_wud";
-	public static final String COM_WAKEUP_HOUR = "com_wuh";
-	public static final String COM_WAKEUP_MIN = "com_wum";
-	public static final String COM_WAKEUP_SEC = "com_wus";
-	public static final String COM_WAKEUP_ALERTTYPE = "com_wualerttype";
-	public static final String COM_WAKEUP_REPEATTYPE = "com_wurepeat";
-	public static final String COM_WAKEUP_SNOOZE5SEC = "com_wusnooze";
+	public void setManual(int mManual) {
+		this.mManual = mManual;
+	}
 
-	public static final int COMS_CHILD = 27;
-	public static final String COM_CHILD = "com_child";
+	public int getRealtimeFeedback() {
+		return mRealtimeFeedback;
+	}
 
-	public static final String COM_MELANIN_PRE_FRONT = "com_mpfront";
-	public static final String COM_MELANIN_PRE_BACK = "com_mpback";
-	public static final String COM_MODE = "com_mpmode";
+	public void setRealtimeFeedback(int mRealtimeFeedback) {
+		this.mRealtimeFeedback = mRealtimeFeedback;
+	}
 
-	public static final int COMS_NIGHT = 30;
-	public static final String COM_NIGHT = "com_night";
+	public int getAlertType() {
+		return mAlertType;
+	}
 
-	public static final int COMS_VIBRATE = 31;
-	public static final String COM_VIBRATE = "com_vibrate";
+	public void setAlertType(int mAlertType) {
+		this.mAlertType = mAlertType;
+	}
 
-	public static final int COMS_RGB = 32;
-	public static final String COM_RGB_R = "com_rgbr";
-	public static final String COM_RGB_G = "com_rgbg";
-	public static final String COM_RGB_B = "com_rgbb";
-	public static final String COM_RGB_TIME = "com_rgbt";
+	public int getMorningAlertType() {
+		return mMorningAlertType;
+	}
 
-	public static final int COMS_BUZZER = 33;
-	public static final String COM_BUZZER_FREQ = "com_buzzerf";
-	public static final String COM_BUZZER_TIME = "com_buzzert";
+	public void setMorningAlertType(int mMorningAlertType) {
+		this.mMorningAlertType = mMorningAlertType;
+	}
 
-	public static final int COMS_TORCH = 35;
-	public static final String COM_TORCH = "com_buzzerf";
+	public int getSnooze() {
+		return mSnooze;
+	}
 
-	public static final int COMS_DISABLE_WAKEUPS = 37;
+	public void setSnooze(int mSnooze) {
+		this.mSnooze = mSnooze;
+	}
 
+	public int getMorningAlertStatus() {
+		return mMorningAlertStatus;
+	}
+
+	public void setMorningAlertStatus(int mMorningAlertStatus) {
+		this.mMorningAlertStatus = mMorningAlertStatus;
+	}
+
+	public int getMorningUVAlertStatus() {
+		return mMorningUVAlertStatus;
+	}
+
+	public void setMorningUVAlertStatus(int mMorningUVAlertStatus) {
+		this.mMorningUVAlertStatus = mMorningUVAlertStatus;
+	}
+
+	public int getChildProtectionStatus() {
+		return mChildProtectionStatus;
+	}
+
+	public void setChildProtectionStatus(int mChildProtectionStatus) {
+		this.mChildProtectionStatus = mChildProtectionStatus;
+	}
+
+	public int getPlannedModeStatus() {
+		return mPlannedModeStatus;
+	}
+
+	public void setPlannedModeStatus(int mPlannedModeStatus) {
+		this.mPlannedModeStatus = mPlannedModeStatus;
+	}
+
+	public int getEnergySaverNightStatus() {
+		return mEnergySaverNightStatus;
+	}
+
+	public void setEnergySaverNightStatus(int mEnergySaverNightStatus) {
+		this.mEnergySaverNightStatus = mEnergySaverNightStatus;
+	}
+
+	public int getDelayedMeasureStatus() {
+		return mDelayedMeasureStatus;
+	}
+
+	public void setDelayedMeasureStatus(int mDelayedMeasureStatus) {
+		this.mDelayedMeasureStatus = mDelayedMeasureStatus;
+	}
+	
+	public int getIllnessSet() {
+		return mIllnessSet;
+	}
+
+	public void setIllnessSet(int mIllnessSet) {
+		this.mIllnessSet = mDelayedMeasureStatus;
+	}
+	
+	public int getBatteryLevel() {
+		return mBatteryLevel;
+	}
+
+	public void setBatteryLevel(int mBatteryLevel) {
+		this.mBatteryLevel = mBatteryLevel;
+	}
+
+	public int getSolarBattery() {
+		return mSolarBattery;
+	}
+
+	public void setSolarBattery(int mSolarBattery) {
+		this.mSolarBattery = mSolarBattery;
+	}
+	
+
+	
+	/*8bit //melanin index (bõr barnasága)
+8bit //eritéma index (bõr pirossága)
+32bit //aktuális UV dózis
+32bit	//UV dóziskorlát
+
+8bit //UV intenzitás korlát
+8bit //bõr regenerációs ideje
+8bit //mikortól mér?
+
+16bit //mérések közt eltetl idõ
+
+8bit //mérés módja
+8bit //manuális mérés beapcsolása
+8bit //folyamatos adatküldés bluetoothon keresztül
+8bit //alap visszajelzás
+8bit //alap riasztási visszajelzés	
+	
+8bit //szundi bekapcsolva
+8bit //ébresztõóra bekapcsolva
+8bit //napfényre való ébresztés bekapcsolva
+8bit //gyerekvédõ funckió bekapcsolva
+8bit //terevezett napozás bekapcsolva
+8bit //éjszakai energiatakarékos mód bekapcsolva
+8bit //késleltetett mérés bekapcsolva*/
+	
+	
+	
+	
 	String mName;
 
 	Context mContext;
@@ -173,6 +276,9 @@ public class UveDevice {
 
 	Timer mTimer = new Timer();
 	ISReaderTask mISReaderTask;
+	
+	Timer mPingTimer = new Timer();
+	TimerTask mPingTimerTask;
 
 	ArrayList<Integer> mISReaded;
 	ArrayList<Integer> mISStatusReaded;
@@ -181,6 +287,23 @@ public class UveDevice {
 
 	boolean mIsAnswering = false;
 
+	public Timer getPingTimer(){
+		if(mPingTimer!=null) mPingTimer=new Timer();
+		return mPingTimer;
+	}
+	
+	public TimerTask getPingTimerTask(){
+		return mPingTimerTask;
+	}
+	
+	public void setPingTimer(Timer t){
+		mPingTimer=t;
+	}
+	
+	public void setPingTimerTask(TimerTask tt){
+		mPingTimerTask=tt;
+	}
+	
 	public BluetoothAdapter getAdapter() {
 		return mAdapter;
 	}
@@ -243,24 +366,7 @@ public class UveDevice {
 		mISStatusReaded = new ArrayList<Integer>();
 	}
 
-	/*public UveDevice(BluetoothAdapter ad, BluetoothSocket soc,
-			BluetoothDevice dev, String add, String name, Context con,
-			UveDeviceStatuskListener l) {
-		mAdapter = ad;
-		mSocket = soc;
-		mBtDevice = dev;
-		mAddress = add;
-		mName = name;
-		mContext = con;
 
-		mStatusListener = l;
-
-		mISReaded = new ArrayList<Integer>();
-		mISStatusReaded = new ArrayList<Integer>();
-
-		connectStreams();
-	}
-*/
 	public void setStatusCallback(UveDeviceStatuskListener l) {
 		mStatusListener = l;
 		UveLogger.Info("DEVICE "+getName()+ " status listener set.");
@@ -306,6 +412,7 @@ public class UveDevice {
 			setConnected(false);
 		}
 		setConnected(false);
+		mStatusListener.onPanic(this, mAddress);
 	}
 
 	void readed(Integer r) {
@@ -377,6 +484,8 @@ public class UveDevice {
 		}
 
 	}
+	
+	
 
 	public ArrayList<Integer> waitForBytes(int byteCount) {
 		UveLogger.Info("DEVICE "+getName()+" waiting for "+byteCount+" bytes...");
@@ -407,113 +516,113 @@ public class UveDevice {
 		try {
 			switch (c) {
 			case EnergySaver:
-				mOS.write(COMS_ENERGY);
-				mOS.write(data.getInt(COM_ENERGY));
+				mOS.write(UveDeviceConstants.COMS_ENERGY);
+				mOS.write(data.getInt(UveDeviceConstants.COM_ENERGY));
 				break;
 			case Timeout:
-				mOS.write(COMS_TIMEOUT);
-				mOS.write(data.getInt(COM_TIMEOUT));
+				mOS.write(UveDeviceConstants.COMS_TIMEOUT);
+				mOS.write(data.getInt(UveDeviceConstants.COM_TIMEOUT));
 				break;
 			case MeasureType:
-				mOS.write(COMS_MEASURETYPE);
-				mOS.write(data.getInt(COM_MEASURETYPE));
+				mOS.write(UveDeviceConstants.COMS_MEASURETYPE);
+				mOS.write(data.getInt(UveDeviceConstants.COM_MEASURETYPE));
 				break;
 			case MeasureManual:
-				mOS.write(COMS_MEASUREMANUAL);
-				mOS.write(data.getInt(COM_MEASUREMANUAL));
+				mOS.write(UveDeviceConstants.COMS_MEASUREMANUAL);
+				mOS.write(data.getInt(UveDeviceConstants.COM_MEASUREMANUAL));
 				break;
 			case RestartMeasure:
-				mOS.write(COMS_RESTART_MEASURE);
+				mOS.write(UveDeviceConstants.COMS_RESTART_MEASURE);
 				break;
 			case DeleteMeasures:
-				mOS.write(COMS_DELETE_MESAURES);
+				mOS.write(UveDeviceConstants.COMS_DELETE_MESAURES);
 				break;
 			case SetTime:
-				mOS.write(COMS_TIME);
-				mOS.write(data.getInt(COM_TIME_DAY));
-				mOS.write(data.getInt(COM_TIME_HOUR));
-				mOS.write(data.getInt(COM_TIME_MIN));
-				mOS.write(data.getInt(COM_TIME_SEC));
+				mOS.write(UveDeviceConstants.COMS_TIME);
+				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_DAY));
+				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_HOUR));
+				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_MIN));
+				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_SEC));
 				break;
 			case StartTimedMeasure:
-				mOS.write(COMS_TIMED_TIME);
-				mOS.write(data.getInt(COM_TIMED_TIME_DAY));
-				mOS.write(data.getInt(COM_TIMED_TIME_HOUR));
-				mOS.write(data.getInt(COM_TIMED_TIME_MIN));
-				mOS.write(data.getInt(COM_TIMED_TIME_SEC));
+				mOS.write(UveDeviceConstants.COMS_TIMED_TIME);
+				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_DAY));
+				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_HOUR));
+				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_MIN));
+				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_SEC));
 				break;
 			case Reset:
-				mOS.write(COMS_SOFT_RESET);
+				mOS.write(UveDeviceConstants.COMS_SOFT_RESET);
 				break;
 			case DeleteUvDose:
-				mOS.write(COMS_DELETE_UV_DOSE);
+				mOS.write(UveDeviceConstants.COMS_DELETE_UV_DOSE);
 				break;
 			case RealTimeFeedback:
-				mOS.write(COMS_FEEDBACK);
-				mOS.write(data.getInt(COM_FEEDBACK));
+				mOS.write(UveDeviceConstants.COMS_FEEDBACK);
+				mOS.write(data.getInt(UveDeviceConstants.COM_FEEDBACK));
 				break;
 			case IllnessParameters:
-				mOS.write(COMS_ILLNESS);
-				mOS.write(data.getInt(COM_ILLNESS_1));
-				mOS.write(data.getInt(COM_ILLNESS_2));
-				mOS.write(data.getInt(COM_ILLNESS_3));
-				mOS.write(data.getInt(COM_ILLNESS_4));
-				mOS.write(data.getInt(COM_ILLNESS_INTENSE));
-				mOS.write(data.getInt(COM_ILLNESS_REGEN));
+				mOS.write(UveDeviceConstants.COMS_ILLNESS);
+				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_1));
+				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_2));
+				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_3));
+				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_4));
+				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_INTENSE));
+				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_REGEN));
 				break;
 			case AlertType:
-				mOS.write(COMS_ALERTTYPE);
-				mOS.write(data.getInt(COM_ALERTTYPE));
+				mOS.write(UveDeviceConstants.COMS_ALERTTYPE);
+				mOS.write(data.getInt(UveDeviceConstants.COM_ALERTTYPE));
 				break;
 			case Wakeup:
-				mOS.write(COMS_WAKEUP);
-				mOS.write(data.getInt(COM_WAKEUP));
+				mOS.write(UveDeviceConstants.COMS_WAKEUP);
+				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP));
 				break;
 			case WakeupParameters:
-				mOS.write(COMS_WAKEUP_PARAMS);
-				mOS.write(data.getInt(COM_WAKEUP_DAY));
-				mOS.write(data.getInt(COM_WAKEUP_HOUR));
-				mOS.write(data.getInt(COM_WAKEUP_MIN));
-				mOS.write(data.getInt(COM_WAKEUP_SEC));
-				mOS.write(data.getInt(COM_WAKEUP_ALERTTYPE));
-				mOS.write(data.getInt(COM_WAKEUP_REPEATTYPE));
-				mOS.write(data.getInt(COM_WAKEUP_SNOOZE5SEC));
+				mOS.write(UveDeviceConstants.COMS_WAKEUP_PARAMS);
+				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_DAY));
+				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_HOUR));
+				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_MIN));
+				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_SEC));
+				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_ALERTTYPE));
+				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_REPEATTYPE));
+				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_SNOOZE5SEC));
 				break;
 			case ChildAlert:
-				mOS.write(COMS_CHILD);
-				mOS.write(data.getInt(COM_CHILD));
+				mOS.write(UveDeviceConstants.COMS_CHILD);
+				mOS.write(data.getInt(UveDeviceConstants.COM_CHILD));
 				break;
 			case NightMode:
-				mOS.write(COMS_NIGHT);
-				mOS.write(data.getInt(COM_NIGHT));
+				mOS.write(UveDeviceConstants.COMS_NIGHT);
+				mOS.write(data.getInt(UveDeviceConstants.COM_NIGHT));
 				break;
 			case Vibrate:
-				mOS.write(COMS_VIBRATE);
-				mOS.write(data.getInt(COM_VIBRATE));
+				mOS.write(UveDeviceConstants.COMS_VIBRATE);
+				mOS.write(data.getInt(UveDeviceConstants.COM_VIBRATE));
 				break;
 			case RBG:
-				mOS.write(COMS_RGB);
-				mOS.write(data.getInt(COM_RGB_R));
-				mOS.write(data.getInt(COM_RGB_G));
-				mOS.write(data.getInt(COM_RGB_B));
-				mOS.write(data.getInt(COM_RGB_TIME));
+				mOS.write(UveDeviceConstants.COMS_RGB);
+				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_R));
+				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_G));
+				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_B));
+				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_TIME));
 				break;
 			case Speaker:
-				mOS.write(COMS_BUZZER);
-				mOS.write(data.getInt(COM_BUZZER_FREQ));
-				mOS.write(data.getInt(COM_BUZZER_TIME));
+				mOS.write(UveDeviceConstants.COMS_BUZZER);
+				mOS.write(data.getInt(UveDeviceConstants.COM_BUZZER_FREQ));
+				mOS.write(data.getInt(UveDeviceConstants.COM_BUZZER_TIME));
 				break;
 			case Torch:
-				mOS.write(COMS_TORCH);
-				mOS.write(data.getInt(COM_TORCH));
+				mOS.write(UveDeviceConstants.COMS_TORCH);
+				mOS.write(data.getInt(UveDeviceConstants.COM_TORCH));
 				break;
 			case DisableWakeups:
-				mOS.write(COMS_DISABLE_WAKEUPS);
+				mOS.write(UveDeviceConstants.COMS_DISABLE_WAKEUPS);
 				break;
 			case PlannedMeasureParameters:
-				mOS.write(data.getInt(COM_MELANIN_PRE_FRONT));
-				mOS.write(data.getInt(COM_MELANIN_PRE_BACK));
-				mOS.write(data.getInt(COM_MODE));
+				mOS.write(data.getInt(UveDeviceConstants.COM_MELANIN_PRE_FRONT));
+				mOS.write(data.getInt(UveDeviceConstants.COM_MELANIN_PRE_BACK));
+				mOS.write(data.getInt(UveDeviceConstants.COM_MODE));
 				break;
 			case AlterPlannedMeasureParameters:
 				getAnswer(null, Question.StartPlannedMeasure,
@@ -525,10 +634,10 @@ public class UveDevice {
 								if (succ) {
 									try {
 										mOS.write(data
-												.getInt(COM_MELANIN_PRE_FRONT));
+												.getInt(UveDeviceConstants.COM_MELANIN_PRE_FRONT));
 										mOS.write(data
-												.getInt(COM_MELANIN_PRE_BACK));
-										mOS.write(data.getInt(COM_MODE));
+												.getInt(UveDeviceConstants.COM_MELANIN_PRE_BACK));
+										mOS.write(data.getInt(UveDeviceConstants.COM_MODE));
 									} catch (Exception e) {
 										panic();
 										e.printStackTrace();
@@ -601,7 +710,7 @@ public class UveDevice {
 					switch (q) {
 					case Serial:
 						try {
-							mOS.write(QUE_SERIAL);
+							mOS.write(UveDeviceConstants.QUE_SERIAL);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_SERIAL");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -619,7 +728,7 @@ public class UveDevice {
 						String s = "";
 						for (int i : got) {
 							s = s + i;
-							b.putString(ANS_SERIAL, s);
+							b.putString(UveDeviceConstants.ANS_SERIAL, s);
 						}
 
 						answer(a, b, q, cb);
@@ -627,7 +736,7 @@ public class UveDevice {
 						break;
 					case Ping:
 						try {
-							mOS.write(QUE_PING);
+							mOS.write(UveDeviceConstants.QUE_PING);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_PING");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -644,13 +753,13 @@ public class UveDevice {
 							break;
 						}
 
-						b.putString(ANS_PING, "" + got.get(0));
+						b.putString(UveDeviceConstants.ANS_PING, "" + got.get(0));
 
 						answer(a, b, q, cb);
 						break;
 					case Battery:
 						try {
-							mOS.write(QUE_BATTERY);
+							mOS.write(UveDeviceConstants.QUE_BATTERY);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_BATTERY");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -666,8 +775,8 @@ public class UveDevice {
 
 							break;
 						}
-						b.putInt(ANS_BATTERY_LP, got.get(0));
-						b.putInt(ANS_BATTERY_SC, got.get(1));
+						b.putInt(UveDeviceConstants.ANS_BATTERY_LP, got.get(0));
+						b.putInt(UveDeviceConstants.ANS_BATTERY_SC, got.get(1));
 
 						answer(a, b, q, cb);
 
