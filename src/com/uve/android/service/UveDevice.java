@@ -23,11 +23,11 @@ public class UveDevice {
 	String mAddress;
 	BluetoothDevice mBtDevice;
 	boolean mIsConnected;
-	
+
 	static final UUID MY_UUID = UUID
 			.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-	//question commands
+	// question commands
 	static final int QUE_SERIAL = 0;
 	static final int QUE_MEASURE_UV = 1;
 	static final int QUE_DAILY_DOSE = 2;
@@ -37,14 +37,13 @@ public class UveDevice {
 	static final int QUE_PREVIOUS_ERITEMA = 6;
 	static final int QUE_MESURE_ERITEMA = 7;
 	static final int QUE_BATTERY = 9;
-	static final int QUE_TIME = 16;	
-	static final int QUE_PLANNED_MEASURE = 28;	
-	static final int QUE_ALTER_PLANNED_MEASURE = 29;	
+	static final int QUE_TIME = 16;
+	static final int QUE_PLANNED_MEASURE = 28;
+	static final int QUE_ALTER_PLANNED_MEASURE = 29;
 	static final int QUE_PING = 34;
 	static final int QUE_WAKEUP_DUMP = 36;
-	
-	
-	//answer constants
+
+	// answer constants
 	public static final String ANS_SERIAL = "ans_serial";
 	public static final String ANS_MEASURE_UV = "ans_measureuv";
 	public static final String ANS_DAILY_DOSE_COUNT = "ans_dosec";
@@ -65,55 +64,55 @@ public class UveDevice {
 	public static final String ANS_TIME_HOUR = "ans_th";
 	public static final String ANS_TIME_MIN = "ans_tm";
 	public static final String ANS_TIME_SEC = "ans_ts";
-	
+
 	public static final String ANS_ALTER_DOSE = "ans_mado";
 	public static final String ANS_ALTER_MODE = "ans_mamo";
 	public static final String ANS_ALTER_MELANIN_FRONT = "ans_mafr";
 	public static final String ANS_ALTER_MELANIN_BACK = "ans_maba";
-	
+
 	public static final String ANS_PING = "ans_ping";
-	
+
 	public static final String ANS_DUMP_TIME_DAY = "ans_wudtd";
 	public static final String ANS_DUMP_TIME_HOUR = "ans_wudth";
 	public static final String ANS_DUMP_TIME_MIN = "ans_wudtm";
 	public static final String ANS_DUMP_TIME_SEC = "ans_wudts";
 
-	//commands, that are not waiting for response
+	// commands, that are not waiting for response
 	public static final int COMS_ENERGY = 10;
 	public static final String COM_ENERGY = "com_energy";
-	
+
 	public static final int COMS_TIMEOUT = 11;
 	public static final String COM_TIMEOUT = "com_timeout";
-	
+
 	public static final int COMS_MEASURETYPE = 12;
 	public static final String COM_MEASURETYPE = "com_mtype";
-	
+
 	public static final int COMS_MEASUREMANUAL = 13;
 	public static final String COM_MEASUREMANUAL = "com_mman";
-	
+
 	public static final int COMS_RESTART_MEASURE = 14;
-	
+
 	public static final int COMS_DELETE_MESAURES = 15;
-	
+
 	public static final int COMS_TIME = 17;
 	public static final String COM_TIME_DAY = "com_td";
 	public static final String COM_TIME_HOUR = "com_th";
 	public static final String COM_TIME_MIN = "com_tm";
 	public static final String COM_TIME_SEC = "com_ts";
-	
+
 	public static final int COMS_TIMED_TIME = 18;
 	public static final String COM_TIMED_TIME_DAY = "com_ttd";
 	public static final String COM_TIMED_TIME_HOUR = "com_tth";
 	public static final String COM_TIMED_TIME_MIN = "com_ttm";
 	public static final String COM_TIMED_TIME_SEC = "com_tts";
-	
+
 	public static final int COMS_SOFT_RESET = 19;
-	
+
 	public static final int COMS_DELETE_UV_DOSE = 20;
-	
+
 	public static final int COMS_FEEDBACK = 22;
 	public static final String COM_FEEDBACK = "com_feedback";
-	
+
 	public static final int COMS_ILLNESS = 23;
 	public static final String COM_ILLNESS_1 = "com_ill1";
 	public static final String COM_ILLNESS_2 = "com_ill2";
@@ -121,13 +120,13 @@ public class UveDevice {
 	public static final String COM_ILLNESS_4 = "com_ill4";
 	public static final String COM_ILLNESS_INTENSE = "com_illi";
 	public static final String COM_ILLNESS_REGEN = "com_illr";
-	
+
 	public static final int COMS_ALERTTYPE = 24;
 	public static final String COM_ALERTTYPE = "com_alerttype";
-	
+
 	public static final int COMS_WAKEUP = 25;
 	public static final String COM_WAKEUP = "com_wu";
-	
+
 	public static final int COMS_WAKEUP_PARAMS = 26;
 	public static final String COM_WAKEUP_DAY = "com_wud";
 	public static final String COM_WAKEUP_HOUR = "com_wuh";
@@ -136,36 +135,35 @@ public class UveDevice {
 	public static final String COM_WAKEUP_ALERTTYPE = "com_wualerttype";
 	public static final String COM_WAKEUP_REPEATTYPE = "com_wurepeat";
 	public static final String COM_WAKEUP_SNOOZE5SEC = "com_wusnooze";
-	
+
 	public static final int COMS_CHILD = 27;
 	public static final String COM_CHILD = "com_child";
-	
+
 	public static final String COM_MELANIN_PRE_FRONT = "com_mpfront";
 	public static final String COM_MELANIN_PRE_BACK = "com_mpback";
 	public static final String COM_MODE = "com_mpmode";
-	
+
 	public static final int COMS_NIGHT = 30;
 	public static final String COM_NIGHT = "com_night";
-	
+
 	public static final int COMS_VIBRATE = 31;
 	public static final String COM_VIBRATE = "com_vibrate";
-	
+
 	public static final int COMS_RGB = 32;
 	public static final String COM_RGB_R = "com_rgbr";
 	public static final String COM_RGB_G = "com_rgbg";
 	public static final String COM_RGB_B = "com_rgbb";
 	public static final String COM_RGB_TIME = "com_rgbt";
-	
+
 	public static final int COMS_BUZZER = 33;
 	public static final String COM_BUZZER_FREQ = "com_buzzerf";
 	public static final String COM_BUZZER_TIME = "com_buzzert";
-	
+
 	public static final int COMS_TORCH = 35;
 	public static final String COM_TORCH = "com_buzzerf";
-	
+
 	public static final int COMS_DISABLE_WAKEUPS = 37;
-	
-	
+
 	String mName;
 
 	Context mContext;
@@ -213,9 +211,9 @@ public class UveDevice {
 
 	public void setConnected(boolean b) {
 		mIsConnected = b;
+		UveLogger.Info("DEVICE "+getName()+ " set connected: "+b);
 	}
 
-	
 	public BluetoothDevice getDevice() {
 		return mBtDevice;
 	}
@@ -245,7 +243,7 @@ public class UveDevice {
 		mISStatusReaded = new ArrayList<Integer>();
 	}
 
-	public UveDevice(BluetoothAdapter ad, BluetoothSocket soc,
+	/*public UveDevice(BluetoothAdapter ad, BluetoothSocket soc,
 			BluetoothDevice dev, String add, String name, Context con,
 			UveDeviceStatuskListener l) {
 		mAdapter = ad;
@@ -262,12 +260,14 @@ public class UveDevice {
 
 		connectStreams();
 	}
-
+*/
 	public void setStatusCallback(UveDeviceStatuskListener l) {
 		mStatusListener = l;
+		UveLogger.Info("DEVICE "+getName()+ " status listener set.");
 	}
 
-	void connectStreams() {
+	public boolean connectStreams() {
+		UveLogger.Info("DEVICE "+getName()+ " connecting streams.");
 		if (mTimer == null || mISReaderTask == null) {
 			mTimer = new Timer();
 			mISReaderTask = new ISReaderTask();
@@ -287,14 +287,24 @@ public class UveDevice {
 
 			mTimer.schedule(mISReaderTask, 0);
 			setConnected(true);
-			UveLogger.Info(mAddress + " got IS/OS");
+			UveLogger.Info("DEVICE "+getName()+ " "+mAddress + " got IS/OS");
+			return true;
 		} catch (Exception e) {
+			UveLogger.Error("DEVICE "+getName()+ " "+mAddress + " couldnt got IS/OS");
 			e.printStackTrace();
 			panic();
 		}
+		return false;
 	}
 
 	void panic() {
+		UveLogger.Error("DEVICE "+getName()+ " PANIC");
+		try {
+			this.mSocket.close();
+			UveLogger.Info("DEVICE "+getName()+ " PANIC, socket closed.");
+		} catch (Exception e) {
+			setConnected(false);
+		}
 		setConnected(false);
 	}
 
@@ -307,19 +317,20 @@ public class UveDevice {
 
 		@Override
 		public void run() {
+			UveLogger.Info("DEVICE "+getName()+" starting ReaderTask");
 			while (readFlag) {
 				try {
 					int readed = mIS.read();
-					UveLogger.Info("Got: "+readed);
+					UveLogger.Info("DEVICE "+getName()+" byte got: " + readed);
 
 					if (!mIsAnswering) {
 						if (mISStatusReaded.size() == 0) {
 							if (readed == 0)
 								mISStatusReaded.add(readed);
 							else {
-								mStatusListener.onUVFeedback(mAddress, readed);
+								mStatusListener.onUVFeedback(UveDevice.this, mAddress, readed);
 							}
-							
+
 						} else {
 							if (mISStatusReaded.size() == 1) {
 								if (readed == 0 || readed == 1 || readed == 2) {
@@ -336,23 +347,27 @@ public class UveDevice {
 					}
 
 					if (mISStatusReaded.size() == 3) {
-						if (mISStatusReaded.get(0) == 0 && mISStatusReaded.get(1) == 0) {
-							mStatusListener.onWakeUpAlert(mAddress,
+						if (mISStatusReaded.get(0) == 0
+								&& mISStatusReaded.get(1) == 0) {
+							mStatusListener.onWakeUpAlert(UveDevice.this, mAddress,
 									mISStatusReaded.get(2));
 						}
-						if (mISStatusReaded.get(0) == 0 && mISStatusReaded.get(1) == 1) {
-							mStatusListener.onChildUpAlert(mAddress,
+						if (mISStatusReaded.get(0) == 0
+								&& mISStatusReaded.get(1) == 1) {
+							mStatusListener.onChildUpAlert(UveDevice.this,mAddress,
 									mISStatusReaded.get(2) == 0 ? false : true);
 						}
-						if (mISStatusReaded.get(0) == 0 && mISStatusReaded.get(1) == 2) {
-							mStatusListener.onUVAlert(mAddress,
+						if (mISStatusReaded.get(0) == 0
+								&& mISStatusReaded.get(1) == 2) {
+							mStatusListener.onUVAlert(UveDevice.this,mAddress,
 									mISStatusReaded.get(2) == 1 ? true : false);
 						}
 						mISStatusReaded.clear();
 					}
 
-					//readed(readed);
+					// readed(readed);
 				} catch (Exception e) {
+					UveLogger.Error("DEVICE "+getName()+" ReaderTask exception");
 					readFlag = false;
 					e.printStackTrace();
 					panic();
@@ -364,29 +379,33 @@ public class UveDevice {
 	}
 
 	public ArrayList<Integer> waitForBytes(int byteCount) {
+		UveLogger.Info("DEVICE "+getName()+" waiting for "+byteCount+" bytes...");
 		ArrayList<Integer> arr = new ArrayList<Integer>();
 		mISReaded.clear();
 		int sleepCounter = 0;
 		while (mISReaded.size() < byteCount) {
 			try {
+				
 				Thread.sleep(100);
 				sleepCounter++;
 			} catch (Exception e) {
 			}
 			if (sleepCounter > 10) {
+				UveLogger.Error("DEVICE "+getName()+" waiting for bytes Timeout.");
 				mIsAnswering = false;
 				return null;
 			}
 		}
+		UveLogger.Info("DEVICE "+getName()+" waiting for bytes got all. "+mISReaded);
 		mIsAnswering = false;
 		arr = mISReaded;
 		return arr;
 	}
-	
-	public void sendCommand(Command c, Bundle data){
-		UveLogger.Info("sending: "+c);
+
+	public void sendCommand(Command c, Bundle data) {
+		UveLogger.Info("DEVICE "+getName()+ " sending command: " + c);
 		try {
-			switch (c) { 
+			switch (c) {
 			case EnergySaver:
 				mOS.write(COMS_ENERGY);
 				mOS.write(data.getInt(COM_ENERGY));
@@ -415,7 +434,7 @@ public class UveDevice {
 				mOS.write(data.getInt(COM_TIME_HOUR));
 				mOS.write(data.getInt(COM_TIME_MIN));
 				mOS.write(data.getInt(COM_TIME_SEC));
-				break;	
+				break;
 			case StartTimedMeasure:
 				mOS.write(COMS_TIMED_TIME);
 				mOS.write(data.getInt(COM_TIMED_TIME_DAY));
@@ -497,68 +516,79 @@ public class UveDevice {
 				mOS.write(data.getInt(COM_MODE));
 				break;
 			case AlterPlannedMeasureParameters:
-				getAnswer(null, Question.StartPlannedMeasure, new UveDeviceAnswerListener(){
+				getAnswer(null, Question.StartPlannedMeasure,
+						new UveDeviceAnswerListener() {
 
-					@Override
-					public void onComplete(String add, Question quest,
-							Bundle data, boolean succ) {
-						if(succ){
-							try{
-								mOS.write(data.getInt(COM_MELANIN_PRE_FRONT));
-								mOS.write(data.getInt(COM_MELANIN_PRE_BACK));
-								mOS.write(data.getInt(COM_MODE));
-							} catch (Exception e) {
-								panic();
-								e.printStackTrace();
+							@Override
+							public void onComplete(String add, Question quest,
+									Bundle data, boolean succ) {
+								if (succ) {
+									try {
+										mOS.write(data
+												.getInt(COM_MELANIN_PRE_FRONT));
+										mOS.write(data
+												.getInt(COM_MELANIN_PRE_BACK));
+										mOS.write(data.getInt(COM_MODE));
+									} catch (Exception e) {
+										panic();
+										e.printStackTrace();
+									}
+								}
+
 							}
-						}
 
-					}
-
-					});
+						});
 				break;
 			default:
-			
+
 				break;
-			} 
-			
+			}
+
 		} catch (Exception e) {
 			panic();
 			e.printStackTrace();
 		}
 	}
-	
-	void answer(Activity a, final Bundle b, final Question q, final UveDeviceAnswerListener cb){
-		if(a!=null){
-		a.runOnUiThread(new Runnable(){
 
-			@Override
-			public void run() {
-				cb.onComplete(mAddress, q, b, true);
-				
-			}});
+	void answer(Activity a, final Bundle b, final Question q,
+			final UveDeviceAnswerListener cb) {
+		if (a != null) {
+			UveLogger.Info("DEVICE "+getName()+" answering on activity: "+q);
+			a.runOnUiThread(new Runnable() {
+
+				@Override
+				public void run() {
+					cb.onComplete(mAddress, q, b, true);
+
+				}
+			});
 		} else {
+			UveLogger.Info("DEVICE "+getName()+" answering: "+q);
 			cb.onComplete(mAddress, q, b, true);
 		}
 	}
-	
-	void answerError(Activity a, final Bundle b, final Question q, final UveDeviceAnswerListener cb){
-		if(a!=null){
-			a.runOnUiThread(new Runnable(){
+
+	void answerError(Activity a, final Bundle b, final Question q,
+			final UveDeviceAnswerListener cb) {
+		if (a != null) {
+			UveLogger.Error("DEVICE "+getName()+" answering error on activity: "+q);
+			a.runOnUiThread(new Runnable() {
 
 				@Override
 				public void run() {
 					cb.onComplete(mAddress, q, b, false);
-					
-				}});
-		}else {
+
+				}
+			});
+		} else {
+			UveLogger.Error("DEVICE "+getName()+" answering error: "+q);
 			cb.onComplete(mAddress, q, b, false);
 		}
 	}
-	
 
-
-	public void getAnswer(final Activity a, final Question q, final UveDeviceAnswerListener cb) {
+	public void getAnswer(final Activity a, final Question q,
+			final UveDeviceAnswerListener cb) {
+		UveLogger.Info("DEVICE "+getName()+" getting answer: "+q);
 		Timer sendTimer = new Timer();
 		TimerTask sendTimerTask = new TimerTask() {
 
@@ -570,16 +600,16 @@ public class UveDevice {
 					ArrayList<Integer> got;
 					switch (q) {
 					case Serial:
-						try{
+						try {
 							mOS.write(QUE_SERIAL);
-							UveLogger.Info("sent: QUE_SERIAL");
-						} catch(Exception e){
+							UveLogger.Info("DEVICE "+getName()+" sent: QUE_SERIAL");
+						} catch (Exception e) {
 							e.printStackTrace();
 							panic();
 							answerError(a, b, q, cb);
 							break;
 						}
-						
+
 						got = waitForBytes(4);
 						if (got == null) {
 							panic();
@@ -591,58 +621,56 @@ public class UveDevice {
 							s = s + i;
 							b.putString(ANS_SERIAL, s);
 						}
-						
+
 						answer(a, b, q, cb);
-						
+
 						break;
 					case Ping:
-						try{
+						try {
 							mOS.write(QUE_PING);
-							UveLogger.Info("sent: QUE_PING");
-						} catch(Exception e){
+							UveLogger.Info("DEVICE "+getName()+" sent: QUE_PING");
+						} catch (Exception e) {
 							e.printStackTrace();
 							panic();
 							answerError(a, b, q, cb);
 							break;
 						}
-						
+
 						got = waitForBytes(1);
 						if (got == null) {
 							panic();
 							answerError(a, b, q, cb);
-								
+
 							break;
 						}
-						
-						b.putString(ANS_PING, ""+got.get(0));
-						
-						
+
+						b.putString(ANS_PING, "" + got.get(0));
+
 						answer(a, b, q, cb);
 						break;
 					case Battery:
-						try{
+						try {
 							mOS.write(QUE_BATTERY);
-							UveLogger.Info("sent: QUE_BATTERY");
-						} catch(Exception e){
+							UveLogger.Info("DEVICE "+getName()+" sent: QUE_BATTERY");
+						} catch (Exception e) {
 							e.printStackTrace();
 							panic();
 							answerError(a, b, q, cb);
 							break;
 						}
-						
+
 						got = waitForBytes(2);
 						if (got == null) {
 							panic();
 							answerError(a, b, q, cb);
-								
+
 							break;
 						}
 						b.putInt(ANS_BATTERY_LP, got.get(0));
 						b.putInt(ANS_BATTERY_SC, got.get(1));
-						
-						
+
 						answer(a, b, q, cb);
-						
+
 						break;
 					default:
 						break;

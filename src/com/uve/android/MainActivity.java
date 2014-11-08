@@ -131,7 +131,44 @@ public class MainActivity extends Activity implements
 		startService(intent);
 	}
 
-	public void loadDevices() {
+	
+	public void promtForNewDeviceName(final String address){
+		AlertDialog.Builder alert = new AlertDialog.Builder(
+				this);
+
+		alert.setTitle(getResources().getString(R.string.new_device_title));
+		alert.setMessage(getResources().getString(R.string.new_device_msg));
+		alert.setCancelable(true);
+		
+		// Set an EditText view to get user input
+		final EditText input = new EditText(this);
+		alert.setView(input);
+
+		alert.setPositiveButton(getResources().getString(R.string.gen_ok),
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog,
+							int whichButton) {
+						final String value = input.getText()
+								.toString();
+						
+						mService.setDeviceName(address, value);
+					}
+				});
+
+		alert.setNegativeButton(getResources().getString(R.string.gen_notnow),
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog,
+							int whichButton) {
+						// Canceled.
+					}
+				});
+
+		alert.show();
+		
+	}
+	
+	
+	/*public void loadDevices() {
 		int uveCounter=0;
 		Set<BluetoothDevice> pairedDevices = mService.getPairedDevices();
 
@@ -244,51 +281,56 @@ public class MainActivity extends Activity implements
 							mUveStatus.setVisibility(View.VISIBLE);
 							if (isSuccessful) {
 								mUveStatus.setImageResource(R.drawable.status_on);
+								
+								mDeviceTimer=new Timer();
+								mDeviceTimerTask = new TimerTask() {
+
+									@Override
+									public void run() {
+										//PINGING (getting battery)
+										u.getAnswer(MainActivity.this, Question.Battery,
+												new UveDeviceAnswerListener() {
+
+													@Override
+													public void onComplete(String add, Question quest, Bundle data, boolean isSuccessful) {
+														
+														if(isSuccessful){
+															mUveStatus.setImageResource(R.drawable.status_on);
+															int lipol=data.getInt(UveDevice.ANS_BATTERY_LP);
+															int solar=data.getInt(UveDevice.ANS_BATTERY_SC);
+															
+															if(solar>0) mUveSolar.setVisibility(View.VISIBLE);
+															else mUveSolar.setVisibility(View.GONE);
+															mUveBty.setVisibility(View.VISIBLE);
+															if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
+															if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
+															if(lipol<190 && lipol>=128) mUveBty.setImageResource(R.drawable.bty_50);
+															if(lipol<128 && lipol>=64) mUveBty.setImageResource(R.drawable.bty_25);
+															if(lipol<64) mUveBty.setImageResource(R.drawable.bty_0);
+														} 
+														
+														else {
+															mUveStatus.setImageResource(R.drawable.status_off);
+															mUveBty.setVisibility(View.GONE);
+															mUveSolar.setVisibility(View.GONE);
+														}
+														
+														
+													}
+												});
+									}
+								};
+								
+								mDeviceTimer.scheduleAtFixedRate(mDeviceTimerTask, 0, 2000);
+
+								
+								
 							} else mUveStatus.setImageResource(R.drawable.status_off);
 						}
 					});
 			
-			mDeviceTimer=new Timer();
-			mDeviceTimerTask = new TimerTask() {
-
-				@Override
-				public void run() {
-					//PINGING (getting battery)
-					u.getAnswer(MainActivity.this, Question.Battery,
-							new UveDeviceAnswerListener() {
-
-								@Override
-								public void onComplete(String add, Question quest, Bundle data, boolean isSuccessful) {
-									if(u.isConnected()){
-										mUveStatus.setImageResource(R.drawable.status_on);
-										int lipol=data.getInt(UveDevice.ANS_BATTERY_LP);
-										int solar=data.getInt(UveDevice.ANS_BATTERY_SC);
-										
-										if(solar>0) mUveSolar.setVisibility(View.VISIBLE);
-										else mUveSolar.setVisibility(View.GONE);
-										mUveBty.setVisibility(View.VISIBLE);
-										if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
-										if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
-										if(lipol<190 && lipol>=128) mUveBty.setImageResource(R.drawable.bty_50);
-										if(lipol<128 && lipol>=64) mUveBty.setImageResource(R.drawable.bty_25);
-										if(lipol<64) mUveBty.setImageResource(R.drawable.bty_0);
-									} 
-									
-									else {
-										mUveStatus.setImageResource(R.drawable.status_off);
-										mUveBty.setVisibility(View.GONE);
-										mUveSolar.setVisibility(View.GONE);
-									}
-									
-									
-								}
-							});
-				}
-			};
-			
-			mDeviceTimer.scheduleAtFixedRate(mDeviceTimerTask, 0, 2000);
 		}
-	}
+	}*/
 	
 	private UveDevice getADevice(int index){
 		if(mService.getUveDevices().size()>0)
@@ -367,28 +409,29 @@ public class MainActivity extends Activity implements
 						mWeatherTemp.setText("");
 						mWeatherMisc.setText("");
 						
+						mWeatherGetter.getWeather(new WeatherCallback(){
+
+							@Override
+							public void onGotWeather(final Weather w, boolean isSuccessful) {
+								if(isSuccessful){
+									
+									runOnUiThread(new Runnable(){
+
+										@Override
+										public void run() {
+											findViewById(R.id.weatherProgress).setVisibility(View.GONE);
+											mWeatherImage.setImageResource(w.getDrawable());
+											mWeatherMain.setText(w.getMain());
+											mWeatherTemp.setText(w.getTemperature());
+											mWeatherMisc.setText("min:" +w.getTemperatureMin()+"  max: "+w.getTemperatureMax()+", "+w.getHumidity()+", "+w.getWind()+"km/h");
+										}});
+									}
+							}},getLocation().getLatitude(),getLocation().getLongitude());
 					}});
 				
 				
 				
-				mWeatherGetter.getWeather(new WeatherCallback(){
-
-					@Override
-					public void onGotWeather(final Weather w, boolean isSuccessful) {
-						if(isSuccessful){
-							
-							runOnUiThread(new Runnable(){
-
-								@Override
-								public void run() {
-									findViewById(R.id.weatherProgress).setVisibility(View.GONE);
-									mWeatherImage.setImageResource(w.getDrawable());
-									mWeatherMain.setText(w.getMain());
-									mWeatherTemp.setText(w.getTemperature());
-									mWeatherMisc.setText("min:" +w.getTemperatureMin()+"  max: "+w.getTemperatureMax()+", "+w.getHumidity()+", "+w.getWind()+"km/h");
-								}});
-							}
-					}},getLocation().getLatitude(),getLocation().getLongitude());
+				
 			}};
 		mWeatherTimer.scheduleAtFixedRate(mWeatherTimerTask, 0, 600000);
 		
@@ -412,7 +455,7 @@ public class MainActivity extends Activity implements
 
 		switch (arg0.getId()) {
 		case R.id.noUveLayout:
-			loadDevices();
+			//loadDevices();
 			break;
 		/*case R.id.button2:
 			mService.getUveDevices()
@@ -460,7 +503,7 @@ public class MainActivity extends Activity implements
 					.getDefaultSharedPreferences(mService);
 			mEditor = mPreferences.edit();
 			
-			loadDevices();
+			//loadDevices();
 		}
 
 		public void onServiceDisconnected(ComponentName className) {

@@ -5,7 +5,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="gen_ok">OK</string>
     <string name="gen_cancel">Cancel</string>
-        <string name="gen_notnow">Not now</string>
+    <string name="gen_notnow">Not now</string>
     <string name="gen_please_wait">Please wait</string>
     <string name="gen_close">Close</string>
     <string name="w200">Thunderstorm with light rain</string>
@@ -81,8 +81,8 @@
     <string name="w960">Storm</string>
     <string name="w961">Violent storm</string>
     <string name="w962">Hurricane</string>
-        <string name="no_devices">There is no paired uve device\n:(\n\nTap here to reload!</string>
-        <string name="no_device_ready">There is no ready uve device\n:(</string>
+    <string name="no_devices">There is no paired uve device\n:(\n\nTap here to reload!</string>
+    <string name="no_device_ready">There is no ready uve device\n:(</string>
     <string name="new_device_title">A new device has been found!</string>
     <string name="new_device_msg">Please name it!</string>
 
