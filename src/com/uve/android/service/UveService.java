@@ -257,13 +257,15 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 						if(isSuccessful){
 							u.setBatteryLevel(data.getInt(UveDeviceConstants.ANS_BATTERY_LP));
 							u.setSolarBattery(data.getInt(UveDeviceConstants.ANS_BATTERY_SC));
+							
+						
 						} else {
 							connectToDevice(u);
 						}	
 					}});			
 			}});
 		
-		u.getPingTimer().scheduleAtFixedRate(u.getPingTimerTask(), 0, 60000);
+		u.getPingTimer().scheduleAtFixedRate(u.getPingTimerTask(), 0, 15000);
 	}
 	
 	public void stopPinging(UveDevice u){

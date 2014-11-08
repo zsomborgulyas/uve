@@ -35,6 +35,7 @@ import com.uve.android.model.Weather;
 import com.uve.android.service.UveDevice;
 import com.uve.android.service.UveDeviceAnswerListener;
 import com.uve.android.service.UveDeviceConnectListener;
+import com.uve.android.service.UveDeviceConstants;
 import com.uve.android.service.UveLogger;
 import com.uve.android.service.UveService;
 import com.uve.android.service.UveService.Question;
@@ -122,7 +123,7 @@ public class MainActivity extends Activity implements
 		
 		
 		
-		
+		mUveLayout.setOnClickListener(this);
 		mNoUveLayout.setOnClickListener(this);
 		
 		mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -454,6 +455,22 @@ public class MainActivity extends Activity implements
 	public void onClick(View arg0) {
 
 		switch (arg0.getId()) {
+		case R.id.uveLayout:
+			
+			mService.getUveDevices().get(0).getAnswer(this, Question.MeasureMelanin, new UveDeviceAnswerListener(){
+
+			@Override
+			public void onComplete(String add,
+					Question quest, Bundle data,
+					boolean isSuccessful) {
+				if(isSuccessful){
+					Toast.makeText(MainActivity.this, "Melanin: "+data.getInt(UveDeviceConstants.ANS_MESURE_MELANIN), Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(MainActivity.this, "not succ", Toast.LENGTH_SHORT).show();
+				}
+				
+			}});
+			break;
 		case R.id.noUveLayout:
 			//loadDevices();
 			break;

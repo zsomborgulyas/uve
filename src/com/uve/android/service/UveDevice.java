@@ -495,7 +495,7 @@ public class UveDevice {
 		while (mISReaded.size() < byteCount) {
 			try {
 				
-				Thread.sleep(100);
+				Thread.sleep(500);
 				sleepCounter++;
 			} catch (Exception e) {
 			}
@@ -662,7 +662,7 @@ public class UveDevice {
 	void answer(Activity a, final Bundle b, final Question q,
 			final UveDeviceAnswerListener cb) {
 		if (a != null) {
-			UveLogger.Info("DEVICE "+getName()+" answering on activity: "+q);
+			UveLogger.Info("DEVICE "+getName()+" ANSWERED OK on activity: "+q);
 			a.runOnUiThread(new Runnable() {
 
 				@Override
@@ -672,7 +672,7 @@ public class UveDevice {
 				}
 			});
 		} else {
-			UveLogger.Info("DEVICE "+getName()+" answering: "+q);
+			UveLogger.Info("DEVICE "+getName()+" ANSWERED OK: "+q);
 			cb.onComplete(mAddress, q, b, true);
 		}
 	}
@@ -680,7 +680,7 @@ public class UveDevice {
 	void answerError(Activity a, final Bundle b, final Question q,
 			final UveDeviceAnswerListener cb) {
 		if (a != null) {
-			UveLogger.Error("DEVICE "+getName()+" answering error on activity: "+q);
+			UveLogger.Error("DEVICE "+getName()+" ANSWERED error on activity: "+q);
 			a.runOnUiThread(new Runnable() {
 
 				@Override
@@ -690,7 +690,7 @@ public class UveDevice {
 				}
 			});
 		} else {
-			UveLogger.Error("DEVICE "+getName()+" answering error: "+q);
+			UveLogger.Error("DEVICE "+getName()+" ANSWERED error: "+q);
 			cb.onComplete(mAddress, q, b, false);
 		}
 	}
@@ -770,13 +770,36 @@ public class UveDevice {
 
 						got = waitForBytes(2);
 						if (got == null) {
-							panic();
+							//panic();
 							answerError(a, b, q, cb);
 
 							break;
 						}
 						b.putInt(UveDeviceConstants.ANS_BATTERY_LP, got.get(0));
 						b.putInt(UveDeviceConstants.ANS_BATTERY_SC, got.get(1));
+
+						answer(a, b, q, cb);
+
+						break;
+					case MeasureMelanin:
+						try {
+							mOS.write(UveDeviceConstants.QUE_MESURE_MELANIN);
+							UveLogger.Info("DEVICE "+getName()+" sent: QUE_MESURE_MELANIN");
+						} catch (Exception e) {
+							e.printStackTrace();
+							panic();
+							answerError(a, b, q, cb);
+							break;
+						}
+
+						got = waitForBytes(1);
+						if (got == null) {
+							//panic();
+							answerError(a, b, q, cb);
+
+							break;
+						}
+						b.putInt(UveDeviceConstants.ANS_MESURE_MELANIN, got.get(0));
 
 						answer(a, b, q, cb);
 
