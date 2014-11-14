@@ -55,14 +55,14 @@
                 android:layout_centerVertical="true"
                 android:layout_marginLeft="10dp"
                 android:src="@drawable/status_off" />
-            
-                    <ProgressBar
-            android:id="@+id/uveTopProgress"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+
+            <ProgressBar
+                android:id="@+id/uveTopProgress"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_centerVertical="true"
                 android:layout_marginLeft="10dp"
-            android:visibility="gone" />
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/uveTopName"

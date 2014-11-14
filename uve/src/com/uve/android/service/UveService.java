@@ -2,6 +2,7 @@ package com.uve.android.service;
 
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
@@ -83,10 +84,14 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		return mBinder;
 	}
 
-	public void connectToDevice(UveDevice u, final UveDeviceConnectListener cl){
-		//connectToDevice(u.getAddress(), u.getName(), cl);
-		boolean response=connectToDevice(u);
-		cl.onConnect(u, u.getAddress(),response);
+	public void connectToDevice(final UveDevice u, final UveDeviceConnectListener cl){
+		Timer t=new Timer();
+		t.schedule(new TimerTask(){
+
+			@Override
+			public void run() {
+				cl.onConnect(u, u.getAddress(), connectToDevice(u));
+			}}, 0);
 	}
 
 		
@@ -191,6 +196,26 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		return savedName;
 	}
 	
+	public void checkForUnnamedDevices(){
+		Set<BluetoothDevice> pairedDevices = getPairedDevices();
+		boolean isFoundInOurList=false;
+		if (pairedDevices.size() > 0) {
+			for (BluetoothDevice device : pairedDevices) {
+				String deviceBTName = device.getName();
+				if (deviceBTName.toLowerCase().contains("uve")) {
+					UveLogger.Info("CHECK: got an uve device. "+device.getAddress());
+					isFoundInOurList=false;
+					for(UveDevice savedUve : mDevices){
+						if(savedUve.getAddress().equals(device.getAddress())){
+							savedUve.setName(getNameFromAddress(device.getAddress()));
+							UveLogger.Info("CHECK: got in mDevices. "+device.getAddress());
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	public void loadDevicesFromAdapter(){
 		if(mDevices==null) mDevices=new ArrayList<UveDevice>();
 		Set<BluetoothDevice> pairedDevices = getPairedDevices();
@@ -224,8 +249,15 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 	
 	public void tryConnectToEachBondedDevice(){
-		for(UveDevice u : mDevices){
-			connectToDevice(u);
+		for(final UveDevice u : mDevices){
+			Timer t=new Timer();
+			t.schedule(new TimerTask(){
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					connectToDevice(u);
+				}}, 0);
 		}
 		
 	}
@@ -265,7 +297,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 					}});			
 			}});
 		
-		u.getPingTimer().scheduleAtFixedRate(u.getPingTimerTask(), 0, 15000);
+		u.getPingTimer().scheduleAtFixedRate(u.getPingTimerTask(), 0, 30000);
 	}
 	
 	public void stopPinging(UveDevice u){

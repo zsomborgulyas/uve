@@ -1,13 +1,19 @@
 package com.uve.android;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import jp.co.cyberagent.android.gpuimage.GPUImage;
+import jp.co.cyberagent.android.gpuimage.GPUImageBoxBlurFilter;
+import jp.co.cyberagent.android.gpuimage.GPUImageFastPseudoGaussianBlurFilter;
 import jp.co.cyberagent.android.gpuimage.GPUImageFilter;
+import jp.co.cyberagent.android.gpuimage.GPUImageFilterGroup;
+import jp.co.cyberagent.android.gpuimage.GPUImageGaussianBlurFilter;
 import jp.co.cyberagent.android.gpuimage.GPUImageGrayscaleFilter;
+import jp.co.cyberagent.android.gpuimage.GPUImageSharpenFilter;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -128,28 +134,18 @@ public class MainActivity extends Activity implements
 		mCameraHelper = new CameraHelper(this);
 		mCamera = new CameraLoader();
 		
-		findViewById(R.id.button1).setOnClickListener(this);
+		List<GPUImageFilter> filters = new LinkedList<GPUImageFilter>();
+        filters.add(new GPUImageBoxBlurFilter(3));
+        filters.add(new GPUImageGaussianBlurFilter(3));
+        //filters.add(new GPUImageGrayscaleFilter());
+        mFilter = new GPUImageFilterGroup(filters);
 		
-		/*mUveLayout=(RelativeLayout)findViewById(R.id.uveLayout);
-		mNoUveLayout=(RelativeLayout)findViewById(R.id.noUveLayout);
 
-
-		mWeatherImage=(ImageView)findViewById(R.id.weatherImage);
-		mWeatherMain=(TextView)findViewById(R.id.weatherMain);
-		mWeatherTemp=(TextView)findViewById(R.id.weatherTemp);
-		mWeatherMisc=(TextView)findViewById(R.id.weatherMisc);
-		
-		mUveStatus=(ImageView)findViewById(R.id.uveTopStatus);
+		mGPUImage.setFilter(mFilter);
 		mUveName=(TextView)findViewById(R.id.uveTopName);
 		mUveBty=(ImageView)findViewById(R.id.uveTopBattery);
-		mUveChild=(ImageView)findViewById(R.id.uveTopStatus);
 		mUveSolar=(ImageView)findViewById(R.id.uveTopBatterySolar);
 		mUveProgress=(ProgressBar)findViewById(R.id.uveTopProgress);
-		
-		
-		
-		mUveLayout.setOnClickListener(this);
-		mNoUveLayout.setOnClickListener(this);*/
 		
 		mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 		
@@ -194,169 +190,54 @@ public class MainActivity extends Activity implements
 	}
 	
 	
-	/*public void loadDevices() {
-		int uveCounter=0;
-		Set<BluetoothDevice> pairedDevices = mService.getPairedDevices();
-
-		if (pairedDevices.size() > 0) {
-			for (BluetoothDevice device : pairedDevices) {
-				String deviceBTName = device.getName();
-				if (deviceBTName.toLowerCase().contains("uve")) {
-					
-					final String address = device.getAddress();
-					final String savedName = mPreferences.getString("Name"+address, "");
-					if (savedName.equals("")) {
-						AlertDialog.Builder alert = new AlertDialog.Builder(
-								this);
-
-						alert.setTitle(getResources().getString(R.string.new_device_title));
-						alert.setMessage(getResources().getString(R.string.new_device_msg));
-						alert.setCancelable(true);
-						
-						// Set an EditText view to get user input
-						final EditText input = new EditText(this);
-						alert.setView(input);
-
-						alert.setPositiveButton(getResources().getString(R.string.gen_ok),
-								new DialogInterface.OnClickListener() {
-									public void onClick(DialogInterface dialog,
-											int whichButton) {
-										final String value = input.getText()
-												.toString();
-										mEditor.putString("Name"+address, value);
-										mEditor.commit();
-										mService.connectToDevice(address, value,
-												new UveDeviceConnectListener() {
-
-													@Override
-													public void onConnect(String addr,
-															boolean isSuccessful) {
-														if (isSuccessful) {
-
-														}
-
-													}
-												});
-
-									}
-								});
-
-						alert.setNegativeButton(getResources().getString(R.string.gen_notnow),
-								new DialogInterface.OnClickListener() {
-									public void onClick(DialogInterface dialog,
-											int whichButton) {
-										// Canceled.
-									}
-								});
-
-						alert.show();
-					} else {
-						uveCounter++;
-						mService.connectToDevice(address, savedName,
-								new UveDeviceConnectListener() {
-
-									@Override
-									public void onConnect(String addr,
-											boolean isSuccessful) {
-										if (isSuccessful) {
-
-										}
-
-									}
-								});
-					}
-
-					break;
-				}
-			}
-		}
-		
-		if(uveCounter==0){
-			mUveLayout.setVisibility(View.GONE);
-			mNoUveLayout.setVisibility(View.VISIBLE);
-		}
-		else {
-			while(getADevice(0)==null){}
-			showADevice(0);
-		}
-
-		
-	}
 	
-	public void showADevice(int index){
-		mUveLayout.setVisibility(View.VISIBLE);
-		mNoUveLayout.setVisibility(View.GONE);
-
+	public void showADevice(final int index){
+		
 		final UveDevice u=getADevice(index);
 		//UveLogger.Info("showdevice: "+u.getName());
-		
-		if(u!=null){
-			mCurrentUveDevice=u;
-			mUveName.setText(u.getName());
-			mUveProgress.setVisibility(View.VISIBLE);
-			mUveStatus.setVisibility(View.INVISIBLE);
-			//mUveStatus.setImageResource(R.drawable.status_trying);
-			
-			mService.connectToDevice(u,
-					new UveDeviceConnectListener() {
+		if(u==null) return;
 
-						@Override
-						public void onConnect(String addr,
-								boolean isSuccessful) {
-							mUveProgress.setVisibility(View.GONE);
-							mUveStatus.setVisibility(View.VISIBLE);
-							if (isSuccessful) {
-								mUveStatus.setImageResource(R.drawable.status_on);
-								
-								mDeviceTimer=new Timer();
-								mDeviceTimerTask = new TimerTask() {
-
-									@Override
-									public void run() {
-										//PINGING (getting battery)
-										u.getAnswer(MainActivity.this, Question.Battery,
-												new UveDeviceAnswerListener() {
-
-													@Override
-													public void onComplete(String add, Question quest, Bundle data, boolean isSuccessful) {
-														
-														if(isSuccessful){
-															mUveStatus.setImageResource(R.drawable.status_on);
-															int lipol=data.getInt(UveDevice.ANS_BATTERY_LP);
-															int solar=data.getInt(UveDevice.ANS_BATTERY_SC);
-															
-															if(solar>0) mUveSolar.setVisibility(View.VISIBLE);
-															else mUveSolar.setVisibility(View.GONE);
-															mUveBty.setVisibility(View.VISIBLE);
-															if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
-															if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
-															if(lipol<190 && lipol>=128) mUveBty.setImageResource(R.drawable.bty_50);
-															if(lipol<128 && lipol>=64) mUveBty.setImageResource(R.drawable.bty_25);
-															if(lipol<64) mUveBty.setImageResource(R.drawable.bty_0);
-														} 
-														
-														else {
-															mUveStatus.setImageResource(R.drawable.status_off);
-															mUveBty.setVisibility(View.GONE);
-															mUveSolar.setVisibility(View.GONE);
-														}
-														
-														
-													}
-												});
-									}
-								};
-								
-								mDeviceTimer.scheduleAtFixedRate(mDeviceTimerTask, 0, 2000);
-
-								
-								
-							} else mUveStatus.setImageResource(R.drawable.status_off);
-						}
-					});
-			
+		if(mDeviceTimer!=null){
+			mDeviceTimer.cancel();
+			mDeviceTimer.purge();
 		}
-	}*/
+		
+		if(mDeviceTimerTask!=null){
+			mDeviceTimerTask.cancel();
+		}
+		
+		mDeviceTimer=new Timer();
+		
+		mDeviceTimerTask=new TimerTask(){
+
+			@Override
+			public void run() {
+				MainActivity.this.runOnUiThread(new Runnable(){
+
+					@Override
+					public void run() {
+						mCurrentUveDevice=getADevice(index);
+						showDeviceContent(mCurrentUveDevice);
+					}});
+			}};
+		
+		mDeviceTimer.schedule(mDeviceTimerTask, 0, 2000);	
+	}
+	
+	public void showDeviceContent(UveDevice u){
+		mUveName.setText(u.getName());
+		int lipol=u.getBatteryLevel();
+		int solar=u.getSolarBattery();
+			
+		if(solar>0) mUveSolar.setVisibility(View.VISIBLE);
+		else mUveSolar.setVisibility(View.GONE);
+		mUveBty.setVisibility(View.VISIBLE);
+		if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
+		if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
+		if(lipol<190 && lipol>=128) mUveBty.setImageResource(R.drawable.bty_50);
+		if(lipol<128 && lipol>=64) mUveBty.setImageResource(R.drawable.bty_25);
+		if(lipol<64) mUveBty.setImageResource(R.drawable.bty_0);
+	}
 	
 	private UveDevice getADevice(int index){
 		if(mService.getUveDevices().size()>0)
@@ -479,11 +360,7 @@ public class MainActivity extends Activity implements
 	public void onClick(View arg0) {
 
 		switch (arg0.getId()) {
-		case R.id.button1:
-			mFilter = new GPUImageGrayscaleFilter();
-			mGPUImage.setFilter(mFilter);
-			mFilterAdjuster = new FilterAdjuster(mFilter);
-			break;
+
 		case R.id.uveLayout:
 			
 			mService.getUveDevices().get(0).getAnswer(this, Question.MeasureMelanin, new UveDeviceAnswerListener(){
@@ -543,13 +420,15 @@ public class MainActivity extends Activity implements
 			UveService.MyBinder b = (UveService.MyBinder) binder;
 			mService = b.getService();
 			mService.setActivity(MainActivity.this);
-			//Toast.makeText(MainActivity.this, "Connected", Toast.LENGTH_SHORT).show();
 
 			mPreferences = PreferenceManager
 					.getDefaultSharedPreferences(mService);
 			mEditor = mPreferences.edit();
 			
-			//loadDevices();
+			mService.checkForUnnamedDevices();
+			
+			if(mService.getUveDevices().size()>0)
+				showADevice(0);
 		}
 
 		public void onServiceDisconnected(ComponentName className) {
@@ -615,7 +494,7 @@ public class MainActivity extends Activity implements
 			
 			List<Camera.Size> sizeList = parameters.getSupportedPreviewSizes();
 			for(Size s : sizeList){
-				//UiLogger.Info("Supported preview resolution: "+s.width+"*"+s.height);
+				UveLogger.Info("Supported preview resolution: "+s.width+"*"+s.height);
 			}
 			Collections.reverse(sizeList);
 			for(Size s : sizeList){
@@ -625,18 +504,18 @@ public class MainActivity extends Activity implements
 					break;
 				}
 			}
-			
+			//parameters.setPreviewSize(sizeList.get(0).width,sizeList.get(0).height);
 			//parameters.setPreviewSize(opts.width,opts.height);
 
 			
-			
+			parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_FIXED);
 			
 	
-			if (parameters.getSupportedFocusModes().contains(
+			/*if (parameters.getSupportedFocusModes().contains(
 					Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
 				parameters
-						.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-			}
+						.setFocusMode(Camera.Parameters.fo .FOCUS_MODE_CONTINUOUS_PICTURE);
+			}*/
 			mCameraInstance.setParameters(parameters);
 			
 			

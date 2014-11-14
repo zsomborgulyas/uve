@@ -15,5 +15,7 @@
     <color name="green">#78E256</color>
     <color name="yellow">#EEE14A</color>
     <color name="red">#FF3636</color>
-
+    <color name="sun_yellow_fore">#f09910</color>
+    <color name="sun_yellow_back">#f5bb20</color>
+    <color name="sun_yellow_progress">#f06c10</color>
 </resources>
