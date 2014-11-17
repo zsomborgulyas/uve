@@ -51,7 +51,25 @@ public class UveDevice {
 	int mIllnessSet;
 	int mBatteryLevel;
 	int mSolarBattery;
+	boolean mIsTorchOn;
 	
+	int mRemainingMinutes=-1;
+	
+	public int getRemainingMinutes() {
+		return mRemainingMinutes;
+	}
+
+	public void setRemainingMinutes(int mRemainingMinutes) {
+		this.mRemainingMinutes = mRemainingMinutes;
+	}
+	
+	public boolean getTorchStatus() {
+		return mIsTorchOn;
+	}
+
+	public void setTorchStatus(boolean state) {
+		this.mIsTorchOn = state;
+	}
 	
 	public int getMelaninIndex() {
 		return mMelaninIndex;
@@ -405,6 +423,25 @@ public class UveDevice {
 
 	void panic() {
 		UveLogger.Error("DEVICE "+getName()+ " PANIC");
+		
+		if (mIS != null) {
+			try {
+				mIS.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			mIS = null;
+		}
+
+		if (mOS != null) {
+			try {
+				mOS.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			mOS = null;
+		}
+		
 		try {
 			this.mSocket.close();
 			UveLogger.Info("DEVICE "+getName()+ " PANIC, socket closed.");

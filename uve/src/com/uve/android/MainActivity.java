@@ -34,6 +34,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
@@ -49,19 +50,22 @@ import android.widget.Toast;
 import com.uve.android.model.Weather;
 import com.uve.android.service.UveDevice;
 import com.uve.android.service.UveDeviceAnswerListener;
+import com.uve.android.service.UveDeviceConnectListener;
 import com.uve.android.service.UveDeviceConstants;
 import com.uve.android.service.UveLogger;
 import com.uve.android.service.UveService;
+import com.uve.android.service.UveService.Command;
 import com.uve.android.service.UveService.Question;
 import com.uve.android.tools.WeatherCallback;
 import com.uve.android.tools.WeatherGetter;
 import com.uve.android.tools.gpuimage.CameraHelper;
 import com.uve.android.tools.gpuimage.CameraHelper.CameraInfo2;
 import com.uve.android.tools.gpuimage.GPUImageFilterTools.FilterAdjuster;
+import com.uve.android.tools.ui.PieProgressbarView;
 
 public class MainActivity extends Activity implements
 		android.view.View.OnClickListener, LocationListener {
-	TextView out;
+
 	BroadcastReceiver mBroadcastReceiver;
 
 	boolean read = false;
@@ -83,7 +87,15 @@ public class MainActivity extends Activity implements
 	ImageView mUveBty;
 	ImageView mUveChild;
 	ImageView mUveSolar;
-	ProgressBar mUveProgress;
+	ProgressBar mUveTopProgress;
+	PieProgressbarView mUveProgress;
+	TextView mUveProgressText;
+	TextView mUveProgressTextUnit;
+	
+	ImageView mUveReconnect;
+	ImageView mUveToggleAlarm;
+	ImageView mUveTorch;
+	ImageView mUveToggleChild;
 	
 	BluetoothAdapter mAdapter;
 	SharedPreferences mPreferences;
@@ -135,8 +147,8 @@ public class MainActivity extends Activity implements
 		mCamera = new CameraLoader();
 		
 		List<GPUImageFilter> filters = new LinkedList<GPUImageFilter>();
-        filters.add(new GPUImageBoxBlurFilter(3));
-        filters.add(new GPUImageGaussianBlurFilter(3));
+        filters.add(new GPUImageBoxBlurFilter(4));
+        filters.add(new GPUImageGaussianBlurFilter(4));
         //filters.add(new GPUImageGrayscaleFilter());
         mFilter = new GPUImageFilterGroup(filters);
 		
@@ -145,7 +157,26 @@ public class MainActivity extends Activity implements
 		mUveName=(TextView)findViewById(R.id.uveTopName);
 		mUveBty=(ImageView)findViewById(R.id.uveTopBattery);
 		mUveSolar=(ImageView)findViewById(R.id.uveTopBatterySolar);
-		mUveProgress=(ProgressBar)findViewById(R.id.uveTopProgress);
+		mUveProgress=(PieProgressbarView)findViewById(R.id.uveProgressBar);
+		mUveTopProgress=(ProgressBar)findViewById(R.id.uveTopProgress);
+		mUveProgressText=(TextView)findViewById(R.id.uveProgressText);
+		mUveProgressTextUnit=(TextView)findViewById(R.id.uveProgressTextUnit);
+		
+		mUveReconnect=(ImageView)findViewById(R.id.uveReconnect);
+		mUveToggleAlarm=(ImageView)findViewById(R.id.uveToggleAlarm);
+		mUveTorch=(ImageView)findViewById(R.id.uveTorch);
+		mUveToggleChild=(ImageView)findViewById(R.id.uveToggleChild);
+		
+		
+		
+		
+		mUveTorch.setOnClickListener(this);
+		mUveToggleAlarm.setOnClickListener(this);
+		mUveToggleChild.setOnClickListener(this);
+		mUveReconnect.setOnClickListener(this);
+		mUveProgress.setOnClickListener(this);
+		mUveName.setOnClickListener(this);
+		
 		
 		mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 		
@@ -194,7 +225,7 @@ public class MainActivity extends Activity implements
 	public void showADevice(final int index){
 		
 		final UveDevice u=getADevice(index);
-		//UveLogger.Info("showdevice: "+u.getName());
+		UveLogger.Info("showdevice: "+u.getName());
 		if(u==null) return;
 
 		if(mDeviceTimer!=null){
@@ -221,22 +252,47 @@ public class MainActivity extends Activity implements
 					}});
 			}};
 		
-		mDeviceTimer.schedule(mDeviceTimerTask, 0, 2000);	
+		mDeviceTimer.schedule(mDeviceTimerTask, 0, 500);	
 	}
 	
 	public void showDeviceContent(UveDevice u){
 		mUveName.setText(u.getName());
-		int lipol=u.getBatteryLevel();
-		int solar=u.getSolarBattery();
+		mUveTopProgress.setVisibility(View.GONE);
+		if(u.isConnected()){
 			
-		if(solar>0) mUveSolar.setVisibility(View.VISIBLE);
-		else mUveSolar.setVisibility(View.GONE);
-		mUveBty.setVisibility(View.VISIBLE);
-		if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
-		if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
-		if(lipol<190 && lipol>=128) mUveBty.setImageResource(R.drawable.bty_50);
-		if(lipol<128 && lipol>=64) mUveBty.setImageResource(R.drawable.bty_25);
-		if(lipol<64) mUveBty.setImageResource(R.drawable.bty_0);
+			int lipol=u.getBatteryLevel();
+			int solar=u.getSolarBattery();
+				
+			if(solar>0) mUveSolar.setVisibility(View.VISIBLE);
+			else mUveSolar.setVisibility(View.GONE);
+			mUveBty.setVisibility(View.VISIBLE);
+			if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
+			if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
+			if(lipol<190 && lipol>=128) mUveBty.setImageResource(R.drawable.bty_50);
+			if(lipol<128 && lipol>=64) mUveBty.setImageResource(R.drawable.bty_25);
+			if(lipol<64) mUveBty.setImageResource(R.drawable.bty_0);
+			
+			mUveProgress.setVisibility(View.VISIBLE);
+			mUveProgressText.setVisibility(View.VISIBLE);
+			mUveProgressTextUnit.setVisibility(View.VISIBLE);
+			mUveReconnect.setVisibility(View.GONE);
+			mUveToggleAlarm.setVisibility(View.VISIBLE);
+			mUveTorch.setVisibility(View.VISIBLE);
+			
+			mUveToggleChild.setVisibility(View.VISIBLE);
+			if(u.getChildProtectionStatus()==1) mUveToggleChild.setImageResource(R.drawable.child_on);
+			else mUveToggleChild.setImageResource(R.drawable.child_off);
+		} else {
+			mUveBty.setVisibility(View.GONE);
+			mUveSolar.setVisibility(View.GONE);
+			mUveProgress.setVisibility(View.GONE);
+			mUveProgressText.setVisibility(View.GONE);
+			mUveProgressTextUnit.setVisibility(View.GONE);
+			mUveReconnect.setVisibility(View.VISIBLE);
+			mUveToggleAlarm.setVisibility(View.GONE);
+			mUveTorch.setVisibility(View.GONE);
+			mUveToggleChild.setVisibility(View.GONE);
+		}
 	}
 	
 	private UveDevice getADevice(int index){
@@ -249,11 +305,11 @@ public class MainActivity extends Activity implements
 
 	private void CheckBTState() {
 		if (mAdapter == null) {
-			out.append("Bluetooth Not supported. Aborting.\n");
+			
 
 		} else {
 			if (mAdapter.isEnabled()) {
-				out.append("\nBluetooth ok.");
+				
 			} else {
 				Intent enableBtIntent = new Intent(
 						mAdapter.ACTION_REQUEST_ENABLE);
@@ -282,7 +338,7 @@ public class MainActivity extends Activity implements
 	@Override
 	protected void onResume() {
 		super.onResume();
-		mCamera.onResume();
+		//mCamera.onResume();
 		Intent intent = new Intent(this, UveService.class);
 		bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 		
@@ -348,7 +404,7 @@ public class MainActivity extends Activity implements
 	@Override
 	public void onPause() {
 		super.onPause();
-		mCamera.onPause();
+		//mCamera.onPause();
 		unbindService(mConnection);
 		
 		mWeatherTimerTask.cancel();
@@ -360,7 +416,50 @@ public class MainActivity extends Activity implements
 	public void onClick(View arg0) {
 
 		switch (arg0.getId()) {
+		case R.id.uveTorch:
+			Bundle b0=new Bundle();
+			b0.putInt(UveDeviceConstants.COM_TORCH, 10);
+			if(!mCurrentUveDevice.getTorchStatus()){
+				mCurrentUveDevice.setTorchStatus(true);
+				mCurrentUveDevice.sendCommand(Command.Torch, b0);
+				mUveTorch.setImageResource(R.drawable.flashlight_on);
+				Handler h=new Handler();
+				h.postDelayed(new Runnable(){
 
+					@Override
+					public void run() {
+						mCurrentUveDevice.setTorchStatus(false);
+						mUveTorch.setImageResource(R.drawable.flashlight_off);
+					}}, 1000);
+				
+			}
+			break;
+		case R.id.uveToggleChild:
+			Bundle b1=new Bundle();
+			if(mCurrentUveDevice.getChildProtectionStatus()==0){
+				b1.putInt(UveDeviceConstants.COM_CHILD, 1);
+				mCurrentUveDevice.sendCommand(Command.ChildAlert, b1);
+				mCurrentUveDevice.setChildProtectionStatus(1);
+				mUveToggleChild.setImageResource(R.drawable.child_on);
+			} else {
+				b1.putInt(UveDeviceConstants.COM_CHILD, 0);
+				mCurrentUveDevice.sendCommand(Command.ChildAlert, b1);
+				mCurrentUveDevice.setChildProtectionStatus(0);
+				mUveToggleChild.setImageResource(R.drawable.child_off);
+			}
+
+			break;
+		case R.id.uveReconnect:
+			mUveTopProgress.setVisibility(View.VISIBLE);
+			mService.connectToDevice(mCurrentUveDevice, new UveDeviceConnectListener(){
+
+				@Override
+				public void onConnect(UveDevice u, String addr,
+						boolean isSuccessful) {
+					mUveTopProgress.setVisibility(View.GONE);
+					
+				}});
+			break;
 		case R.id.uveLayout:
 			
 			mService.getUveDevices().get(0).getAnswer(this, Question.MeasureMelanin, new UveDeviceAnswerListener(){
@@ -493,7 +592,7 @@ public class MainActivity extends Activity implements
 			
 			
 			List<Camera.Size> sizeList = parameters.getSupportedPreviewSizes();
-			for(Size s : sizeList){
+			/*for(Size s : sizeList){
 				UveLogger.Info("Supported preview resolution: "+s.width+"*"+s.height);
 			}
 			Collections.reverse(sizeList);
@@ -503,8 +602,8 @@ public class MainActivity extends Activity implements
 					//UiLogger.Info("Seleceted preview resolution: "+s.width+"*"+s.height);
 					break;
 				}
-			}
-			//parameters.setPreviewSize(sizeList.get(0).width,sizeList.get(0).height);
+			}*/
+			parameters.setPreviewSize(sizeList.get(0).width,sizeList.get(0).height);
 			//parameters.setPreviewSize(opts.width,opts.height);
 
 			

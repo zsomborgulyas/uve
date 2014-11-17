@@ -90,7 +90,16 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 
 			@Override
 			public void run() {
-				cl.onConnect(u, u.getAddress(), connectToDevice(u));
+				 final boolean success=connectToDevice(u);
+				 if(mActivity!=null)
+				 mActivity.runOnUiThread(new Runnable(){
+
+					@Override
+					public void run() {
+						cl.onConnect(u, u.getAddress(), success);
+						
+					}});
+				
 			}}, 0);
 	}
 
@@ -120,7 +129,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		if(!u.getSocket().isConnected()){
 			UveLogger.Info("CONNECT: socket found disconnected. "+u.getAddress());
 			try{
-
+				u.panic();
 				UveLogger.Info("CONNECT: socket trying to connect. "+u.getAddress());	
 				u.getSocket().connect();
 				UveLogger.Info("CONNECT: socket connected. "+u.getAddress());
@@ -130,6 +139,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 				UveLogger.Info("CONNECT: socket couldnt be connected. "+u.getAddress());
 				UveLogger.Info("CONNECT: setting a new socket. "+u.getAddress());
 				try{
+					u.panic();
 					u.setSocket(u.mBtDevice.createRfcommSocketToServiceRecord(MY_UUID));
 					UveLogger.Info("CONNECT: set a new socket. trying again... "+u.getAddress());
 					u.getSocket().connect();
