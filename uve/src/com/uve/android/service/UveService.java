@@ -288,17 +288,19 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	
 	public void startPingingAllDevices(){
 		for(final UveDevice u : mDevices){
-			u.getAnswer(null, Question.Statuses, new UveDeviceAnswerListener(){
+			startPinging(u);
+			/*u.getAnswer(null, Question.Statuses, new UveDeviceAnswerListener(){
 
 				@Override
 				public void onComplete(String add, Question quest, Bundle data,
 						boolean isSuccessful) {
-					//if(isSuccessful)
-						startPinging(u);
+					if(isSuccessful)
+						u.setStatusesFromBundle(data);
+					
 					
 				}});
 			
-			//startPinging(u);
+			//startPinging(u);*/
 		}
 	}
 	

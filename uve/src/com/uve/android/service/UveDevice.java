@@ -413,6 +413,16 @@ public class UveDevice {
 			mTimer.schedule(mISReaderTask, 0);
 			setConnected(true);
 			UveLogger.Info("DEVICE "+getName()+ " "+mAddress + " got IS/OS");
+			
+			getAnswer(null, Question.Statuses, new UveDeviceAnswerListener(){
+
+				@Override
+				public void onComplete(String add, Question quest, Bundle data,
+						boolean isSuccessful) {
+					if(isSuccessful)
+						setStatusesFromBundle(data);
+				}});
+			
 			return true;
 		} catch (Exception e) {
 			UveLogger.Error("DEVICE "+getName()+ " "+mAddress + " couldnt got IS/OS");
@@ -459,8 +469,29 @@ public class UveDevice {
 		mStatusListener.onPanic(this, mAddress);
 	}
 
-	void readed(Integer r) {
-		// mListener.onDataReaded(mAddress, Question., data)
+	public void setStatusesFromBundle(Bundle b){
+		mMelaninIndex=b.getInt(UveDeviceConstants.ANS_ST_MELANIN);
+		mEritemaIndex=b.getInt(UveDeviceConstants.ANS_ST_ERITEMA);
+		mDailyDose=b.getInt(UveDeviceConstants.ANS_ST_DAILY_DOSE);
+		mDailyDoseLimit=b.getInt(UveDeviceConstants.ANS_ST_DAILY_DOSE_LIMIT);
+		mUVLimit=b.getInt(UveDeviceConstants.ANS_ST_UV_LIMIT);
+		mSkinRegenerationTime=b.getInt(UveDeviceConstants.ANS_ST_SKIN_REG);
+		mMeasureStart=b.getInt(UveDeviceConstants.ANS_ST_MEASURE_START);
+		mTimeBetweenMeasures=b.getInt(UveDeviceConstants.ANS_ST_TIME_BETWEEN_MEASURES);
+		mMeasureMode=b.getInt(UveDeviceConstants.ANS_ST_MEASURE_MODE);
+		mManual=b.getInt(UveDeviceConstants.ANS_ST_MANUAL);
+		mRealtimeFeedback=b.getInt(UveDeviceConstants.ANS_ST_REALTIME);
+		mAlertType=b.getInt(UveDeviceConstants.ANS_ST_ALERT_TYPE);
+		mMorningAlertType=b.getInt(UveDeviceConstants.ANS_ST_MORNING_ALERT_TYPE);
+		mSnooze=b.getInt(UveDeviceConstants.ANS_ST_SNOOZE);
+		mMorningAlertStatus=b.getInt(UveDeviceConstants.ANS_ST_MORNING_ALERT);
+		mMorningUVAlertStatus=b.getInt(UveDeviceConstants.ANS_ST_MORNING_UVA_ALERT);
+		mChildProtectionStatus=b.getInt(UveDeviceConstants.ANS_ST_CHILD_PROTECTION);
+		mPlannedModeStatus=b.getInt(UveDeviceConstants.ANS_ST_PLANNED_MODE);
+		mEnergySaverNightStatus=b.getInt(UveDeviceConstants.ANS_ST_ENERGY_SAVER);
+		mDelayedMeasureStatus=b.getInt(UveDeviceConstants.ANS_ST_DELAYED_MEASURE);
+		mIllnessSet=b.getInt(UveDeviceConstants.ANS_ST_ILLNESS);
+
 	}
 
 	public class ISReaderTask extends TimerTask {
@@ -555,31 +586,37 @@ public class UveDevice {
 		return arr;
 	}
 
-	public void sendCommand(Command c, Bundle data) {
+	public void sendCommand(final Command c, Bundle data, final UveDeviceCommandListener cl) {
 		UveLogger.Info("DEVICE "+getName()+ " sending command: " + c);
 		try {
 			switch (c) {
 			case EnergySaver:
 				mOS.write(UveDeviceConstants.COMS_ENERGY);
 				mOS.write(data.getInt(UveDeviceConstants.COM_ENERGY));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Timeout:
 				mOS.write(UveDeviceConstants.COMS_TIMEOUT);
 				mOS.write(data.getInt(UveDeviceConstants.COM_TIMEOUT));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case MeasureType:
 				mOS.write(UveDeviceConstants.COMS_MEASURETYPE);
 				mOS.write(data.getInt(UveDeviceConstants.COM_MEASURETYPE));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case MeasureManual:
 				mOS.write(UveDeviceConstants.COMS_MEASUREMANUAL);
 				mOS.write(data.getInt(UveDeviceConstants.COM_MEASUREMANUAL));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case RestartMeasure:
 				mOS.write(UveDeviceConstants.COMS_RESTART_MEASURE);
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case DeleteMeasures:
 				mOS.write(UveDeviceConstants.COMS_DELETE_MESAURES);
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case SetTime:
 				mOS.write(UveDeviceConstants.COMS_TIME);
@@ -587,6 +624,7 @@ public class UveDevice {
 				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_HOUR));
 				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_MIN));
 				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_SEC));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case StartTimedMeasure:
 				mOS.write(UveDeviceConstants.COMS_TIMED_TIME);
@@ -594,16 +632,20 @@ public class UveDevice {
 				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_HOUR));
 				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_MIN));
 				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_SEC));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Reset:
 				mOS.write(UveDeviceConstants.COMS_SOFT_RESET);
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case DeleteUvDose:
 				mOS.write(UveDeviceConstants.COMS_DELETE_UV_DOSE);
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case RealTimeFeedback:
 				mOS.write(UveDeviceConstants.COMS_FEEDBACK);
 				mOS.write(data.getInt(UveDeviceConstants.COM_FEEDBACK));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case IllnessParameters:
 				mOS.write(UveDeviceConstants.COMS_ILLNESS);
@@ -613,14 +655,17 @@ public class UveDevice {
 				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_4));
 				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_INTENSE));
 				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_REGEN));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case AlertType:
 				mOS.write(UveDeviceConstants.COMS_ALERTTYPE);
 				mOS.write(data.getInt(UveDeviceConstants.COM_ALERTTYPE));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Wakeup:
 				mOS.write(UveDeviceConstants.COMS_WAKEUP);
 				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case WakeupParameters:
 				mOS.write(UveDeviceConstants.COMS_WAKEUP_PARAMS);
@@ -631,18 +676,22 @@ public class UveDevice {
 				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_ALERTTYPE));
 				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_REPEATTYPE));
 				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_SNOOZE5SEC));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case ChildAlert:
 				mOS.write(UveDeviceConstants.COMS_CHILD);
 				mOS.write(data.getInt(UveDeviceConstants.COM_CHILD));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case NightMode:
 				mOS.write(UveDeviceConstants.COMS_NIGHT);
 				mOS.write(data.getInt(UveDeviceConstants.COM_NIGHT));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Vibrate:
 				mOS.write(UveDeviceConstants.COMS_VIBRATE);
 				mOS.write(data.getInt(UveDeviceConstants.COM_VIBRATE));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case RBG:
 				mOS.write(UveDeviceConstants.COMS_RGB);
@@ -650,23 +699,28 @@ public class UveDevice {
 				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_G));
 				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_B));
 				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_TIME));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Speaker:
 				mOS.write(UveDeviceConstants.COMS_BUZZER);
 				mOS.write(data.getInt(UveDeviceConstants.COM_BUZZER_FREQ));
 				mOS.write(data.getInt(UveDeviceConstants.COM_BUZZER_TIME));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Torch:
 				mOS.write(UveDeviceConstants.COMS_TORCH);
 				mOS.write(data.getInt(UveDeviceConstants.COM_TORCH));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case DisableWakeups:
 				mOS.write(UveDeviceConstants.COMS_DISABLE_WAKEUPS);
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case PlannedMeasureParameters:
 				mOS.write(data.getInt(UveDeviceConstants.COM_MELANIN_PRE_FRONT));
 				mOS.write(data.getInt(UveDeviceConstants.COM_MELANIN_PRE_BACK));
 				mOS.write(data.getInt(UveDeviceConstants.COM_MODE));
+				cl.onComplete(mAddress, c, null, true);
 				break;
 			case AlterPlannedMeasureParameters:
 				getAnswer(null, Question.StartPlannedMeasure,
@@ -682,9 +736,11 @@ public class UveDevice {
 										mOS.write(data
 												.getInt(UveDeviceConstants.COM_MELANIN_PRE_BACK));
 										mOS.write(data.getInt(UveDeviceConstants.COM_MODE));
+										cl.onComplete(mAddress, c, null, true);
 									} catch (Exception e) {
 										panic();
 										e.printStackTrace();
+										cl.onComplete(mAddress, c, null, false);
 									}
 								}
 
@@ -698,6 +754,7 @@ public class UveDevice {
 			}
 
 		} catch (Exception e) {
+			cl.onComplete(mAddress, c, null, false);
 			panic();
 			e.printStackTrace();
 		}
@@ -849,7 +906,7 @@ public class UveDevice {
 						b.putInt(UveDeviceConstants.ANS_ST_UV_LIMIT, got.get(10));
 						b.putInt(UveDeviceConstants.ANS_ST_SKIN_REG, got.get(11));
 						b.putInt(UveDeviceConstants.ANS_ST_MEASURE_START, got.get(12));
-						b.putInt(UveDeviceConstants.ANS_ST_TIME_BETWEEN_MEASURES, ByteCascader.cascade2Bytes(got.get(13),got.get(14)));
+						b.putInt(UveDeviceConstants.ANS_ST_TIME_BETWEEN_MEASURES, ByteCascader.cascade4Bytes(0,0,got.get(13),got.get(14)));
 						b.putInt(UveDeviceConstants.ANS_ST_MEASURE_MODE, got.get(15));
 						b.putInt(UveDeviceConstants.ANS_ST_MANUAL, got.get(16));
 						b.putInt(UveDeviceConstants.ANS_ST_REALTIME, got.get(17));

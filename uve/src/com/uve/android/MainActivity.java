@@ -50,6 +50,7 @@ import android.widget.Toast;
 import com.uve.android.model.Weather;
 import com.uve.android.service.UveDevice;
 import com.uve.android.service.UveDeviceAnswerListener;
+import com.uve.android.service.UveDeviceCommandListener;
 import com.uve.android.service.UveDeviceConnectListener;
 import com.uve.android.service.UveDeviceConstants;
 import com.uve.android.service.UveLogger;
@@ -282,6 +283,11 @@ public class MainActivity extends Activity implements
 			mUveToggleChild.setVisibility(View.VISIBLE);
 			if(u.getChildProtectionStatus()==1) mUveToggleChild.setImageResource(R.drawable.child_on);
 			else mUveToggleChild.setImageResource(R.drawable.child_off);
+			
+			if(u.getMorningAlertStatus()==1) mUveToggleAlarm.setImageResource(R.drawable.alarm_clock_on);
+			else mUveToggleAlarm.setImageResource(R.drawable.alarm_clock_off);
+			
+			
 		} else {
 			mUveBty.setVisibility(View.GONE);
 			mUveSolar.setVisibility(View.GONE);
@@ -414,38 +420,96 @@ public class MainActivity extends Activity implements
 
 	@Override
 	public void onClick(View arg0) {
-
+		Bundle b=new Bundle();
 		switch (arg0.getId()) {
 		case R.id.uveTorch:
-			Bundle b0=new Bundle();
-			b0.putInt(UveDeviceConstants.COM_TORCH, 40);
+			b=new Bundle();
+			b.putInt(UveDeviceConstants.COM_TORCH, 40);
 			if(!mCurrentUveDevice.getTorchStatus()){
 				mCurrentUveDevice.setTorchStatus(true);
-				mCurrentUveDevice.sendCommand(Command.Torch, b0);
-				mUveTorch.setImageResource(R.drawable.flashlight_on);
-				Handler h=new Handler();
-				h.postDelayed(new Runnable(){
+				mCurrentUveDevice.sendCommand(Command.Torch, b, new UveDeviceCommandListener(){
 
 					@Override
-					public void run() {
-						mCurrentUveDevice.setTorchStatus(false);
-						mUveTorch.setImageResource(R.drawable.flashlight_off);
-					}}, 4000);
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+						if(isSuccessful){
+							mUveTorch.setImageResource(R.drawable.flashlight_on);
+							Handler h=new Handler();
+							h.postDelayed(new Runnable(){
+
+								@Override
+								public void run() {
+									mCurrentUveDevice.setTorchStatus(false);
+									mUveTorch.setImageResource(R.drawable.flashlight_off);
+								}}, 4000);
+						}
+						
+					}});
+				
 				
 			}
 			break;
 		case R.id.uveToggleChild:
-			Bundle b1=new Bundle();
+			b=new Bundle();
 			if(mCurrentUveDevice.getChildProtectionStatus()==0){
-				b1.putInt(UveDeviceConstants.COM_CHILD, 1);
-				mCurrentUveDevice.sendCommand(Command.ChildAlert, b1);
-				mCurrentUveDevice.setChildProtectionStatus(1);
-				mUveToggleChild.setImageResource(R.drawable.child_on);
+				b.putInt(UveDeviceConstants.COM_CHILD, 1);
+				mCurrentUveDevice.sendCommand(Command.ChildAlert, b, new UveDeviceCommandListener(){
+
+					@Override
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+						if(isSuccessful){
+							mCurrentUveDevice.setChildProtectionStatus(1);
+							mUveToggleChild.setImageResource(R.drawable.child_on);
+						}
+					}});
+				
+				
 			} else {
-				b1.putInt(UveDeviceConstants.COM_CHILD, 0);
-				mCurrentUveDevice.sendCommand(Command.ChildAlert, b1);
-				mCurrentUveDevice.setChildProtectionStatus(0);
-				mUveToggleChild.setImageResource(R.drawable.child_off);
+				b.putInt(UveDeviceConstants.COM_CHILD, 0);
+				mCurrentUveDevice.sendCommand(Command.ChildAlert, b, new UveDeviceCommandListener(){
+
+					@Override
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+						if(isSuccessful){
+							mCurrentUveDevice.setChildProtectionStatus(0);
+							mUveToggleChild.setImageResource(R.drawable.child_off);
+						}
+					}});
+				
+			}
+
+			break;
+		case R.id.uveToggleAlarm:
+			b=new Bundle();
+			if(mCurrentUveDevice.getMorningAlertStatus()==0){
+				b.putInt(UveDeviceConstants.COM_WAKEUP, 1);
+				mCurrentUveDevice.sendCommand(Command.Wakeup, b, new UveDeviceCommandListener(){
+
+					@Override
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+						if(isSuccessful){
+							mCurrentUveDevice.setMorningAlertStatus(1);
+							mUveToggleAlarm.setImageResource(R.drawable.alarm_clock_on);
+						}
+					}});
+				
+				
+			} else {
+				b.putInt(UveDeviceConstants.COM_WAKEUP, 0);
+				mCurrentUveDevice.sendCommand(Command.Wakeup, b, new UveDeviceCommandListener(){
+
+					@Override
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+						if(isSuccessful){
+							mCurrentUveDevice.setMorningAlertStatus(0);
+							mUveToggleAlarm.setImageResource(R.drawable.alarm_clock_off);
+						}
+					}});
+				
 			}
 
 			break;
@@ -460,56 +524,7 @@ public class MainActivity extends Activity implements
 					
 				}});
 			break;
-		case R.id.uveLayout:
-			
-			mService.getUveDevices().get(0).getAnswer(this, Question.MeasureMelanin, new UveDeviceAnswerListener(){
-
-			@Override
-			public void onComplete(String add,
-					Question quest, Bundle data,
-					boolean isSuccessful) {
-				if(isSuccessful){
-					Toast.makeText(MainActivity.this, "Melanin: "+data.getInt(UveDeviceConstants.ANS_MESURE_MELANIN), Toast.LENGTH_SHORT).show();
-				} else {
-					Toast.makeText(MainActivity.this, "not succ", Toast.LENGTH_SHORT).show();
-				}
-				
-			}});
-			break;
-		case R.id.noUveLayout:
-			//loadDevices();
-			break;
-		/*case R.id.button2:
-			mService.getUveDevices()
-					.get(0)
-					.getAnswer(this, Question.Serial,
-							new UveDeviceAnswerListener() {
-
-								@Override
-								public void onComplete(String add,
-										Question quest, Bundle data,
-										boolean isSuccessful) {
-									if (isSuccessful) {
-										String serial = data
-												.getString(UveDevice.ANS_SERIAL);
-										Toast.makeText(MainActivity.this,
-												serial, Toast.LENGTH_SHORT)
-												.show();
-									}
-
-								}
-							}
-
-					);
-			break;
-		case R.id.button3:
-			Bundle b=new Bundle();
-			b.putInt(UveDevice.COM_TORCH, 10);
-			mService.getUveDevices()
-					.get(0)
-					.sendCommand(Command.Torch, b);
-
-			break;*/
+		
 		}
 	}
 
