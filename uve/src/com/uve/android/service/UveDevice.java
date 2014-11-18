@@ -17,6 +17,7 @@ import android.os.Bundle;
 import com.uve.android.service.UveService.Command;
 import com.uve.android.service.UveService.Question;
 import com.uve.android.service.UveDeviceConstants;
+import com.uve.android.tools.ByteCascader;
 
 public class UveDevice {
 	BluetoothAdapter mAdapter = null;
@@ -427,6 +428,7 @@ public class UveDevice {
 		if (mIS != null) {
 			try {
 				mIS.close();
+				UveLogger.Info("DEVICE "+getName()+ " PANIC, IS closed.");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -436,6 +438,7 @@ public class UveDevice {
 		if (mOS != null) {
 			try {
 				mOS.close();
+				UveLogger.Info("DEVICE "+getName()+ " PANIC, OS closed.");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -449,6 +452,9 @@ public class UveDevice {
 		} catch (Exception e) {
 			setConnected(false);
 		}
+		
+		
+		
 		setConnected(false);
 		mStatusListener.onPanic(this, mAddress);
 	}
@@ -818,6 +824,48 @@ public class UveDevice {
 
 						answer(a, b, q, cb);
 
+						break;
+					case Statuses:
+						try {
+							mOS.write(UveDeviceConstants.QUE_STATUSES);
+							UveLogger.Info("DEVICE "+getName()+" sent: QUE_STATUSES");
+						} catch (Exception e) {
+							e.printStackTrace();
+							panic();
+							answerError(a, b, q, cb);
+							break;
+						}
+						got = waitForBytes(28);
+						if (got == null) {
+							//panic();
+							answerError(a, b, q, cb);
+
+							break;
+						}
+						b.putInt(UveDeviceConstants.ANS_ST_MELANIN, got.get(0));
+						b.putInt(UveDeviceConstants.ANS_ST_ERITEMA, got.get(1));
+						b.putInt(UveDeviceConstants.ANS_ST_DAILY_DOSE, ByteCascader.cascade4Bytes(got.get(2),got.get(3),got.get(4),got.get(5)));
+						b.putInt(UveDeviceConstants.ANS_ST_DAILY_DOSE_LIMIT, ByteCascader.cascade4Bytes(got.get(6),got.get(7),got.get(8),got.get(9)));
+						b.putInt(UveDeviceConstants.ANS_ST_UV_LIMIT, got.get(10));
+						b.putInt(UveDeviceConstants.ANS_ST_SKIN_REG, got.get(11));
+						b.putInt(UveDeviceConstants.ANS_ST_MEASURE_START, got.get(12));
+						b.putInt(UveDeviceConstants.ANS_ST_TIME_BETWEEN_MEASURES, ByteCascader.cascade2Bytes(got.get(13),got.get(14)));
+						b.putInt(UveDeviceConstants.ANS_ST_MEASURE_MODE, got.get(15));
+						b.putInt(UveDeviceConstants.ANS_ST_MANUAL, got.get(16));
+						b.putInt(UveDeviceConstants.ANS_ST_REALTIME, got.get(17));
+						b.putInt(UveDeviceConstants.ANS_ST_ALERT_TYPE, got.get(18));
+						b.putInt(UveDeviceConstants.ANS_ST_MORNING_ALERT_TYPE, got.get(19));
+						b.putInt(UveDeviceConstants.ANS_ST_SNOOZE, got.get(20));
+						b.putInt(UveDeviceConstants.ANS_ST_MORNING_ALERT, got.get(21));
+						b.putInt(UveDeviceConstants.ANS_ST_MORNING_UVA_ALERT, got.get(22));
+						b.putInt(UveDeviceConstants.ANS_ST_CHILD_PROTECTION, got.get(23));
+						b.putInt(UveDeviceConstants.ANS_ST_PLANNED_MODE, got.get(24));
+						b.putInt(UveDeviceConstants.ANS_ST_ENERGY_SAVER, got.get(25));
+						b.putInt(UveDeviceConstants.ANS_ST_DELAYED_MEASURE, got.get(26));
+						b.putInt(UveDeviceConstants.ANS_ST_ILLNESS, got.get(27));
+						answer(a, b, q, cb);
+
+						
 						break;
 					case MeasureMelanin:
 						try {

@@ -9,6 +9,7 @@ import java.util.UUID;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -150,8 +151,11 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 				UveLogger.Info("CONNECT: setting a new socket. "+u.getAddress());
 				try{
 					u.panic();
-					u.setSocket(u.mBtDevice.createRfcommSocketToServiceRecord(MY_UUID));
-					UveLogger.Info("CONNECT: set a new socket. trying again... "+u.getAddress());
+					
+					BluetoothSocket newSocket =(BluetoothSocket) u.getDevice().getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(u.getDevice(),1);
+					u.setSocket(newSocket);
+					//u.setSocket(u.mBtDevice.createRfcommSocketToServiceRecord(MY_UUID));
+					UveLogger.Info("CONNECT: set a new fallback socket. trying again... "+u.getAddress());
 					u.getSocket().connect();
 					UveLogger.Info("CONNECT: new socket connected. "+u.getAddress());
 					UveLogger.Info("CONNECT: new socket connected, connecting streams... "+u.getAddress());
@@ -283,12 +287,23 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 	
 	public void startPingingAllDevices(){
-		for(UveDevice u : mDevices){
-			startPinging(u);
+		for(final UveDevice u : mDevices){
+			u.getAnswer(null, Question.Statuses, new UveDeviceAnswerListener(){
+
+				@Override
+				public void onComplete(String add, Question quest, Bundle data,
+						boolean isSuccessful) {
+					//if(isSuccessful)
+						startPinging(u);
+					
+				}});
+			
+			//startPinging(u);
 		}
 	}
 	
 	public void startPinging(final UveDevice u){
+		UveLogger.Info("starting pinging "+u.getName());
 		if(u.getPingTimerTask()!=null){
 			u.getPingTimerTask().cancel();
 		}
@@ -321,6 +336,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 	
 	public void stopPinging(UveDevice u){
+		UveLogger.Info("stopping pinging "+u.getName());
 		if(u.getPingTimerTask()!=null){
 			u.getPingTimerTask().cancel();
 		}

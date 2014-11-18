@@ -418,7 +418,7 @@ public class MainActivity extends Activity implements
 		switch (arg0.getId()) {
 		case R.id.uveTorch:
 			Bundle b0=new Bundle();
-			b0.putInt(UveDeviceConstants.COM_TORCH, 10);
+			b0.putInt(UveDeviceConstants.COM_TORCH, 40);
 			if(!mCurrentUveDevice.getTorchStatus()){
 				mCurrentUveDevice.setTorchStatus(true);
 				mCurrentUveDevice.sendCommand(Command.Torch, b0);
@@ -430,7 +430,7 @@ public class MainActivity extends Activity implements
 					public void run() {
 						mCurrentUveDevice.setTorchStatus(false);
 						mUveTorch.setImageResource(R.drawable.flashlight_off);
-					}}, 1000);
+					}}, 4000);
 				
 			}
 			break;
