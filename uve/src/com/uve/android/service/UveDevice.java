@@ -440,6 +440,7 @@ public class UveDevice {
 				e.printStackTrace();
 			}
 			mOS = null;
+			
 		}
 		
 		try {

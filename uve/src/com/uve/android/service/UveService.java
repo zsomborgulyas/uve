@@ -83,6 +83,16 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	public IBinder onBind(Intent intent) {
 		return mBinder;
 	}
+	
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		UveLogger.Info("onDestroy");
+		for(final UveDevice u : mDevices){
+			stopPinging(u);
+			u.panic();
+		}
+	}
 
 	public void connectToDevice(final UveDevice u, final UveDeviceConnectListener cl){
 		Timer t=new Timer();
