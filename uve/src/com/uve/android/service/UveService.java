@@ -38,7 +38,9 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		MornignAlert, UVFront, UVBack, Child
 	}
 	
-
+	public enum AlertMode {
+		LightOnly, ThreeShortVibrates, ThreeLongVibrates, OneLongVibrate, NineShortVibrates, ThreeShortDelayedVibrates
+	}
 
 	private static final int REQUEST_ENABLE_BT = 1;
 	private BluetoothAdapter mBtAdapter = null;
@@ -349,6 +351,46 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 			u.getPingTimer().purge();
 		}
 	}
+	
+	public void stopUVDosePing(UveDevice u){
+		UveLogger.Info("stopping dose measurement "+u.getName() );
+		if(u.getDoseTimerTask()!=null){
+			u.getDoseTimerTask().cancel();
+		}
+		if(u.getDoseTimer()!=null){
+			u.getDoseTimer().cancel();
+			u.getDoseTimer().purge();
+		}
+	}
+	
+	public void startUVDosePing(final UveDevice u){
+		UveLogger.Info("starting dose measurement "+u.getName() );
+		if(u.getDoseTimerTask()!=null){
+			u.getDoseTimerTask().cancel();
+		}
+		if(u.getDoseTimer()!=null){
+			u.getDoseTimer().cancel();
+			u.getDoseTimer().purge();
+		}
+		
+		u.setDoseTimerTask(new TimerTask(){
+
+			@Override
+			public void run() {
+				u.getAnswer(null, Question.DailyDose, new UveDeviceAnswerListener(){
+
+					@Override
+					public void onComplete(String add, Question quest, Bundle data,
+							boolean isSuccessful) {
+						if(isSuccessful){
+							u.setDailyDose(data.getInt(UveDeviceConstants.ANS_DAILY_DOSE));
+
+						} 
+					}});			
+			}});
+		
+		u.getDoseTimer().scheduleAtFixedRate(u.getDoseTimerTask(), 0, 60000);
+	}
 		
 	
 	public Set<BluetoothDevice> getPairedDevices(){
@@ -359,6 +401,24 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		return mDevices;
 	}
 
+	public static AlertMode getAlertModeFromInt(int i){
+		switch(i){
+		case 0:
+			return AlertMode.LightOnly;
+		case 1:
+			return AlertMode.ThreeShortVibrates;
+		case 2:
+			return AlertMode.ThreeLongVibrates;
+		case 3:
+			return AlertMode.OneLongVibrate;
+		case 4:
+			return AlertMode.NineShortVibrates;
+		case 5:
+			return AlertMode.ThreeShortDelayedVibrates;
+		}
+		return AlertMode.LightOnly;
+	}
+	
 	@Override
 	public void onDataReaded(UveDevice u, String add, Question quest,
 			Bundle data) {

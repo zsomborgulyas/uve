@@ -27,10 +27,7 @@ public class UveDeviceConstants {
 	public static final String ANS_SERIAL = "ans_serial";
 	public static final String ANS_MEASURE_UV = "ans_measureuv";
 	public static final String ANS_DAILY_DOSE_COUNT = "ans_dosec";
-	public static final String ANS_DAILY_DOSE_1 = "ans_dose1";
-	public static final String ANS_DAILY_DOSE_2 = "ans_dose2";
-	public static final String ANS_DAILY_DOSE_3 = "ans_dose3";
-	public static final String ANS_DAILY_DOSE_4 = "ans_dose4";
+	public static final String ANS_DAILY_DOSE= "ans_dose";
 	public static final String ANS_DAILY_DOSE_FROM = "ans_dose_from";
 	public static final String ANS_DAILY_INTENSE_COUNT = "ans_intc";
 	public static final String ANS_DAILY_INTENSE_PREFIX = "ans_int";

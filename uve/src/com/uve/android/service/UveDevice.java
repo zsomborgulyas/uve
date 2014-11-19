@@ -5,7 +5,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -14,9 +13,10 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Bundle;
 
+import com.uve.android.service.UveService.AlertMode;
 import com.uve.android.service.UveService.Command;
 import com.uve.android.service.UveService.Question;
-import com.uve.android.service.UveDeviceConstants;
+import com.uve.android.service.UveWakeUpAlert.AlertState;
 import com.uve.android.tools.ByteCascader;
 
 public class UveDevice {
@@ -275,6 +275,9 @@ public class UveDevice {
 	Timer mPingTimer = new Timer();
 	TimerTask mPingTimerTask;
 
+	Timer mDoseTimer = new Timer();
+	TimerTask mDoseTimerTask;
+	
 	ArrayList<Integer> mISReaded;
 	ArrayList<Integer> mISStatusReaded;
 
@@ -297,6 +300,23 @@ public class UveDevice {
 	
 	public void setPingTimerTask(TimerTask tt){
 		mPingTimerTask=tt;
+	}
+	
+	public Timer getDoseTimer(){
+		if(mDoseTimer!=null) mDoseTimer=new Timer();
+		return mDoseTimer;
+	}
+	
+	public TimerTask getDoseTimerTask(){
+		return mDoseTimerTask;
+	}
+	
+	public void setDoseTimer(Timer t){
+		mDoseTimer=t;
+	}
+	
+	public void setDoseTimerTask(TimerTask tt){
+		mDoseTimerTask=tt;
 	}
 	
 	public BluetoothAdapter getAdapter() {
@@ -446,6 +466,7 @@ public class UveDevice {
 	}
 
 	public void setStatusesFromBundle(Bundle b){
+		UveLogger.Info("Setting statuses");
 		mMelaninIndex=b.getInt(UveDeviceConstants.ANS_ST_MELANIN);
 		mEritemaIndex=b.getInt(UveDeviceConstants.ANS_ST_ERITEMA);
 		mDailyDose=b.getInt(UveDeviceConstants.ANS_ST_DAILY_DOSE);
@@ -474,9 +495,18 @@ public class UveDevice {
 		mWakeUpList=new ArrayList<UveWakeUpAlert>();
 		for(int i=0; i<10; ++i){
 			UveWakeUpAlert alert=new UveWakeUpAlert();
-			//alert.setAlertDays(mAlertDays)
-			b.getInt("wu"+i+0);
+			alert.setAlertDays(UveWakeUpAlert.getAlertDaysFromInt(b.getInt("wu"+i+"0"), mContext));
+			alert.setHour(b.getInt("wu"+i+"1"));
+			alert.setMinute(b.getInt("wu"+i+"2"));
+			alert.setSec(b.getInt("wu"+i+"3"));
+			alert.setAlertMode(UveService.getAlertModeFromInt(b.getInt("wu"+i+"4")));
+			if(b.getInt("wu"+i+"5")==0)
+				alert.setAlertState(AlertState.Off);
+			if(b.getInt("wu"+i+"5")==1)
+				alert.setAlertState(AlertState.On);
+			mWakeUpList.add(alert);
 		}
+		this.setMorningAlertStatus(b.getInt(UveDeviceConstants.ANS_WAKEUP_ENABLED));
 	}
 
 	public class ISReaderTask extends TimerTask {
@@ -842,6 +872,29 @@ public class UveDevice {
 
 						b.putString(UveDeviceConstants.ANS_PING, "" + got.get(0));
 
+						answer(a, b, q, cb);
+						break;
+						
+					case DailyDose:
+						try {
+							mOS.write(UveDeviceConstants.QUE_DAILY_DOSE);
+							UveLogger.Info("DEVICE "+getName()+" sent: QUE_DAILY_DOSE");
+						} catch (Exception e) {
+							e.printStackTrace();
+							panic();
+							answerError(a, b, q, cb);
+							break;
+						}
+
+						got = waitForBytes(5);
+						if (got == null) {
+
+							answerError(a, b, q, cb);
+
+							break;
+						}
+						b.putInt(UveDeviceConstants.ANS_DAILY_DOSE, ByteCascader.cascade4Bytes(got.get(0),got.get(1),got.get(2),got.get(3)));
+						b.putInt(UveDeviceConstants.ANS_DAILY_DOSE_FROM, got.get(4));
 						answer(a, b, q, cb);
 						break;
 					case Battery:

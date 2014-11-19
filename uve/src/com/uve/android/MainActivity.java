@@ -233,7 +233,13 @@ public class MainActivity extends Activity implements
 		final UveDevice u=getADevice(index);
 		UveLogger.Info("showdevice: "+u.getName());
 		if(u==null) return;
-
+		
+		if(mCurrentUveDevice!=null)
+			mService.stopUVDosePing(mCurrentUveDevice);
+		mService.startUVDosePing(u);
+		
+		mCurrentUveDevice=u;
+		
 		if(mDeviceTimer!=null){
 			mDeviceTimer.cancel();
 			mDeviceTimer.purge();
@@ -253,7 +259,7 @@ public class MainActivity extends Activity implements
 
 					@Override
 					public void run() {
-						mCurrentUveDevice=getADevice(index);
+						
 						showDeviceContent(mCurrentUveDevice);
 					}});
 			}};
@@ -293,7 +299,10 @@ public class MainActivity extends Activity implements
 				mUveToggleAlarm.setProgress(100);
 			else mUveToggleAlarm.setProgress(0);
 
-			//mUveProgress.setProgress(30);
+			double dosePercent=0;
+			if(u.getDailyDoseLimit()>0)
+				dosePercent=u.getDailyDose()/u.getDailyDoseLimit();
+			mUveProgress.setProgress((int)Math.round((dosePercent*100d)));
 			
 		} else {
 			mUveBottomLayout.setVisibility(View.GONE);
@@ -418,7 +427,8 @@ public class MainActivity extends Activity implements
 		super.onPause();
 		//mCamera.onPause();
 		unbindService(mConnection);
-		
+		if(mCurrentUveDevice!=null)
+			mService.stopUVDosePing(mCurrentUveDevice);
 		mWeatherTimerTask.cancel();
 		mWeatherTimer.cancel();
 		mWeatherTimer.purge();
@@ -559,6 +569,15 @@ public class MainActivity extends Activity implements
 		}
 	}
 
+	public void showWakeUpAlertDialog(){
+		
+	}
+	
+	public void showPlannedMeasureMentDialog(){
+		
+	}
+	
+	
 	private ServiceConnection mConnection = new ServiceConnection() {
 
 		public void onServiceConnected(ComponentName className, IBinder binder) {
