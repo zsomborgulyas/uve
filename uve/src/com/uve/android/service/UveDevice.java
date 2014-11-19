@@ -752,9 +752,10 @@ public class UveDevice {
 
 				break;
 			}
-
+			UveLogger.Info("DEVICE "+getName()+ " SENT command: " + c);
 		} catch (Exception e) {
 			cl.onComplete(mAddress, c, null, false);
+			UveLogger.Error("DEVICE "+getName()+ " FAILED SENDIGN command: " + c );
 			panic();
 			e.printStackTrace();
 		}

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/com.uve.android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000" >
@@ -89,7 +90,9 @@
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:visibility="visible"
-            app:pieColor="@color/sun_yellow_progress" />
+            app:inverseColor="@color/sun_yellow_back"
+            app:pieColor="@color/sun_yellow_progress"
+            app:topColor="@color/sun_yellow_fore" />
 
         <ImageView
             android:id="@+id/uveReconnect"
@@ -145,34 +148,93 @@
             android:layout_centerVertical="true"
             android:orientation="horizontal" >
 
-            <ImageView
-                android:id="@+id/uveToggleAlarm"
+            <RelativeLayout
                 android:layout_width="70dp"
                 android:layout_height="70dp"
                 android:layout_marginLeft="10dp"
-                android:layout_marginRight="20dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/alarm_clock_off"
-                android:visibility="visible" />
+                android:layout_marginRight="20dp" >
 
-            <ImageView
-                android:id="@+id/uveTorch"
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="20dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/flashlight_off"
-                android:visibility="visible" />
+                <com.uve.android.tools.ui.PieProgressbarView
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    android:id="@+id/uveToggleAlarm"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:visibility="visible"
+                    app:inverseColor="#555"
+                    app:pieColor="#fff"
+                    app:topColor="#000" />
 
-            <ImageView
-                android:id="@+id/uveToggleChild"
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/alarm_clock_off"
+                    android:visibility="visible" />
+            </RelativeLayout>
+
+            
+            <RelativeLayout
                 android:layout_width="70dp"
                 android:layout_height="70dp"
                 android:layout_marginLeft="10dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/child_off"
-                android:visibility="visible" />
+                android:layout_marginRight="20dp" >
+
+                <com.uve.android.tools.ui.PieProgressbarView
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    android:id="@+id/uveTorch"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:visibility="visible"
+                    app:inverseColor="#555"
+                    app:pieColor="#fff"
+                    app:topColor="#000" />
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/flashlight_off"
+                    android:visibility="visible" />
+            </RelativeLayout>
+            
+                      <RelativeLayout
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="20dp" >
+
+                <com.uve.android.tools.ui.PieProgressbarView
+                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                    android:id="@+id/uveToggleChild"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:visibility="visible"
+                    app:inverseColor="#555"
+                    app:pieColor="#fff"
+                    app:topColor="#000" />
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/child_off"
+                    android:visibility="visible" />
+            </RelativeLayout>
+ 
+
+          
         </LinearLayout>
     </RelativeLayout>
 

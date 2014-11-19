@@ -1,5 +1,9 @@
 package com.uve.android.tools.ui;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
@@ -22,9 +26,15 @@ public class PieProgressbarView extends View {
 
 	// Pie color
 	private ColorStateList mPieColor;
+	
+	private ColorStateList mTopColor;
+	
+	private ColorStateList mPieInverseColor;
 
 	// Pie paint
 	private Paint mPiePaint;
+	
+	private int mTColor= Color.rgb(255, 255, 255);
 
 	// Context - protected, for the use of derived classes
 	protected Context mContext;
@@ -67,12 +77,22 @@ public class PieProgressbarView extends View {
 	public int getMax() {
 		return mPieMax;
 	}
-
+	
+	public void setTopColor(int c){
+		mTopColor=null;
+		mTColor=c;
+		postInvalidate();
+	}
+	
 	protected void initWithAttrs(AttributeSet attrs) {
 		TypedArray a = mContext.obtainStyledAttributes(attrs,
 				R.styleable.PieProgressbarView);
 		mPieColor = a
 				.getColorStateList(R.styleable.PieProgressbarView_pieColor);
+		mTopColor= a
+				.getColorStateList(R.styleable.PieProgressbarView_topColor);
+		mPieInverseColor= a
+				.getColorStateList(R.styleable.PieProgressbarView_inverseColor);
 		a.recycle();
 	}
 
@@ -88,6 +108,21 @@ public class PieProgressbarView extends View {
 			currentColor = mPieColor.getColorForState(getDrawableState(),
 					Color.WHITE);
 		}
+		
+		int currentInvColor = Color.WHITE;
+		if (null != mPieInverseColor) {
+			currentColor = mPieInverseColor.getColorForState(getDrawableState(),
+					Color.WHITE);
+		}
+		
+		int currentTopColor = Color.WHITE;
+		if (null != mTopColor) {
+			
+			currentTopColor = mTopColor.getColorForState(getDrawableState(),Color.WHITE);
+		} else {
+			currentTopColor=mTColor;
+		}
+		
 		mPiePaint.setColor(currentColor);
 
 		int rectWidth = getWidth() - getPaddingLeft() - getPaddingRight();
@@ -97,7 +132,7 @@ public class PieProgressbarView extends View {
 		int y = getPaddingTop();
 
 		Paint p = new Paint();
-		p.setColor(this.getResources().getColor(R.color.sun_yellow_back));
+		p.setColor(currentInvColor);
 		canvas.drawCircle(canvas.getWidth() / 2, canvas.getHeight() / 2,
 				canvas.getWidth() * 0.5f, p);
 
@@ -107,9 +142,53 @@ public class PieProgressbarView extends View {
 		canvas.drawArc(arcRect, -90, angle, true, mPiePaint);
 
 		p = new Paint();
-		p.setColor(this.getResources().getColor(R.color.sun_yellow_fore));
+		p.setColor(currentTopColor);
 		canvas.drawCircle(canvas.getWidth() / 2, canvas.getHeight() / 2,
 				canvas.getWidth() * 0.45f, p);
 
+	}
+	public static double progress; 
+	public static void animatePieProgressbarView(final PieProgressbarView p, final int from, final int to, int time, final Activity a){
+		int t=0;
+		int tmax=time;
+		progress=from;
+
+		
+		
+		double steps=time/10;
+
+		
+		double dprogress=Math.abs(to-from);
+		
+		final double dp=dprogress/steps;
+		
+		Timer timer=new Timer();
+		TimerTask timerTask=new TimerTask(){
+
+			@Override
+			public void run() {
+				a.runOnUiThread(new Runnable(){
+
+					@Override
+					public void run() {
+						p.setProgress((int)Math.round(progress));
+					}});
+				
+				if(to>from)
+					progress=progress+dp;
+				if(from>to)
+					progress=progress-dp;
+				
+				/*if(Math.abs(to-progress)>(dp*10)){
+					cancel();
+				}*/
+				if(to>from)
+					if(progress>=to) cancel();
+				
+				if(from>to)
+					if(progress<=to) cancel();
+			}};
+			timer.schedule(timerTask, 0, 10);
+		
 	}
 }

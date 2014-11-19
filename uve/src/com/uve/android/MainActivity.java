@@ -94,9 +94,11 @@ public class MainActivity extends Activity implements
 	TextView mUveProgressTextUnit;
 	
 	ImageView mUveReconnect;
-	ImageView mUveToggleAlarm;
-	ImageView mUveTorch;
-	ImageView mUveToggleChild;
+	PieProgressbarView mUveToggleAlarm;
+	PieProgressbarView mUveTorch;
+	PieProgressbarView mUveToggleChild;
+	
+	RelativeLayout mUveBottomLayout;
 	
 	BluetoothAdapter mAdapter;
 	SharedPreferences mPreferences;
@@ -164,9 +166,12 @@ public class MainActivity extends Activity implements
 		mUveProgressTextUnit=(TextView)findViewById(R.id.uveProgressTextUnit);
 		
 		mUveReconnect=(ImageView)findViewById(R.id.uveReconnect);
-		mUveToggleAlarm=(ImageView)findViewById(R.id.uveToggleAlarm);
-		mUveTorch=(ImageView)findViewById(R.id.uveTorch);
-		mUveToggleChild=(ImageView)findViewById(R.id.uveToggleChild);
+		
+		mUveBottomLayout=(RelativeLayout)findViewById(R.id.uveBottomLayout);
+		
+		mUveToggleAlarm=(PieProgressbarView)findViewById(R.id.uveToggleAlarm);
+		mUveTorch=(PieProgressbarView)findViewById(R.id.uveTorch);
+		mUveToggleChild=(PieProgressbarView)findViewById(R.id.uveToggleChild);
 		
 		
 		
@@ -257,9 +262,11 @@ public class MainActivity extends Activity implements
 	}
 	
 	public void showDeviceContent(UveDevice u){
+		//UveLogger.Info("showing device content: "+u.getName());
 		mUveName.setText(u.getName());
 		mUveTopProgress.setVisibility(View.GONE);
 		if(u.isConnected()){
+			mUveBottomLayout.setVisibility(View.VISIBLE);
 			
 			int lipol=u.getBatteryLevel();
 			int solar=u.getSolarBattery();
@@ -277,27 +284,25 @@ public class MainActivity extends Activity implements
 			mUveProgressText.setVisibility(View.VISIBLE);
 			mUveProgressTextUnit.setVisibility(View.VISIBLE);
 			mUveReconnect.setVisibility(View.GONE);
-			mUveToggleAlarm.setVisibility(View.VISIBLE);
-			mUveTorch.setVisibility(View.VISIBLE);
+
+			if(u.getChildProtectionStatus()!=0)
+				mUveToggleChild.setProgress(100);
+			else mUveToggleChild.setProgress(0);
 			
-			mUveToggleChild.setVisibility(View.VISIBLE);
-			if(u.getChildProtectionStatus()==1) mUveToggleChild.setImageResource(R.drawable.child_on);
-			else mUveToggleChild.setImageResource(R.drawable.child_off);
-			
-			if(u.getMorningAlertStatus()==1) mUveToggleAlarm.setImageResource(R.drawable.alarm_clock_on);
-			else mUveToggleAlarm.setImageResource(R.drawable.alarm_clock_off);
-			
+			if(u.getMorningAlertStatus()!=0)
+				mUveToggleAlarm.setProgress(100);
+			else mUveToggleAlarm.setProgress(0);
+
 			
 		} else {
+			mUveBottomLayout.setVisibility(View.GONE);
 			mUveBty.setVisibility(View.GONE);
 			mUveSolar.setVisibility(View.GONE);
 			mUveProgress.setVisibility(View.GONE);
 			mUveProgressText.setVisibility(View.GONE);
 			mUveProgressTextUnit.setVisibility(View.GONE);
 			mUveReconnect.setVisibility(View.VISIBLE);
-			mUveToggleAlarm.setVisibility(View.GONE);
-			mUveTorch.setVisibility(View.GONE);
-			mUveToggleChild.setVisibility(View.GONE);
+			
 		}
 	}
 	
@@ -433,14 +438,16 @@ public class MainActivity extends Activity implements
 					public void onComplete(String add, Command command,
 							Bundle data, boolean isSuccessful) {
 						if(isSuccessful){
-							mUveTorch.setImageResource(R.drawable.flashlight_on);
+							
+							PieProgressbarView.animatePieProgressbarView(mUveTorch, 0, 100, 3900, MainActivity.this);
+	
 							Handler h=new Handler();
 							h.postDelayed(new Runnable(){
 
 								@Override
 								public void run() {
 									mCurrentUveDevice.setTorchStatus(false);
-									mUveTorch.setImageResource(R.drawable.flashlight_off);
+									PieProgressbarView.animatePieProgressbarView(mUveTorch, 100, 0, 400, MainActivity.this);
 								}}, 4000);
 						}
 						
@@ -460,7 +467,7 @@ public class MainActivity extends Activity implements
 							Bundle data, boolean isSuccessful) {
 						if(isSuccessful){
 							mCurrentUveDevice.setChildProtectionStatus(1);
-							mUveToggleChild.setImageResource(R.drawable.child_on);
+							PieProgressbarView.animatePieProgressbarView(mUveToggleChild, 0, 100, 400, MainActivity.this);
 						}
 					}});
 				
@@ -474,7 +481,7 @@ public class MainActivity extends Activity implements
 							Bundle data, boolean isSuccessful) {
 						if(isSuccessful){
 							mCurrentUveDevice.setChildProtectionStatus(0);
-							mUveToggleChild.setImageResource(R.drawable.child_off);
+							PieProgressbarView.animatePieProgressbarView(mUveToggleChild, 100, 0, 400, MainActivity.this);
 						}
 					}});
 				
@@ -492,7 +499,8 @@ public class MainActivity extends Activity implements
 							Bundle data, boolean isSuccessful) {
 						if(isSuccessful){
 							mCurrentUveDevice.setMorningAlertStatus(1);
-							mUveToggleAlarm.setImageResource(R.drawable.alarm_clock_on);
+							PieProgressbarView.animatePieProgressbarView(mUveToggleAlarm, 0, 100, 400, MainActivity.this);
+
 						}
 					}});
 				
@@ -506,7 +514,8 @@ public class MainActivity extends Activity implements
 							Bundle data, boolean isSuccessful) {
 						if(isSuccessful){
 							mCurrentUveDevice.setMorningAlertStatus(0);
-							mUveToggleAlarm.setImageResource(R.drawable.alarm_clock_off);
+							PieProgressbarView.animatePieProgressbarView(mUveToggleAlarm, 100, 0, 400, MainActivity.this);
+
 						}
 					}});
 				
@@ -515,11 +524,14 @@ public class MainActivity extends Activity implements
 			break;
 		case R.id.uveReconnect:
 			mUveTopProgress.setVisibility(View.VISIBLE);
+			mCurrentUveDevice.getAdapter().disable();
+			mCurrentUveDevice.getAdapter().enable();
 			mService.connectToDevice(mCurrentUveDevice, new UveDeviceConnectListener(){
 
 				@Override
 				public void onConnect(UveDevice u, String addr,
 						boolean isSuccessful) {
+					
 					mUveTopProgress.setVisibility(View.GONE);
 					
 				}});

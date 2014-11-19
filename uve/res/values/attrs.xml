@@ -3,6 +3,8 @@
 
     <declare-styleable name="PieProgressbarView">
         <attr name="pieColor" format="color" />
+        <attr name="topColor" format="color" />
+        <attr name="inverseColor" format="color" />
     </declare-styleable>
 
 </resources>
