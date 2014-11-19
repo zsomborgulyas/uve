@@ -56,6 +56,9 @@ public class UveDeviceConstants {
 	public static final String ANS_DUMP_TIME_HOUR = "ans_wudth";
 	public static final String ANS_DUMP_TIME_MIN = "ans_wudtm";
 	public static final String ANS_DUMP_TIME_SEC = "ans_wudts";
+	
+	public static final String ANS_WAKEUP_ENABLED = "ans_wuen";
+	public static final String ANS_WAKEUP_SNOOZE = "ans_wusn";
 
 	public static final String ANS_ST_MELANIN = "ans_st_1";
 	public static final String ANS_ST_ERITEMA = "ans_st_2";

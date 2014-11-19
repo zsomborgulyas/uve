@@ -27,7 +27,7 @@ public class PieProgressbarView extends View {
 	// Pie color
 	private ColorStateList mPieColor;
 	
-	private ColorStateList mTopColor;
+	public ColorStateList mTopColor;
 	
 	private ColorStateList mPieInverseColor;
 
@@ -111,7 +111,7 @@ public class PieProgressbarView extends View {
 		
 		int currentInvColor = Color.WHITE;
 		if (null != mPieInverseColor) {
-			currentColor = mPieInverseColor.getColorForState(getDrawableState(),
+			currentInvColor = mPieInverseColor.getColorForState(getDrawableState(),
 					Color.WHITE);
 		}
 		
@@ -147,13 +147,35 @@ public class PieProgressbarView extends View {
 				canvas.getWidth() * 0.45f, p);
 
 	}
-	public static double progress; 
+
+	
+	public double progress;
+	
 	public static void animatePieProgressbarView(final PieProgressbarView p, final int from, final int to, int time, final Activity a){
 		int t=0;
 		int tmax=time;
-		progress=from;
+		p.progress=from;
+		final int prevTopColor;
+		
+		/*if(p.mTopColor!=null){
+			prevTopColor=p.mTopColor.getColorForState(p.getDrawableState(),
+					Color.WHITE);
+		} else {
+			prevTopColor=p.mTColor;
+		}
+		
+		
+		int ca=Color.alpha(prevTopColor);
+		int cr=Color.red(prevTopColor);
+		int cg=Color.green(prevTopColor);
+		int cb=Color.blue(prevTopColor);
+		
+		if(cr>20) cr=cr-20;
+		if(cg>20) cg=cg-20;
+		if(cb>20) cb=cb-20;
 
 		
+		final int newTopColor=Color.argb(Color.alpha(prevTopColor),cr,cg,cb);*/
 		
 		double steps=time/10;
 
@@ -171,22 +193,29 @@ public class PieProgressbarView extends View {
 
 					@Override
 					public void run() {
-						p.setProgress((int)Math.round(progress));
+						//p.setTopColor(newTopColor);
+						p.setProgress((int)Math.round(p.progress));
 					}});
 				
 				if(to>from)
-					progress=progress+dp;
+					p.progress=p.progress+dp;
 				if(from>to)
-					progress=progress-dp;
+					p.progress=p.progress-dp;
 				
 				/*if(Math.abs(to-progress)>(dp*10)){
 					cancel();
 				}*/
 				if(to>from)
-					if(progress>=to) cancel();
+					if(p.progress>=to) {
+						cancel();
+						//p.setTopColor(prevTopColor);
+					}
 				
 				if(from>to)
-					if(progress<=to) cancel();
+					if(p.progress<=to) {
+						cancel();
+						//p.setTopColor(prevTopColor);
+					}
 			}};
 			timer.schedule(timerTask, 0, 10);
 		

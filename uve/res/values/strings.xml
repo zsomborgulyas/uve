@@ -85,5 +85,12 @@
     <string name="no_device_ready">There is no ready uve device\n:(</string>
     <string name="new_device_title">A new device has been found!</string>
     <string name="new_device_msg">Please name it!</string>
-
+    <string name="day_everyday">Each day</string>
+    <string name="day_sunday">Sunday</string>
+    <string name="day_monday">Monday</string>
+    <string name="day_tuesday">Tuesday</string>
+    <string name="day_wednesday">Wednesday</string>
+    <string name="day_thursday">Thursday</string>
+    <string name="day_friday">Friday</string>
+    <string name="day_saturday">Saturday</string>
 </resources>

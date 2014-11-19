@@ -56,6 +56,8 @@ public class UveDevice {
 	
 	int mRemainingMinutes=-1;
 	
+	ArrayList<UveWakeUpAlert> mWakeUpList = new ArrayList<UveWakeUpAlert>();
+	
 	public int getRemainingMinutes() {
 		return mRemainingMinutes;
 	}
@@ -257,32 +259,6 @@ public class UveDevice {
 	}
 	
 
-	
-	/*8bit //melanin index (bõr barnasága)
-8bit //eritéma index (bõr pirossága)
-32bit //aktuális UV dózis
-32bit	//UV dóziskorlát
-
-8bit //UV intenzitás korlát
-8bit //bõr regenerációs ideje
-8bit //mikortól mér?
-
-16bit //mérések közt eltetl idõ
-
-8bit //mérés módja
-8bit //manuális mérés beapcsolása
-8bit //folyamatos adatküldés bluetoothon keresztül
-8bit //alap visszajelzás
-8bit //alap riasztási visszajelzés	
-	
-8bit //szundi bekapcsolva
-8bit //ébresztõóra bekapcsolva
-8bit //napfényre való ébresztés bekapcsolva
-8bit //gyerekvédõ funckió bekapcsolva
-8bit //terevezett napozás bekapcsolva
-8bit //éjszakai energiatakarékos mód bekapcsolva
-8bit //késleltetett mérés bekapcsolva*/
-	
 	
 	
 	
@@ -492,6 +468,15 @@ public class UveDevice {
 		mDelayedMeasureStatus=b.getInt(UveDeviceConstants.ANS_ST_DELAYED_MEASURE);
 		mIllnessSet=b.getInt(UveDeviceConstants.ANS_ST_ILLNESS);
 
+	}
+	
+	public void setWakeUpAlertsFromBundle(Bundle b){
+		mWakeUpList=new ArrayList<UveWakeUpAlert>();
+		for(int i=0; i<10; ++i){
+			UveWakeUpAlert alert=new UveWakeUpAlert();
+			//alert.setAlertDays(mAlertDays)
+			b.getInt("wu"+i+0);
+		}
 	}
 
 	public class ISReaderTask extends TimerTask {
@@ -925,6 +910,41 @@ public class UveDevice {
 
 						
 						break;
+						
+					case WakeupDump:
+						try {
+							mOS.write(UveDeviceConstants.QUE_WAKEUP_DUMP);
+							UveLogger.Info("DEVICE "+getName()+" sent: QUE_WAKEUP_DUMP");
+						} catch (Exception e) {
+							e.printStackTrace();
+							panic();
+							answerError(a, b, q, cb);
+							break;
+						}
+
+						got = waitForBytes(62);
+						if (got == null) {
+							answerError(a, b, q, cb);
+
+							break;
+						}
+						int wakeupIndex=-1;
+						for(int i=0; i<got.size(); ++i){
+							if(i%6==0) wakeupIndex++;
+							if(i<60){
+								b.putInt("wu"+wakeupIndex+(i-(wakeupIndex*6)), got.get(i));
+								//UveLogger.Info("putting wakeupdump data: " +"wu"+wakeupIndex+(i-(wakeupIndex*6)));
+							} else {
+								if(i==60)b.putInt(UveDeviceConstants.ANS_WAKEUP_SNOOZE, got.get(i));
+								if(i==61)b.putInt(UveDeviceConstants.ANS_WAKEUP_ENABLED, got.get(i));
+								//UveLogger.Info("putting wakeupdump end: " +i);
+							}
+						}
+
+						answer(a, b, q, cb);
+						
+						break;
+						
 					case MeasureMelanin:
 						try {
 							mOS.write(UveDeviceConstants.QUE_MESURE_MELANIN);

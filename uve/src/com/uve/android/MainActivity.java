@@ -293,6 +293,7 @@ public class MainActivity extends Activity implements
 				mUveToggleAlarm.setProgress(100);
 			else mUveToggleAlarm.setProgress(0);
 
+			//mUveProgress.setProgress(30);
 			
 		} else {
 			mUveBottomLayout.setVisibility(View.GONE);
@@ -432,22 +433,30 @@ public class MainActivity extends Activity implements
 			b.putInt(UveDeviceConstants.COM_TORCH, 40);
 			if(!mCurrentUveDevice.getTorchStatus()){
 				mCurrentUveDevice.setTorchStatus(true);
+				PieProgressbarView.animatePieProgressbarView(mUveTorch, 0, 100, 400, MainActivity.this);
 				mCurrentUveDevice.sendCommand(Command.Torch, b, new UveDeviceCommandListener(){
 
 					@Override
 					public void onComplete(String add, Command command,
 							Bundle data, boolean isSuccessful) {
 						if(isSuccessful){
-							
-							PieProgressbarView.animatePieProgressbarView(mUveTorch, 0, 100, 3900, MainActivity.this);
-	
 							Handler h=new Handler();
 							h.postDelayed(new Runnable(){
 
 								@Override
 								public void run() {
+									PieProgressbarView.animatePieProgressbarView(mUveTorch, 100, 0, 3900, MainActivity.this);
+									
+								}}, 400);
+							
+	
+							
+							h.postDelayed(new Runnable(){
+
+								@Override
+								public void run() {
 									mCurrentUveDevice.setTorchStatus(false);
-									PieProgressbarView.animatePieProgressbarView(mUveTorch, 100, 0, 400, MainActivity.this);
+									//PieProgressbarView.animatePieProgressbarView(mUveTorch, 100, 0, 400, MainActivity.this);
 								}}, 4000);
 						}
 						
@@ -489,7 +498,17 @@ public class MainActivity extends Activity implements
 
 			break;
 		case R.id.uveToggleAlarm:
-			b=new Bundle();
+			mCurrentUveDevice.getAnswer(this, Question.WakeupDump, new UveDeviceAnswerListener(){
+
+				@Override
+				public void onComplete(String add, Question quest, Bundle data,
+						boolean isSuccessful) {
+					if(isSuccessful){
+						mCurrentUveDevice.setWakeUpAlertsFromBundle(data);
+					}
+					
+				}});
+			/*b=new Bundle();
 			if(mCurrentUveDevice.getMorningAlertStatus()==0){
 				b.putInt(UveDeviceConstants.COM_WAKEUP, 1);
 				mCurrentUveDevice.sendCommand(Command.Wakeup, b, new UveDeviceCommandListener(){
@@ -520,7 +539,7 @@ public class MainActivity extends Activity implements
 					}});
 				
 			}
-
+*/
 			break;
 		case R.id.uveReconnect:
 			mUveTopProgress.setVisibility(View.VISIBLE);

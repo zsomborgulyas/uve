@@ -37,6 +37,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	public enum AlertType {
 		MornignAlert, UVFront, UVBack, Child
 	}
+	
+
 
 	private static final int REQUEST_ENABLE_BT = 1;
 	private BluetoothAdapter mBtAdapter = null;

@@ -164,7 +164,7 @@
                     android:visibility="visible"
                     app:inverseColor="#555"
                     app:pieColor="#fff"
-                    app:topColor="#000" />
+                    app:topColor="#333" />
 
                 <ImageView
                     android:layout_width="40dp"
@@ -172,7 +172,7 @@
                     android:layout_centerHorizontal="true"
                     android:layout_centerVertical="true"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/alarm_clock_off"
+                    android:src="@drawable/alarm_clock_on"
                     android:visibility="visible" />
             </RelativeLayout>
 
@@ -193,7 +193,7 @@
                     android:visibility="visible"
                     app:inverseColor="#555"
                     app:pieColor="#fff"
-                    app:topColor="#000" />
+                    app:topColor="#333" />
 
                 <ImageView
                     android:layout_width="40dp"
@@ -201,7 +201,7 @@
                     android:layout_centerHorizontal="true"
                     android:layout_centerVertical="true"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/flashlight_off"
+                    android:src="@drawable/flashlight_on"
                     android:visibility="visible" />
             </RelativeLayout>
             
@@ -221,7 +221,7 @@
                     android:visibility="visible"
                     app:inverseColor="#555"
                     app:pieColor="#fff"
-                    app:topColor="#000" />
+                    app:topColor="#333" />
 
                 <ImageView
                     android:layout_width="40dp"
@@ -229,7 +229,7 @@
                     android:layout_centerHorizontal="true"
                     android:layout_centerVertical="true"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/child_off"
+                    android:src="@drawable/child_on"
                     android:visibility="visible" />
             </RelativeLayout>
  
