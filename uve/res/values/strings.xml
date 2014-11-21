@@ -7,6 +7,8 @@
     <string name="gen_cancel">Cancel</string>
     <string name="gen_notnow">Not now</string>
     <string name="gen_please_wait">Please wait</string>
+    <string name="gen_no">No</string>
+    <string name="gen_yes">Yes</string>
     <string name="gen_close">Close</string>
     <string name="w200">Thunderstorm with light rain</string>
     <string name="w201">Thunderstorm with rain</string>
@@ -93,4 +95,7 @@
     <string name="day_thursday">Thursday</string>
     <string name="day_friday">Friday</string>
     <string name="day_saturday">Saturday</string>
+    <string name="no_bt">Your device is not bluetooth capable. Sorry for that.\n:(</string>
+    <string name="bt_disabled">Bluetooth is not enabled on your device. Would you like to enable it?</string>
+
 </resources>

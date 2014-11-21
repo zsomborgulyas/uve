@@ -59,25 +59,25 @@ public class UveDeviceConstants {
 
 	public static final String ANS_ST_MELANIN = "ans_st_1";
 	public static final String ANS_ST_ERITEMA = "ans_st_2";
-	public static final String ANS_ST_DAILY_DOSE = "ans_st_2";
-	public static final String ANS_ST_DAILY_DOSE_LIMIT = "ans_st_2";
-	public static final String ANS_ST_UV_LIMIT = "ans_st_2";
-	public static final String ANS_ST_SKIN_REG = "ans_st_2";
-	public static final String ANS_ST_MEASURE_START = "ans_st_2";
-	public static final String ANS_ST_TIME_BETWEEN_MEASURES = "ans_st_2";
-	public static final String ANS_ST_MEASURE_MODE = "ans_st_2";
-	public static final String ANS_ST_MANUAL = "ans_st_2";
-	public static final String ANS_ST_REALTIME = "ans_st_2";
-	public static final String ANS_ST_ALERT_TYPE = "ans_st_2";
-	public static final String ANS_ST_MORNING_ALERT_TYPE = "ans_st_2";
-	public static final String ANS_ST_SNOOZE = "ans_st_2";
-	public static final String ANS_ST_MORNING_ALERT = "ans_st_2";
-	public static final String ANS_ST_MORNING_UVA_ALERT = "ans_st_2";
-	public static final String ANS_ST_CHILD_PROTECTION = "ans_st_2";
-	public static final String ANS_ST_PLANNED_MODE = "ans_st_2";
-	public static final String ANS_ST_ENERGY_SAVER = "ans_st_2";
-	public static final String ANS_ST_DELAYED_MEASURE = "ans_st_2";
-	public static final String ANS_ST_ILLNESS = "ans_st_2";
+	public static final String ANS_ST_DAILY_DOSE = "ans_st_3";
+	public static final String ANS_ST_DAILY_DOSE_LIMIT = "ans_st_4";
+	public static final String ANS_ST_UV_LIMIT = "ans_st_5";
+	public static final String ANS_ST_SKIN_REG = "ans_st_6";
+	public static final String ANS_ST_MEASURE_START = "ans_st_7";
+	public static final String ANS_ST_TIME_BETWEEN_MEASURES = "ans_st_8";
+	public static final String ANS_ST_MEASURE_MODE = "ans_st_9";
+	public static final String ANS_ST_MANUAL = "ans_st_10";
+	public static final String ANS_ST_REALTIME = "ans_st_11";
+	public static final String ANS_ST_ALERT_TYPE = "ans_st_12";
+	public static final String ANS_ST_MORNING_ALERT_TYPE = "ans_st_13";
+	public static final String ANS_ST_SNOOZE = "ans_st_14";
+	public static final String ANS_ST_MORNING_ALERT = "ans_st_15";
+	public static final String ANS_ST_MORNING_UVA_ALERT = "ans_st_16";
+	public static final String ANS_ST_CHILD_PROTECTION = "ans_st_17";
+	public static final String ANS_ST_PLANNED_MODE = "ans_st_18";
+	public static final String ANS_ST_ENERGY_SAVER = "ans_st_19";
+	public static final String ANS_ST_DELAYED_MEASURE = "ans_st_20";
+	public static final String ANS_ST_ILLNESS = "ans_st_21";
 	
 	
 	

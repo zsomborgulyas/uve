@@ -236,6 +236,7 @@ public class MainActivity extends Activity implements
 		
 		if(mCurrentUveDevice!=null)
 			mService.stopUVDosePing(mCurrentUveDevice);
+		
 		mService.startUVDosePing(u);
 		
 		mCurrentUveDevice=u;
@@ -302,7 +303,10 @@ public class MainActivity extends Activity implements
 			double dosePercent=0;
 			if(u.getDailyDoseLimit()>0)
 				dosePercent=u.getDailyDose()/u.getDailyDoseLimit();
+			
 			mUveProgress.setProgress((int)Math.round((dosePercent*100d)));
+			this.mUveProgressText.setText(""+dosePercent*100d);
+			this.mUveProgressTextUnit.setText("%");
 			
 		} else {
 			mUveBottomLayout.setVisibility(View.GONE);
@@ -324,19 +328,64 @@ public class MainActivity extends Activity implements
 		else return null;
 	}
 
-	private void CheckBTState() {
-		if (mAdapter == null) {
-			
-
+	private boolean checkBTState() {
+		if (mService.getAdapter() == null) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+	        builder.setMessage(R.string.no_bt)
+	               .setPositiveButton(R.string.gen_ok, new DialogInterface.OnClickListener() {
+	                   public void onClick(DialogInterface dialog, int id) {
+	                	   finish();
+	                   }
+	               });
+	        builder.create().show();
+	        return false;
 		} else {
-			if (mAdapter.isEnabled()) {
-				
+			if (mService.getAdapter().isEnabled()) {
+				return true;
 			} else {
-				Intent enableBtIntent = new Intent(
-						mAdapter.ACTION_REQUEST_ENABLE);
-				startActivityForResult(enableBtIntent, 1);
+				
+				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		        builder.setMessage(R.string.bt_disabled)
+		               .setPositiveButton(R.string.gen_yes, new DialogInterface.OnClickListener() {
+		                   public void onClick(DialogInterface dialog, int id) {
+		                	   mService.getAdapter().enable();
+		                	   final Activity a=MainActivity.this;
+		                	   finish();
+		                	   Timer t=new Timer();
+		                	   t.schedule(new TimerTask(){
+
+								@Override
+								public void run() {
+									int counter=0;
+									while(mService.getAdapter().getState()!=BluetoothAdapter.STATE_ON){
+										if(counter>=10){
+											break;
+										}
+										try{
+											Thread.sleep(100);
+										} catch(Exception e){}
+										counter++;
+									}
+									if(counter<10){
+										startActivity(new Intent(a, MainActivity.class));
+									}
+									
+								}}, 0);
+		                	   
+		                   }
+		               })
+		               .setNegativeButton(R.string.gen_notnow, new DialogInterface.OnClickListener() {
+		                   public void onClick(DialogInterface dialog, int id) {
+		                	  
+		                       finish();
+		                       
+		                   }
+		               });
+		        builder.create().show();
+
 			}
 		}
+		return false;
 	}
 	
 
@@ -588,6 +637,10 @@ public class MainActivity extends Activity implements
 			mPreferences = PreferenceManager
 					.getDefaultSharedPreferences(mService);
 			mEditor = mPreferences.edit();
+			
+			if(checkBTState()){
+				
+			}
 			
 			mService.checkForUnnamedDevices();
 			

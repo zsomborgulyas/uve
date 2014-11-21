@@ -68,6 +68,10 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		mActivity=m;
 	}
 	
+	public BluetoothAdapter getAdapter(){
+		return mBtAdapter;
+	}
+	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		if(mBtAdapter==null)
@@ -377,19 +381,20 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 
 			@Override
 			public void run() {
-				u.getAnswer(null, Question.DailyDose, new UveDeviceAnswerListener(){
-
-					@Override
-					public void onComplete(String add, Question quest, Bundle data,
-							boolean isSuccessful) {
-						if(isSuccessful){
-							u.setDailyDose(data.getInt(UveDeviceConstants.ANS_DAILY_DOSE));
-
-						} 
-					}});			
+				if(u.isConnected())
+					u.getAnswer(null, Question.DailyDose, new UveDeviceAnswerListener(){
+	
+						@Override
+						public void onComplete(String add, Question quest, Bundle data,
+								boolean isSuccessful) {
+							if(isSuccessful){
+								u.setDailyDose(data.getInt(UveDeviceConstants.ANS_DAILY_DOSE));
+	
+							} 
+						}});			
 			}});
 		
-		u.getDoseTimer().scheduleAtFixedRate(u.getDoseTimerTask(), 0, 60000);
+		u.getDoseTimer().scheduleAtFixedRate(u.getDoseTimerTask(), 0, 40000);
 	}
 		
 	
@@ -441,6 +446,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	@Override
 	public void onChildUpAlert(UveDevice u, String add, boolean inWater) {
 		// TODO Auto-generated method stub
+		UveLogger.Info("CHILD ALERT");
 		
 	}
 
