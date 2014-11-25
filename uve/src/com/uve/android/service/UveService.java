@@ -122,9 +122,13 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		    PendingIntent pendingIntent = PendingIntent.getActivity(this,
 		    		BASE_NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 		 
+		    String message=String.format(getResources().getString(R.string.sticky_notification_connected),connected,all);
+		    if(connected==0) message=getResources().getString(R.string.sticky_notification_none_connected);
+		    else if(connected==all) message=getResources().getString(R.string.sticky_notification_all_connected);
+		    
 		    Notification.Builder builder = new Notification.Builder(this)
 		        .setContentTitle(getResources().getString(R.string.sticky_notification_title))
-		        .setContentText(String.format(getResources().getString(R.string.sticky_notification_connected),connected,all))
+		        .setContentText(message)
 		        .setContentIntent(pendingIntent)
 		        .setSmallIcon(R.drawable.ic_launcher)
 		        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher))
@@ -182,6 +186,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 			stopPinging(u);
 			u.panic();
 		}
+		mNotificationManager.cancelAll();
 	}
 
 	public void connectToDevice(final UveDevice u, final UveDeviceConnectListener cl){
@@ -377,7 +382,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	
 	public void startPingingAllDevices(){
 		for(final UveDevice u : mDevices){
-			startPinging(u);
+			startPinging(u,2000);
 			/*u.getAnswer(null, Question.Statuses, new UveDeviceAnswerListener(){
 
 				@Override
@@ -393,8 +398,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		}
 	}
 	
-	public void startPinging(final UveDevice u){
-		UveLogger.Info("starting pinging "+u.getName());
+	public void startPinging(final UveDevice u, final long interval){
+		UveLogger.Info("starting pinging "+u.getName()+" interval:"+interval);
 		if(u.getPingTimerTask()!=null){
 			u.getPingTimerTask().cancel();
 		}
@@ -402,6 +407,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 			u.getPingTimer().cancel();
 			u.getPingTimer().purge();
 		}
+		
 		
 		u.setPingTimerTask(new TimerTask(){
 
@@ -415,16 +421,26 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 						if(isSuccessful){
 							u.setBatteryLevel(data.getInt(UveDeviceConstants.ANS_BATTERY_LP));
 							u.setSolarBattery(data.getInt(UveDeviceConstants.ANS_BATTERY_SC));
+							updateStickyNotification();
 							
-						
+							if(u.getPingingInterval()<10000){
+								u.setPingingInterval(15000);
+								startPinging(u, u.getPingingInterval());
+							}
+							
 						} else {
 							updateStickyNotification();
 							connectToDevice(u);
+							
+							if(u.getPingingInterval()>10000){
+								u.setPingingInterval(2000);
+								startPinging(u, u.getPingingInterval());
+							}
 						}	
 					}});			
 			}});
 		
-		u.getPingTimer().scheduleAtFixedRate(u.getPingTimerTask(), 0, 30000);
+		u.getPingTimer().scheduleAtFixedRate(u.getPingTimerTask(), 0, interval);
 	}
 	
 	public void stopPinging(UveDevice u){

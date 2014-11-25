@@ -16,6 +16,7 @@ import jp.co.cyberagent.android.gpuimage.GPUImageGrayscaleFilter;
 import jp.co.cyberagent.android.gpuimage.GPUImageSharpenFilter;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -25,6 +26,8 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
@@ -38,8 +41,11 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -63,6 +69,7 @@ import com.uve.android.tools.WeatherGetter;
 import com.uve.android.tools.gpuimage.CameraHelper;
 import com.uve.android.tools.gpuimage.CameraHelper.CameraInfo2;
 import com.uve.android.tools.gpuimage.GPUImageFilterTools.FilterAdjuster;
+import com.uve.android.tools.ui.Converters;
 import com.uve.android.tools.ui.PieProgressbarView;
 
 public class MainActivity extends Activity implements
@@ -289,6 +296,7 @@ public class MainActivity extends Activity implements
 		mUveTopProgress.setVisibility(View.GONE);
 		if(u.isConnected()){
 			mUveTopLayout.setBackgroundColor(getResources().getColor(R.color.sun_yellow_fore));
+			mUveContentLayout.setBackgroundColor(Color.WHITE);
 			mUveBottomLayout.setVisibility(View.VISIBLE);
 			
 			int lipol=u.getBatteryLevel();
@@ -297,6 +305,7 @@ public class MainActivity extends Activity implements
 			if(solar>0) mUveBtySolar.setVisibility(View.VISIBLE);
 			else mUveBtySolar.setVisibility(View.GONE);
 			mUveBty.setVisibility(View.VISIBLE);
+			
 			if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
 			if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
 			if(lipol<190 && lipol>=128) mUveBty.setImageResource(R.drawable.bty_50);
@@ -511,6 +520,9 @@ public class MainActivity extends Activity implements
 	public void onClick(View arg0) {
 		Bundle b=new Bundle();
 		switch (arg0.getId()) {
+		case R.id.uveProgressBar:
+			showSunDialog();
+			break;
 		case R.id.uveTorch:
 			b=new Bundle();
 			b.putInt(UveDeviceConstants.COM_TORCH, 40);
@@ -549,8 +561,7 @@ public class MainActivity extends Activity implements
 			}
 			break;
 		case R.id.uveToggleChild:
-			PieProgressbarView.animatePieProgressbarView(mUveToggleChild, 0, 100, 400, MainActivity.this);
-			/*b=new Bundle();
+			b=new Bundle();
 			if(mCurrentUveDevice.getChildProtectionStatus()==0){
 				b.putInt(UveDeviceConstants.COM_CHILD, 1);
 				mCurrentUveDevice.sendCommand(Command.ChildAlert, b, new UveDeviceCommandListener(){
@@ -578,7 +589,7 @@ public class MainActivity extends Activity implements
 						}
 					}});
 				
-			}*/
+			}
 
 			break;
 		case R.id.uveToggleAlarm:
@@ -651,6 +662,30 @@ public class MainActivity extends Activity implements
 		
 	}
 	
+	public void showSunDialog(){
+		final Dialog dialog = new Dialog(this);
+		dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+		dialog.setContentView(R.layout.sun_options_dialog);
+		dialog.getWindow().setBackgroundDrawable(
+				new ColorDrawable(Color.TRANSPARENT));
+		dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+		WindowManager.LayoutParams wmlp = dialog.getWindow().getAttributes();
+
+		wmlp.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+		this.mUveProgress.getY();
+
+		wmlp.y = (int) (mUveProgress.getTop() + this.mUveTopLayout.getHeight() + mUveProgress.getHeight()/2 - Converters.convertDpToPixel(125, this)); // y position
+		dialog.findViewById(R.id.sunDialogContentBackground).setOnClickListener(null);
+		dialog.findViewById(R.id.sunDialogRoot).setOnClickListener(new OnClickListener(){
+
+			@Override
+			public void onClick(View arg0) {
+				dialog.dismiss();
+				
+			}});
+		
+		dialog.show();
+	}
 	
 	private ServiceConnection mConnection = new ServiceConnection() {
 

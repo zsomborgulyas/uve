@@ -103,5 +103,6 @@
     <string name="sticky_notification_title">uve</string>
     <string name="sticky_notification_msg">Service is started.</string>
     <string name="sticky_notification_connected" formatted="false">Connected to: %d of %d device(s).</string>
-
+    <string name="sticky_notification_all_connected">Connected to all of your device(s).</string>
+    <string name="sticky_notification_none_connected">Connected to none of your device(s).</string>
 </resources>

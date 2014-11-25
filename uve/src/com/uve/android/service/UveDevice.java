@@ -26,6 +26,7 @@ public class UveDevice {
 	BluetoothDevice mBtDevice;
 	boolean mIsConnected;
 
+	int mPingingInterval=2000;
 
 	
 	
@@ -57,6 +58,15 @@ public class UveDevice {
 	int mRemainingMinutes=-1;
 	
 	ArrayList<UveWakeUpAlert> mWakeUpList = new ArrayList<UveWakeUpAlert>();
+	
+	
+	public int getPingingInterval() {
+		return mPingingInterval;
+	}
+
+	public void setPingingInterval(int mPingingInterval) {
+		this.mPingingInterval = mPingingInterval;
+	}
 	
 	public int getRemainingMinutes() {
 		return mRemainingMinutes;
