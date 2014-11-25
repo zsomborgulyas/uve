@@ -6,19 +6,26 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.graphics.BitmapFactory;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 
 import com.uve.android.MainActivity;
+import com.uve.android.R;
 
 public class UveService extends Service implements UveDeviceStatuskListener {
 
@@ -43,6 +50,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 
 	private static final int REQUEST_ENABLE_BT = 1;
+	private static final int BASE_NOTIFICATION_ID=99;
 	private BluetoothAdapter mBtAdapter = null;
 	private ArrayList<UveDevice> mDevices;
 	private static final UUID MY_UUID = UUID
@@ -51,6 +59,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	private static final UUID MY_UUID2 = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
 	
 	private MainActivity mActivity; 
+	
+	private NotificationManager mNotificationManager;
 	
 	boolean gotAnswer=false;
 	
@@ -74,10 +84,18 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		if(mBtAdapter==null)
+		if(mBtAdapter==null){
+			
 			mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-		if(mDevices==null)
+		}
+		if(mDevices==null){
 			mDevices = new ArrayList<UveDevice>();
+		}
+		
+		if(mNotificationManager==null){
+			mNotificationManager=(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			makeStickyNotification();
+		}
 		
 		mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
@@ -85,8 +103,71 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		tryConnectToEachBondedDevice();
 		startPingingAllDevices();
 		
+		
+		
+		
+		
 		return Service.START_NOT_STICKY;
 	}
+	
+	private void updateStickyNotification(){
+		int all=mDevices.size();
+		int connected=0;
+		for(UveDevice u: mDevices){
+			if(u.isConnected()) connected++;
+		}
+		
+		 Intent intent = new Intent(this, MainActivity.class);
+		 
+		    PendingIntent pendingIntent = PendingIntent.getActivity(this,
+		    		BASE_NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		 
+		    Notification.Builder builder = new Notification.Builder(this)
+		        .setContentTitle(getResources().getString(R.string.sticky_notification_title))
+		        .setContentText(String.format(getResources().getString(R.string.sticky_notification_connected),connected,all))
+		        .setContentIntent(pendingIntent)
+		        .setSmallIcon(R.drawable.ic_launcher)
+		        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher))
+		        ;
+		    Notification n;
+		 
+		    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+		        n = builder.build();
+		    } else {
+		        n = builder.getNotification();
+		    }
+		 
+		    n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
+		    
+		    mNotificationManager.notify(BASE_NOTIFICATION_ID, n);
+	}
+	
+	private void makeStickyNotification() {
+	    Intent intent = new Intent(this, MainActivity.class);
+	 
+	    PendingIntent pendingIntent = PendingIntent.getActivity(this,
+	    		BASE_NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+	 
+	    Notification.Builder builder = new Notification.Builder(this)
+	        .setContentTitle(getResources().getString(R.string.sticky_notification_title))
+	        .setContentText(getResources().getString(R.string.sticky_notification_msg))
+	        .setContentIntent(pendingIntent)
+	        .setSmallIcon(R.drawable.ic_launcher)
+	        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher))
+	        ;
+	    Notification n;
+	 
+	    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+	        n = builder.build();
+	    } else {
+	        n = builder.getNotification();
+	    }
+	 
+	    n.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
+	    
+	    mNotificationManager.notify(BASE_NOTIFICATION_ID, n);
+	}
+	
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -337,6 +418,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 							
 						
 						} else {
+							updateStickyNotification();
 							connectToDevice(u);
 						}	
 					}});			
@@ -433,7 +515,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 
 	@Override
 	public void onPanic(UveDevice u, String add) {
-		// TODO Auto-generated method stub
+		updateStickyNotification();
 		
 	}
 

@@ -41,6 +41,7 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -71,9 +72,7 @@ public class MainActivity extends Activity implements
 
 	boolean read = false;
 
-	
-	ImageView mWeatherImage;
-	TextView mWeatherMain, mWeatherTemp, mWeatherMisc;
+
 	TextView mNodevice;
 	
 	LocationManager mLocationManager;
@@ -81,24 +80,36 @@ public class MainActivity extends Activity implements
 	
 	public UveDevice mCurrentUveDevice;
 
-	RelativeLayout mUveLayout, mNoUveLayout;
+	RelativeLayout mUveLayout, mNoUveLayout, mUveTopLayout;
 	
 	ImageView mUveStatus;
 	TextView mUveName;
 	ImageView mUveBty;
 	ImageView mUveChild;
-	ImageView mUveSolar;
+	ImageView mUveBtySolar;
+	ImageView mUveProgressRays;
 	ProgressBar mUveTopProgress;
 	PieProgressbarView mUveProgress;
 	TextView mUveProgressText;
 	TextView mUveProgressTextUnit;
 	
+	ImageView mWeatherImage;
+	TextView mWeatherTemp;
+	TextView mWeatherName;
+	
+	TextView mWeatherLoading;
+	
 	ImageView mUveReconnect;
+	TextView mUveReconnectText;
 	PieProgressbarView mUveToggleAlarm;
 	PieProgressbarView mUveTorch;
 	PieProgressbarView mUveToggleChild;
 	
 	RelativeLayout mUveBottomLayout;
+	RelativeLayout mUveWeatherBottomLayout;
+	ImageView mUveBottomWeatherLayoutShadow;
+	
+	FrameLayout mUveContentLayout;
 	
 	BluetoothAdapter mAdapter;
 	SharedPreferences mPreferences;
@@ -111,12 +122,7 @@ public class MainActivity extends Activity implements
 	
 	Timer mDeviceTimer;
 	TimerTask mDeviceTimerTask;
-	
-	private GPUImage mGPUImage;
-	private CameraHelper mCameraHelper;
-	private CameraLoader mCamera;
-	private GPUImageFilter mFilter;
-	private FilterAdjuster mFilterAdjuster;
+
 	
 	/** Called when the activity is first created. */
 	@Override
@@ -157,24 +163,33 @@ public class MainActivity extends Activity implements
 		
 
 		mGPUImage.setFilter(mFilter);*/
+		mUveContentLayout=(FrameLayout)findViewById(R.id.content_frame);
+		
+		mUveTopLayout = (RelativeLayout)findViewById(R.id.uveTopLayout);
 		mUveName=(TextView)findViewById(R.id.uveTopName);
 		mUveBty=(ImageView)findViewById(R.id.uveTopBattery);
-		mUveSolar=(ImageView)findViewById(R.id.uveTopBatterySolar);
+		mUveBtySolar=(ImageView)findViewById(R.id.uveTopBatterySolar);
 		mUveProgress=(PieProgressbarView)findViewById(R.id.uveProgressBar);
 		mUveTopProgress=(ProgressBar)findViewById(R.id.uveTopProgress);
 		mUveProgressText=(TextView)findViewById(R.id.uveProgressText);
 		mUveProgressTextUnit=(TextView)findViewById(R.id.uveProgressTextUnit);
-		
+		mUveProgressRays=(ImageView)findViewById(R.id.uveSunRays);
 		mUveReconnect=(ImageView)findViewById(R.id.uveReconnect);
 		
+		mUveReconnectText=(TextView)findViewById(R.id.uveReconnectText);
+		
 		mUveBottomLayout=(RelativeLayout)findViewById(R.id.uveBottomLayout);
+		mUveBottomWeatherLayoutShadow=(ImageView)findViewById(R.id.uveBottomWeatherLayoutShadow);
+		mUveWeatherBottomLayout=(RelativeLayout)findViewById(R.id.uveBottomWeatherLayout);
 		
 		mUveToggleAlarm=(PieProgressbarView)findViewById(R.id.uveToggleAlarm);
 		mUveTorch=(PieProgressbarView)findViewById(R.id.uveTorch);
 		mUveToggleChild=(PieProgressbarView)findViewById(R.id.uveToggleChild);
 		
-		
-		
+		mWeatherName=(TextView)findViewById(R.id.weatherName);
+		mWeatherTemp=(TextView)findViewById(R.id.weatherTemp);
+		mWeatherImage=(ImageView)findViewById(R.id.weatherImage);
+		mWeatherLoading=(TextView)findViewById(R.id.weatherLoading);
 		
 		mUveTorch.setOnClickListener(this);
 		mUveToggleAlarm.setOnClickListener(this);
@@ -273,13 +288,14 @@ public class MainActivity extends Activity implements
 		mUveName.setText(u.getName());
 		mUveTopProgress.setVisibility(View.GONE);
 		if(u.isConnected()){
+			mUveTopLayout.setBackgroundColor(getResources().getColor(R.color.sun_yellow_fore));
 			mUveBottomLayout.setVisibility(View.VISIBLE);
 			
 			int lipol=u.getBatteryLevel();
 			int solar=u.getSolarBattery();
 				
-			if(solar>0) mUveSolar.setVisibility(View.VISIBLE);
-			else mUveSolar.setVisibility(View.GONE);
+			if(solar>0) mUveBtySolar.setVisibility(View.VISIBLE);
+			else mUveBtySolar.setVisibility(View.GONE);
 			mUveBty.setVisibility(View.VISIBLE);
 			if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
 			if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
@@ -290,7 +306,9 @@ public class MainActivity extends Activity implements
 			mUveProgress.setVisibility(View.VISIBLE);
 			mUveProgressText.setVisibility(View.VISIBLE);
 			mUveProgressTextUnit.setVisibility(View.VISIBLE);
+			mUveProgressRays.setVisibility(View.VISIBLE);
 			mUveReconnect.setVisibility(View.GONE);
+			mUveReconnectText.setVisibility(View.GONE);
 
 			if(u.getChildProtectionStatus()!=0)
 				mUveToggleChild.setProgress(100);
@@ -309,13 +327,17 @@ public class MainActivity extends Activity implements
 			this.mUveProgressTextUnit.setText("%");
 			
 		} else {
+			mUveTopLayout.setBackgroundColor(getResources().getColor(R.color.inactive_top));
+			mUveContentLayout.setBackgroundColor(getResources().getColor(R.color.gray1));
 			mUveBottomLayout.setVisibility(View.GONE);
 			mUveBty.setVisibility(View.GONE);
-			mUveSolar.setVisibility(View.GONE);
+			mUveBtySolar.setVisibility(View.GONE);
 			mUveProgress.setVisibility(View.GONE);
 			mUveProgressText.setVisibility(View.GONE);
 			mUveProgressTextUnit.setVisibility(View.GONE);
+			mUveProgressRays.setVisibility(View.GONE);
 			mUveReconnect.setVisibility(View.VISIBLE);
+			mUveReconnectText.setVisibility(View.VISIBLE);
 			
 		}
 	}
@@ -437,11 +459,13 @@ public class MainActivity extends Activity implements
 
 					@Override
 					public void run() {
-						findViewById(R.id.weatherProgress).setVisibility(View.VISIBLE);
+						mWeatherLoading.setVisibility(View.VISIBLE);
+						
+
 						mWeatherImage.setImageDrawable(null);
-						mWeatherMain.setText("");
+						mWeatherName.setText("");
 						mWeatherTemp.setText("");
-						mWeatherMisc.setText("");
+
 						
 						mWeatherGetter.getWeather(new WeatherCallback(){
 
@@ -453,11 +477,11 @@ public class MainActivity extends Activity implements
 
 										@Override
 										public void run() {
-											findViewById(R.id.weatherProgress).setVisibility(View.GONE);
+											mWeatherLoading.setVisibility(View.GONE);
 											mWeatherImage.setImageResource(w.getDrawable());
-											mWeatherMain.setText(w.getMain());
+											mWeatherName.setText(w.getMain());
 											mWeatherTemp.setText(w.getTemperature());
-											mWeatherMisc.setText("min:" +w.getTemperatureMin()+"  max: "+w.getTemperatureMax()+", "+w.getHumidity()+", "+w.getWind()+"km/h");
+											//mWeatherMisc.setText("min:" +w.getTemperatureMin()+"  max: "+w.getTemperatureMax()+", "+w.getHumidity()+", "+w.getWind()+"km/h");
 										}});
 									}
 							}},getLocation().getLatitude(),getLocation().getLongitude());
@@ -467,7 +491,7 @@ public class MainActivity extends Activity implements
 				
 				
 			}};
-		//mWeatherTimer.scheduleAtFixedRate(mWeatherTimerTask, 0, 600000);
+		mWeatherTimer.scheduleAtFixedRate(mWeatherTimerTask, 0, 600000);
 		
 	}
 
@@ -679,91 +703,4 @@ public class MainActivity extends Activity implements
 		
 	}
 	
-	private class CameraLoader {
-		public int mCurrentCameraId = 0;
-		private Camera mCameraInstance;
-
-		public void onResume() {
-			setUpCamera(mCurrentCameraId);
-		}
-
-		public void onPause() {
-			releaseCamera();
-		}
-
-		public void switchCamera() {
-			releaseCamera();
-			mCurrentCameraId = (mCurrentCameraId + 1)
-					% mCameraHelper.getNumberOfCameras();
-			setUpCamera(mCurrentCameraId);
-		}
-
-		private void setUpCamera(final int id) {
-			mCameraInstance = getCameraInstance(id);
-			Parameters parameters = mCameraInstance.getParameters();		
-			
-			DisplayMetrics metrics = new DisplayMetrics();
-			getWindowManager().getDefaultDisplay().getMetrics(metrics);
-			
-			//Size opts=getBestPreviewSize(metrics.widthPixels, metrics.heightPixels, parameters);
-			//Size opts=getBestPreviewSize(640,640, parameters);
-			//UiLogger.Info("Seleceted preview resolution: "+opts.width+"*"+opts.height);
-			
-			
-			List<Camera.Size> sizeList = parameters.getSupportedPreviewSizes();
-			/*for(Size s : sizeList){
-				UveLogger.Info("Supported preview resolution: "+s.width+"*"+s.height);
-			}
-			Collections.reverse(sizeList);
-			for(Size s : sizeList){
-				if(s.width>=640 && s.height>=640){
-					parameters.setPreviewSize(s.width,s.height);
-					//UiLogger.Info("Seleceted preview resolution: "+s.width+"*"+s.height);
-					break;
-				}
-			}*/
-			parameters.setPreviewSize(sizeList.get(0).width,sizeList.get(0).height);
-			//parameters.setPreviewSize(opts.width,opts.height);
-
-			
-			parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_FIXED);
-			
-	
-			/*if (parameters.getSupportedFocusModes().contains(
-					Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
-				parameters
-						.setFocusMode(Camera.Parameters.fo .FOCUS_MODE_CONTINUOUS_PICTURE);
-			}*/
-			mCameraInstance.setParameters(parameters);
-			
-			
-	
-			int orientation = mCameraHelper.getCameraDisplayOrientation(
-					MainActivity.this, mCurrentCameraId);
-			//UiLogger.Debug("Camera setup orientation: "+orientation);
-			CameraInfo2 cameraInfo = new CameraInfo2();
-			mCameraHelper.getCameraInfo(mCurrentCameraId, cameraInfo);
-			boolean flipHorizontal = cameraInfo.facing == CameraInfo.CAMERA_FACING_FRONT ? true
-					: false;
-			mGPUImage.setUpCamera(mCameraInstance, orientation, flipHorizontal,
-					false);
-		}
-
-		/** A safe way to get an instance of the Camera object. */
-		private Camera getCameraInstance(final int id) {
-			Camera c = null;
-			try {
-				c = mCameraHelper.openCamera(id);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			return c;
-		}
-
-		private void releaseCamera() {
-			mCameraInstance.setPreviewCallback(null);
-			mCameraInstance.release();
-			mCameraInstance = null;
-		}
-	}
 }

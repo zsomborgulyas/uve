@@ -18,4 +18,6 @@
     <color name="sun_yellow_fore">#f09910</color>
     <color name="sun_yellow_back">#f5bb20</color>
     <color name="sun_yellow_progress">#f06c10</color>
+    <color name="drawer">#ff787878</color>
+        <color name="inactive_top">#dadada</color>
 </resources>

@@ -98,4 +98,10 @@
     <string name="no_bt">Your device is not bluetooth capable. Sorry for that.\n:(</string>
     <string name="bt_disabled">Bluetooth is not enabled on your device. Would you like to enable it?</string>
     <string name="drawer_devices">Devices</string>
+    <string name="loading_weather">Loading weather info...</string>
+    <string name="reconnect_text">This is device is currently offline.\nMake sure it is charged and bring it closer.\nIf it is on, it will be connected automatically.</string>
+    <string name="sticky_notification_title">uve</string>
+    <string name="sticky_notification_msg">Service is started.</string>
+    <string name="sticky_notification_connected" formatted="false">Connected to: %d of %d device(s).</string>
+
 </resources>
