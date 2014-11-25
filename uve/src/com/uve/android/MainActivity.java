@@ -123,7 +123,7 @@ public class MainActivity extends Activity implements
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.main_camera);
+		setContentView(R.layout.navidrawer);
 
 		mWeatherGetter=new WeatherGetter(this);
 		
@@ -143,7 +143,7 @@ public class MainActivity extends Activity implements
 		};
 		
 		
-		mGPUImage = new GPUImage(this);
+		/*mGPUImage = new GPUImage(this);
 		mGPUImage.setGLSurfaceView((GLSurfaceView)findViewById(R.id.surfaceView));
 
 		mCameraHelper = new CameraHelper(this);
@@ -156,7 +156,7 @@ public class MainActivity extends Activity implements
         mFilter = new GPUImageFilterGroup(filters);
 		
 
-		mGPUImage.setFilter(mFilter);
+		mGPUImage.setFilter(mFilter);*/
 		mUveName=(TextView)findViewById(R.id.uveTopName);
 		mUveBty=(ImageView)findViewById(R.id.uveTopBattery);
 		mUveSolar=(ImageView)findViewById(R.id.uveTopBatterySolar);
@@ -525,7 +525,8 @@ public class MainActivity extends Activity implements
 			}
 			break;
 		case R.id.uveToggleChild:
-			b=new Bundle();
+			PieProgressbarView.animatePieProgressbarView(mUveToggleChild, 0, 100, 400, MainActivity.this);
+			/*b=new Bundle();
 			if(mCurrentUveDevice.getChildProtectionStatus()==0){
 				b.putInt(UveDeviceConstants.COM_CHILD, 1);
 				mCurrentUveDevice.sendCommand(Command.ChildAlert, b, new UveDeviceCommandListener(){
@@ -553,7 +554,7 @@ public class MainActivity extends Activity implements
 						}
 					}});
 				
-			}
+			}*/
 
 			break;
 		case R.id.uveToggleAlarm:

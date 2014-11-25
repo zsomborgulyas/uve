@@ -128,7 +128,7 @@
             android:layout_below="@+id/weatherImage"
             android:layout_marginLeft="5dp"
             android:layout_marginTop="2dp"
-            android:text=""
+            android:text="rain"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView

@@ -97,5 +97,5 @@
     <string name="day_saturday">Saturday</string>
     <string name="no_bt">Your device is not bluetooth capable. Sorry for that.\n:(</string>
     <string name="bt_disabled">Bluetooth is not enabled on your device. Would you like to enable it?</string>
-
+    <string name="drawer_devices">Devices</string>
 </resources>
