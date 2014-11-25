@@ -102,8 +102,6 @@
                     app:pieColor="@color/sun_yellow_progress"
                     app:topColor="@color/sun_yellow_fore" />
 
-
-
                 <LinearLayout
                     android:layout_width="130dp"
                     android:layout_height="130dp"
@@ -131,33 +129,32 @@
                         android:textColor="#000"
                         android:textSize="20sp" />
                 </LinearLayout>
-                
-                                <ImageView
+
+                <ImageView
                     android:id="@+id/uveReconnect"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
-                    android:layout_centerHorizontal="true"
                     android:layout_alignParentTop="true"
+                    android:layout_centerHorizontal="true"
                     android:layout_marginTop="50dp"
                     android:src="@drawable/reconnect"
                     android:visibility="gone" />
-                
-                                <TextView
+
+                <TextView
                     android:id="@+id/uveReconnectText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
                     android:layout_below="@+id/uveReconnect"
-                    android:layout_marginTop="30dp"
+                    android:layout_centerHorizontal="true"
                     android:layout_marginLeft="15dp"
                     android:layout_marginRight="15dp"
-                    android:gravity="center"
+                    android:layout_marginTop="30dp"
                     android:fontFamily="sans-serif-light"
+                    android:gravity="center"
                     android:text="@string/reconnect_text"
                     android:textColor="#fff"
-                    android:visibility="gone" 
-                    android:textSize="20sp" />
-                
+                    android:textSize="20sp"
+                    android:visibility="gone" />
             </RelativeLayout>
 
             <RelativeLayout
@@ -199,7 +196,7 @@
                             android:layout_centerHorizontal="true"
                             android:layout_centerVertical="true"
                             android:scaleType="fitCenter"
-                            android:src="@drawable/alarm_clock_on"
+                            android:src="@drawable/alarm_clock_off"
                             android:visibility="visible" />
                     </RelativeLayout>
 
@@ -227,7 +224,7 @@
                             android:layout_centerHorizontal="true"
                             android:layout_centerVertical="true"
                             android:scaleType="fitCenter"
-                            android:src="@drawable/flashlight_on"
+                            android:src="@drawable/flashlight_off"
                             android:visibility="visible" />
                     </RelativeLayout>
 
@@ -255,7 +252,7 @@
                             android:layout_centerHorizontal="true"
                             android:layout_centerVertical="true"
                             android:scaleType="fitCenter"
-                            android:src="@drawable/child_on"
+                            android:src="@drawable/child_off"
                             android:visibility="visible" />
                     </RelativeLayout>
                 </LinearLayout>
@@ -267,7 +264,7 @@
                 android:layout_height="14dp"
                 android:layout_above="@+id/uveBottomWeatherLayout"
                 android:scaleType="fitXY"
-                android:src="@drawable/shadow_bottom"/>
+                android:src="@drawable/shadow_bottom" />
 
             <RelativeLayout
                 android:id="@+id/uveBottomWeatherLayout"
@@ -312,20 +309,19 @@
                     android:text=""
                     android:textColor="#000"
                     android:textSize="17sp" />
-                
+
                 <TextView
                     android:id="@+id/weatherLoading"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_centerHorizontal="true"
                     android:layout_alignParentBottom="true"
+                    android:layout_centerHorizontal="true"
                     android:layout_marginBottom="15dp"
                     android:fontFamily="sans-serif-light"
                     android:text="@string/loading_weather"
                     android:textColor="#555"
-                    android:visibility="gone"
-                    android:textSize="17sp" />
-                
+                    android:textSize="17sp"
+                    android:visibility="gone" />
             </RelativeLayout>
         </RelativeLayout>
     </FrameLayout>
