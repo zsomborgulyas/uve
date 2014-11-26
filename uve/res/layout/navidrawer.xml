@@ -49,6 +49,7 @@
                     android:fontFamily="sans-serif-light"
                     android:text="device name"
                     android:textColor="#000"
+                    android:singleLine="true"
                     android:textSize="22sp" />
 
                 <ImageView

@@ -32,6 +32,7 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -51,6 +52,7 @@ import com.uve.android.tools.WeatherCallback;
 import com.uve.android.tools.WeatherGetter;
 import com.uve.android.tools.ui.Converters;
 import com.uve.android.tools.ui.PieProgressbarView;
+import com.uve.android.tools.ui.UveDeviceListAdapter;
 
 public class MainActivity extends Activity implements
 		android.view.View.OnClickListener, LocationListener {
@@ -98,6 +100,9 @@ public class MainActivity extends Activity implements
 	
 	FrameLayout mUveContentLayout;
 	
+	ListView mDeviceList;
+	UveDeviceListAdapter mListAdapter;
+	
 	BluetoothAdapter mAdapter;
 	SharedPreferences mPreferences;
 	Editor mEditor;
@@ -136,20 +141,8 @@ public class MainActivity extends Activity implements
 		};
 		
 		
-		/*mGPUImage = new GPUImage(this);
-		mGPUImage.setGLSurfaceView((GLSurfaceView)findViewById(R.id.surfaceView));
-
-		mCameraHelper = new CameraHelper(this);
-		mCamera = new CameraLoader();
+		mDeviceList = (ListView)findViewById(R.id.left_drawer_list);
 		
-		List<GPUImageFilter> filters = new LinkedList<GPUImageFilter>();
-        filters.add(new GPUImageBoxBlurFilter(4));
-        filters.add(new GPUImageGaussianBlurFilter(4));
-        //filters.add(new GPUImageGrayscaleFilter());
-        mFilter = new GPUImageFilterGroup(filters);
-		
-
-		mGPUImage.setFilter(mFilter);*/
 		mUveContentLayout=(FrameLayout)findViewById(R.id.content_frame);
 		
 		mUveTopLayout = (RelativeLayout)findViewById(R.id.uveTopLayout);
@@ -408,6 +401,10 @@ public class MainActivity extends Activity implements
 
 	}
 
+	public UveService getService(){
+		return mService;
+	}
+	
 	public Location getLocation(){
 		if (currentLocation == null){
 		currentLocation = mLocationManager
@@ -617,7 +614,8 @@ public class MainActivity extends Activity implements
 */
 			break;
 		case R.id.uveReconnect:
-			mUveTopProgress.setVisibility(View.VISIBLE);
+			mService.forceReconnectAndPing(mCurrentUveDevice);
+			/*mUveTopProgress.setVisibility(View.VISIBLE);
 			mCurrentUveDevice.getAdapter().disable();
 			mCurrentUveDevice.getAdapter().enable();
 			mService.connectToDevice(mCurrentUveDevice, new UveDeviceConnectListener(){
@@ -628,10 +626,19 @@ public class MainActivity extends Activity implements
 					
 					mUveTopProgress.setVisibility(View.GONE);
 					
-				}});
+				}});*/
 			break;
 		
 		}
+	}
+	
+	public void refreshDeviceList(){
+		if(mListAdapter==null){
+			mListAdapter=new UveDeviceListAdapter(this);
+			mDeviceList.setAdapter(mListAdapter);
+		}
+		mListAdapter.contentList=mService.getUveDevices();
+		mListAdapter.notifyDataSetChanged();
 	}
 
 	public void showWakeUpAlertDialog(){
@@ -643,6 +650,7 @@ public class MainActivity extends Activity implements
 	}
 	
 	public void showSunDialog(){
+	
 		final Dialog dialog = new Dialog(this);
 		dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		dialog.setContentView(R.layout.sun_options_dialog);
@@ -683,6 +691,8 @@ public class MainActivity extends Activity implements
 			}
 			
 			mService.checkForUnnamedDevices();
+			
+			refreshDeviceList();
 			
 			if(mService.getUveDevices().size()>0)
 				showADevice(0);

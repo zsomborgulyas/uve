@@ -125,6 +125,10 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 	
 	private void updateStickyNotification(){
+		if(mActivity!=null){
+			mActivity.refreshDeviceList();
+		}
+		
 		int all=mDevices.size();
 		int connected=0;
 		for(UveDevice u: mDevices){
@@ -410,6 +414,12 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 			
 			//startPinging(u);*/
 		}
+	}
+	
+	public void forceReconnectAndPing(final UveDevice u){
+		u.setUnsuccessfulConnectAttempts(0);
+		u.setPingingInterval(UveDeviceConstants.PING_INTERVAL_RETRYING);
+		startPinging(u, u.getPingingInterval());
 	}
 	
 	public void startPinging(final UveDevice u, final long interval){
