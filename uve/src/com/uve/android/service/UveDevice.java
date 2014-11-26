@@ -28,7 +28,7 @@ public class UveDevice {
 
 	int mPingingInterval=2000;
 
-	
+	int mUnsuccessfulConnectAttempts=0;
 	
 	int mMelaninIndex;
 	int mEritemaIndex;
@@ -59,6 +59,14 @@ public class UveDevice {
 	
 	ArrayList<UveWakeUpAlert> mWakeUpList = new ArrayList<UveWakeUpAlert>();
 	
+	//mUnsuccessfulConnectAttempts
+	public int getUnsuccessfulConnectAttempts() {
+		return mUnsuccessfulConnectAttempts;
+	}
+
+	public void setUnsuccessfulConnectAttempts(int mUnsuccessfulConnectAttempts) {
+		this.mUnsuccessfulConnectAttempts = mUnsuccessfulConnectAttempts;
+	}
 	
 	public int getPingingInterval() {
 		return mPingingInterval;
@@ -851,7 +859,7 @@ public class UveDevice {
 	public void getAnswer(final Activity a, final Question q,
 			final UveDeviceAnswerListener cb) {
 		if(mIsAnswering){
-			UveLogger.Info("DEVICE "+getName()+" cannot get answer: "+q+" an other getAnswer is in progress.");
+			UveLogger.Info("DEVICE "+getName()+" cannot get answer: "+q+", because an other getAnswer is in progress.");
 			Timer waitTimer=new Timer();
 			TimerTask waitTimerTask=new TimerTask(){
 
@@ -859,8 +867,7 @@ public class UveDevice {
 				public void run() {
 					int counter=0;
 					while(mIsAnswering){
-						if(counter>10){
-							
+						if(counter>20){
 							break;
 						}
 						try{
@@ -868,14 +875,14 @@ public class UveDevice {
 						}catch(Exception e){}
 						counter++;
 					}
-					if(counter<10){
+					if(counter<20){
 						getAnswer(a, q, cb);
 					} else {
-						UveLogger.Error("DEVICE "+getName()+" cannot get answer: "+q+" an other getAnswer is in progress. TIMEOUT");
+						UveLogger.Error("DEVICE "+getName()+" cannot get answer: "+q+", because an other getAnswer is in progress. TIMEOUT");
 					}
 					
 				}};
-				waitTimer.schedule(waitTimerTask, 0);
+				waitTimer.schedule(waitTimerTask, 100);
 		}
 		
 		

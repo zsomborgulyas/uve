@@ -1,6 +1,7 @@
 package com.uve.android.service;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -102,12 +103,25 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		loadDevicesFromAdapter();
 		tryConnectToEachBondedDevice();
 		startPingingAllDevices();
+
 		
 		
-		
-		
-		
-		return Service.START_NOT_STICKY;
+		return Service.START_STICKY;
+	}
+	
+	public void incomingCall(){
+		for(UveDevice u : mDevices){
+			if(u.isConnected()){
+				Bundle b=new Bundle();
+				b.putInt(UveDeviceConstants.COM_VIBRATE, 40);
+				u.sendCommand(Command.Vibrate, b, new UveDeviceCommandListener(){
+
+					@Override
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+					}});
+			}
+		}
 	}
 	
 	private void updateStickyNotification(){
@@ -422,20 +436,68 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 							u.setBatteryLevel(data.getInt(UveDeviceConstants.ANS_BATTERY_LP));
 							u.setSolarBattery(data.getInt(UveDeviceConstants.ANS_BATTERY_SC));
 							updateStickyNotification();
+							u.setUnsuccessfulConnectAttempts(0);
 							
-							if(u.getPingingInterval()<10000){
-								u.setPingingInterval(15000);
+							if(u.getPingingInterval()!=UveDeviceConstants.PING_INTERVAL_INUSE){
+								u.setPingingInterval(UveDeviceConstants.PING_INTERVAL_INUSE);
 								startPinging(u, u.getPingingInterval());
+								
+								Bundle timeBundle=new Bundle();
+								Calendar c = Calendar.getInstance(); 
+								int day=0;
+								
+								switch(c.get(Calendar.DAY_OF_WEEK)){
+									case Calendar.MONDAY:
+										day=1; break;
+									case Calendar.TUESDAY:
+										day=2; break;
+									case Calendar.WEDNESDAY:
+										day=3; break;
+									case Calendar.THURSDAY:
+										day=4; break;
+									case Calendar.FRIDAY:
+										day=5; break;
+									case Calendar.SATURDAY:
+										day=6; break;
+									case Calendar.SUNDAY:
+										day=7; break;
+								}
+								timeBundle.putInt(UveDeviceConstants.COM_TIME_HOUR, c.get(Calendar.HOUR_OF_DAY));
+								timeBundle.putInt(UveDeviceConstants.COM_TIME_MIN, c.get(Calendar.MINUTE));
+								timeBundle.putInt(UveDeviceConstants.COM_TIME_SEC, c.get(Calendar.SECOND));
+								timeBundle.putInt(UveDeviceConstants.COM_TIME_DAY, day);
+								
+								u.sendCommand(Command.SetTime, timeBundle, new UveDeviceCommandListener(){
+
+									@Override
+									public void onComplete(String add,
+											Command command, Bundle data,
+											boolean isSuccessful) {
+											UveLogger.Info("time set: "+u.getName());
+										
+									}});
 							}
 							
 						} else {
+							int att=u.getUnsuccessfulConnectAttempts()+1;
+							u.setUnsuccessfulConnectAttempts(att);
+							
 							updateStickyNotification();
 							connectToDevice(u);
 							
-							if(u.getPingingInterval()>10000){
-								u.setPingingInterval(2000);
+							if(u.getPingingInterval()==UveDeviceConstants.PING_INTERVAL_INUSE){
+								u.setPingingInterval(UveDeviceConstants.PING_INTERVAL_RETRYING);
 								startPinging(u, u.getPingingInterval());
+							} 
+							
+							if(u.getPingingInterval()==UveDeviceConstants.PING_INTERVAL_RETRYING){
+								if(att>10){
+									u.setPingingInterval(UveDeviceConstants.PING_INTERVAL_RARE);
+									startPinging(u, u.getPingingInterval());
+								}
 							}
+							
+							
 						}	
 					}});			
 			}});

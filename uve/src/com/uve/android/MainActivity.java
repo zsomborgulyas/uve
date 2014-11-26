@@ -1,19 +1,8 @@
 package com.uve.android;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import jp.co.cyberagent.android.gpuimage.GPUImage;
-import jp.co.cyberagent.android.gpuimage.GPUImageBoxBlurFilter;
-import jp.co.cyberagent.android.gpuimage.GPUImageFastPseudoGaussianBlurFilter;
-import jp.co.cyberagent.android.gpuimage.GPUImageFilter;
-import jp.co.cyberagent.android.gpuimage.GPUImageFilterGroup;
-import jp.co.cyberagent.android.gpuimage.GPUImageGaussianBlurFilter;
-import jp.co.cyberagent.android.gpuimage.GPUImageGrayscaleFilter;
-import jp.co.cyberagent.android.gpuimage.GPUImageSharpenFilter;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -28,19 +17,13 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.hardware.Camera;
-import android.hardware.Camera.CameraInfo;
-import android.hardware.Camera.Parameters;
-import android.hardware.Camera.Size;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -66,9 +49,6 @@ import com.uve.android.service.UveService.Command;
 import com.uve.android.service.UveService.Question;
 import com.uve.android.tools.WeatherCallback;
 import com.uve.android.tools.WeatherGetter;
-import com.uve.android.tools.gpuimage.CameraHelper;
-import com.uve.android.tools.gpuimage.CameraHelper.CameraInfo2;
-import com.uve.android.tools.gpuimage.GPUImageFilterTools.FilterAdjuster;
 import com.uve.android.tools.ui.Converters;
 import com.uve.android.tools.ui.PieProgressbarView;
 
@@ -441,7 +421,7 @@ public class MainActivity extends Activity implements
 		super.onResume();
 		//mCamera.onResume();
 		Intent intent = new Intent(this, UveService.class);
-		bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+		bindService(intent, mConnection, Context.BIND_ABOVE_CLIENT);
 		
 		
 		String provider;
