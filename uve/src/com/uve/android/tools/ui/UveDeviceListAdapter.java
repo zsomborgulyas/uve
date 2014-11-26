@@ -61,7 +61,8 @@ public class UveDeviceListAdapter extends BaseAdapter {
 					.findViewById(R.id.deviceListItemName);
 			holder.state = (ImageView) v
 					.findViewById(R.id.deviceListItemImage);
-			
+			holder.child = (ImageView) v
+					.findViewById(R.id.deviceListItemChild);
 
 			v.setTag(holder);
 		} else {
@@ -69,12 +70,22 @@ public class UveDeviceListAdapter extends BaseAdapter {
 		}
 		
 		final UveDevice actItem=contentList.get(pos);
-		if(actItem.isConnected())
-			holder.state.setImageResource(R.drawable.status_on);
-		else holder.state.setImageResource(R.drawable.status_off);
-			
+
+		
+		if(actItem.getChildProtectionStatus()==0){
+			holder.child.setVisibility(View.GONE);
+		} else holder.child.setVisibility(View.VISIBLE);
 		
 		holder.name.setText(actItem.getName());
+		
+		
+		if(actItem.isConnected()){
+			holder.state.setImageResource(R.drawable.status_on);
+		}
+		else {
+			holder.state.setImageResource(R.drawable.status_off);
+			holder.child.setVisibility(View.GONE);
+		}
 		
 		holder.layout.setOnClickListener(new OnClickListener(){
 
@@ -92,11 +103,13 @@ public class UveDeviceListAdapter extends BaseAdapter {
 				
 			}});
 		
+		
 		return v;
 	}
 	private static class ViewHolder {
 		public RelativeLayout layout;
 		public TextView name;
 		public ImageView state;
+		public ImageView child;
 	}
 }

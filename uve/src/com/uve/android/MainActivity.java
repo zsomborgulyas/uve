@@ -268,6 +268,8 @@ public class MainActivity extends Activity implements
 		mUveName.setText(u.getName());
 		mUveTopProgress.setVisibility(View.GONE);
 		if(u.isConnected()){
+			refreshDeviceList();
+			
 			mUveTopLayout.setBackgroundColor(getResources().getColor(R.color.sun_yellow_fore));
 			mUveContentLayout.setBackgroundColor(Color.WHITE);
 			mUveBottomLayout.setVisibility(View.VISIBLE);
@@ -353,28 +355,6 @@ public class MainActivity extends Activity implements
 		               .setPositiveButton(R.string.gen_yes, new DialogInterface.OnClickListener() {
 		                   public void onClick(DialogInterface dialog, int id) {
 		                	   mService.getAdapter().enable();
-		                	   final Activity a=MainActivity.this;
-		                	   finish();
-		                	   Timer t=new Timer();
-		                	   t.schedule(new TimerTask(){
-
-								@Override
-								public void run() {
-									int counter=0;
-									while(mService.getAdapter().getState()!=BluetoothAdapter.STATE_ON){
-										if(counter>=10){
-											break;
-										}
-										try{
-											Thread.sleep(100);
-										} catch(Exception e){}
-										counter++;
-									}
-									if(counter<10){
-										startActivity(new Intent(a, MainActivity.class));
-									}
-									
-								}}, 0);
 		                	   
 		                   }
 		               })
@@ -639,6 +619,7 @@ public class MainActivity extends Activity implements
 		}
 		mListAdapter.contentList=mService.getUveDevices();
 		mListAdapter.notifyDataSetChanged();
+		
 	}
 
 	public void showWakeUpAlertDialog(){
