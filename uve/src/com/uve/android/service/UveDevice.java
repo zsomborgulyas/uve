@@ -571,7 +571,7 @@ public class UveDevice {
 						}
 						if (mISStatusReaded.get(0) == 0
 								&& mISStatusReaded.get(1) == 1) {
-							mStatusListener.onChildUpAlert(UveDevice.this,mAddress,
+							mStatusListener.onChildAlert(UveDevice.this,mAddress,
 									mISStatusReaded.get(2) == 0 ? false : true);
 						}
 						if (mISStatusReaded.get(0) == 0

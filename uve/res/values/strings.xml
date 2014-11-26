@@ -96,8 +96,11 @@
     <string name="day_friday">Friday</string>
     <string name="day_saturday">Saturday</string>
     <string name="no_bt">Your device is not bluetooth capable. Sorry for that.\n:(</string>
+    <string name="bt_disabled_title">Bluetooth</string>
     <string name="bt_disabled">Bluetooth is not enabled on your device. Would you like to enable it?</string>
     <string name="drawer_devices">Devices</string>
+    <string name="drawer_exit">Stop checking devices and exit</string>
+        <string name="drawer_exit_dialog_title">Are you sure?</string>
     <string name="loading_weather">Loading weather info...</string>
     <string name="reconnect_text">This is device is currently offline.\nMake sure it is charged and bring it closer.\nIf it is on, it will be connected automatically.</string>
     <string name="sticky_notification_title">uve</string>
@@ -105,4 +108,8 @@
     <string name="sticky_notification_connected" formatted="false">Connected to: %d of %d device(s).</string>
     <string name="sticky_notification_all_connected">Connected to all of your device(s).</string>
     <string name="sticky_notification_none_connected">Connected to none of your device(s).</string>
+    <string name="child_notification_title">Child alert</string>
+    <string name="child_notification_water" formatted="false">WARNING: %s is in water!</string>
+    <string name="child_notification" formatted="false">WARNING: %s reached its UV dose!</string>
+
 </resources>

@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.v4.widget.DrawerLayout;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -42,7 +43,6 @@ import com.uve.android.model.Weather;
 import com.uve.android.service.UveDevice;
 import com.uve.android.service.UveDeviceAnswerListener;
 import com.uve.android.service.UveDeviceCommandListener;
-import com.uve.android.service.UveDeviceConnectListener;
 import com.uve.android.service.UveDeviceConstants;
 import com.uve.android.service.UveLogger;
 import com.uve.android.service.UveService;
@@ -52,6 +52,8 @@ import com.uve.android.tools.WeatherCallback;
 import com.uve.android.tools.WeatherGetter;
 import com.uve.android.tools.ui.Converters;
 import com.uve.android.tools.ui.PieProgressbarView;
+import com.uve.android.tools.ui.TwoButtonDialog;
+import com.uve.android.tools.ui.TwoButtonDialogCallback;
 import com.uve.android.tools.ui.UveDeviceListAdapter;
 
 public class MainActivity extends Activity implements
@@ -70,6 +72,8 @@ public class MainActivity extends Activity implements
 	public UveDevice mCurrentUveDevice;
 
 	RelativeLayout mUveLayout, mNoUveLayout, mUveTopLayout;
+	
+	DrawerLayout mDrawer;
 	
 	ImageView mUveStatus;
 	TextView mUveName;
@@ -102,6 +106,7 @@ public class MainActivity extends Activity implements
 	
 	ListView mDeviceList;
 	UveDeviceListAdapter mListAdapter;
+	RelativeLayout mExit;
 	
 	BluetoothAdapter mAdapter;
 	SharedPreferences mPreferences;
@@ -140,9 +145,11 @@ public class MainActivity extends Activity implements
 			}
 		};
 		
+		mDrawer=(DrawerLayout)findViewById(R.id.drawer_layout);
+		
 		
 		mDeviceList = (ListView)findViewById(R.id.left_drawer_list);
-		
+		mExit = (RelativeLayout)findViewById(R.id.left_drawer_bottom_layout);
 		mUveContentLayout=(FrameLayout)findViewById(R.id.content_frame);
 		
 		mUveTopLayout = (RelativeLayout)findViewById(R.id.uveTopLayout);
@@ -178,6 +185,7 @@ public class MainActivity extends Activity implements
 		mUveProgress.setOnClickListener(this);
 		mUveName.setOnClickListener(this);
 		
+		mExit.setOnClickListener(this);
 		
 		mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 		
@@ -227,7 +235,10 @@ public class MainActivity extends Activity implements
 		
 		final UveDevice u=getADevice(index);
 		UveLogger.Info("showdevice: "+u.getName());
+		
 		if(u==null) return;
+		
+		mDrawer.closeDrawers();
 		
 		if(mCurrentUveDevice!=null)
 			mService.stopUVDosePing(mCurrentUveDevice);
@@ -350,6 +361,23 @@ public class MainActivity extends Activity implements
 				return true;
 			} else {
 				
+				TwoButtonDialog dialog=new TwoButtonDialog(this, getResources().getString(R.string.bt_disabled_title), getResources().getString(R.string.bt_disabled), false, getResources().getString(R.string.gen_ok), getResources().getString(R.string.gen_notnow), new TwoButtonDialogCallback(){
+
+					@Override
+					public void onBtn1() {
+						mService.getAdapter().enable();
+						
+						finish();
+					}
+
+					@Override
+					public void onBtn2() {
+						  finish();
+						
+					}});
+				
+				dialog.show();
+			/*	
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		        builder.setMessage(R.string.bt_disabled)
 		               .setPositiveButton(R.string.gen_yes, new DialogInterface.OnClickListener() {
@@ -366,7 +394,7 @@ public class MainActivity extends Activity implements
 		                   }
 		               });
 		        builder.create().show();
-
+*/
 			}
 		}
 		return false;
@@ -465,18 +493,50 @@ public class MainActivity extends Activity implements
 	public void onPause() {
 		super.onPause();
 		//mCamera.onPause();
-		unbindService(mConnection);
-		if(mCurrentUveDevice!=null)
-			mService.stopUVDosePing(mCurrentUveDevice);
+		if(mService!=null)
+			if(mCurrentUveDevice!=null)
+				mService.stopUVDosePing(mCurrentUveDevice);
 		mWeatherTimerTask.cancel();
 		mWeatherTimer.cancel();
 		mWeatherTimer.purge();
+		
+		unbindService(mConnection);
 	}
 
 	@Override
 	public void onClick(View arg0) {
 		Bundle b=new Bundle();
 		switch (arg0.getId()) {
+		case R.id.left_drawer_bottom_layout:
+			
+			TwoButtonDialog dialog=new TwoButtonDialog(this, getResources().getString(R.string.drawer_exit_dialog_title), "", true, getResources().getString(R.string.gen_yes), getResources().getString(R.string.gen_no), new TwoButtonDialogCallback(){
+
+				@Override
+				public void onBtn1() {
+					finish();
+					
+					Timer t=new Timer();
+					t.schedule(new TimerTask(){
+
+						@Override
+						public void run() {
+							if(mService!=null){
+								mService.stopSelf();
+							}
+							
+						}}, 0);
+				}
+
+				@Override
+				public void onBtn2() {
+					  mDrawer.closeDrawers();
+					
+				}});
+			
+			dialog.show();
+
+			
+			break;
 		case R.id.uveProgressBar:
 			showSunDialog();
 			break;
@@ -613,12 +673,20 @@ public class MainActivity extends Activity implements
 	}
 	
 	public void refreshDeviceList(){
-		if(mListAdapter==null){
-			mListAdapter=new UveDeviceListAdapter(this);
-			mDeviceList.setAdapter(mListAdapter);
-		}
-		mListAdapter.contentList=mService.getUveDevices();
-		mListAdapter.notifyDataSetChanged();
+		runOnUiThread(new Runnable(){
+
+			@Override
+			public void run() {
+				try{
+					if(mListAdapter==null){
+						mListAdapter=new UveDeviceListAdapter(MainActivity.this);
+						mDeviceList.setAdapter(mListAdapter);
+					}
+					mListAdapter.contentList=mService.getUveDevices();
+					mListAdapter.notifyDataSetChanged();
+					mDeviceList.invalidateViews();
+				} catch(Exception e){}
+			}});
 		
 	}
 

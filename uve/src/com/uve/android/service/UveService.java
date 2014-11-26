@@ -52,6 +52,10 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 
 	private static final int REQUEST_ENABLE_BT = 1;
 	private static final int BASE_NOTIFICATION_ID=99;
+	
+	private static final int CHILD_NOTIFICATION_ID=98;
+	private static final int UV_NOTIFICATION_ID=97;
+	
 	private BluetoothAdapter mBtAdapter = null;
 	private ArrayList<UveDevice> mDevices;
 	private static final UUID MY_UUID = UUID
@@ -202,6 +206,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		UveLogger.Info("onDestroy");
 		for(final UveDevice u : mDevices){
 			stopPinging(u);
+			stopUVDosePing(u);
 			u.panic();
 		}
 		mNotificationManager.cancelAll();
@@ -400,19 +405,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	
 	public void startPingingAllDevices(){
 		for(final UveDevice u : mDevices){
-			startPinging(u,2000);
-			/*u.getAnswer(null, Question.Statuses, new UveDeviceAnswerListener(){
-
-				@Override
-				public void onComplete(String add, Question quest, Bundle data,
-						boolean isSuccessful) {
-					if(isSuccessful)
-						u.setStatusesFromBundle(data);
-					
-					
-				}});
-			
-			//startPinging(u);*/
+			startPinging(u,UveDeviceConstants.PING_INTERVAL_RETRYING);
 		}
 	}
 	
@@ -564,7 +557,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 						}});			
 			}});
 		
-		u.getDoseTimer().scheduleAtFixedRate(u.getDoseTimerTask(), 0, 40000);
+		u.getDoseTimer().scheduleAtFixedRate(u.getDoseTimerTask(), 0, UveDeviceConstants.PING_INTERVAL_UV);
 	}
 		
 	
@@ -614,10 +607,40 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 
 	@Override
-	public void onChildUpAlert(UveDevice u, String add, boolean inWater) {
+	public void onChildAlert(UveDevice u, String add, boolean inWater) {
 		// TODO Auto-generated method stub
 		UveLogger.Info("CHILD ALERT");
-		
+		Intent intent = new Intent(this, MainActivity.class);
+		 
+	    PendingIntent pendingIntent = PendingIntent.getActivity(this,
+	    		BASE_NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+	    String message="";
+	    if(inWater)
+	    	message=String.format(getResources().getString(R.string.child_notification_water), u.getName());
+		else message=String.format(getResources().getString(R.string.child_notification), u.getName());
+	    
+	    Notification.Builder builder = new Notification.Builder(this)
+	        .setContentTitle(getResources().getString(R.string.child_notification_title))
+	        .setContentText(message)
+	        .setContentIntent(pendingIntent)
+	        .setSmallIcon(R.drawable.child_on)
+	        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.child_off))
+	        ;
+	    Notification n;
+	    
+	    builder.setPriority(100);
+	    
+	 
+	    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+	        n = builder.build();
+	    } else {
+	        n = builder.getNotification();
+	    }
+	 
+	    
+	    //n.flags |= Notification.FLAG_NO_CLEAR | Notification.PRIORITY_MAX | Notification.f .FLAG_ONGOING_EVENT;
+	    
+	    mNotificationManager.notify(CHILD_NOTIFICATION_ID, n);
 	}
 
 	@Override
