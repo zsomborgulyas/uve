@@ -483,6 +483,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 							
 						} else {
 							int att=u.getUnsuccessfulConnectAttempts()+1;
+							UveLogger.Info("connection attempts pinging "+u.getName()+" "+att);
 							u.setUnsuccessfulConnectAttempts(att);
 							
 							updateStickyNotification();

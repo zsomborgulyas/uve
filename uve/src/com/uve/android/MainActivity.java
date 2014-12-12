@@ -4,6 +4,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
@@ -189,8 +191,10 @@ public class MainActivity extends Activity implements
 		
 		mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 		
-		Intent intent = new Intent(this, UveService.class);
-		startService(intent);
+		if(!isMyServiceRunning(UveService.class)) {
+			Intent intent = new Intent(this, UveService.class);
+			startService(intent);
+		}
 	}
 
 	
@@ -752,7 +756,16 @@ public class MainActivity extends Activity implements
 			mService = null;
 		}
 	};
-
+	
+	private boolean isMyServiceRunning(Class<?> serviceClass) {
+	    ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+	    for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+	        if (serviceClass.getName().equals(service.service.getClassName())) {
+	            return true;
+	        }
+	    }
+	    return false;
+	}
 
 	@Override
 	public void onLocationChanged(Location location) {

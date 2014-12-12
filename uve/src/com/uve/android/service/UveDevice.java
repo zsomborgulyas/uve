@@ -26,7 +26,7 @@ public class UveDevice {
 	BluetoothDevice mBtDevice;
 	boolean mIsConnected;
 
-	int mPingingInterval=2000;
+	int mPingingInterval=UveDeviceConstants.PING_INTERVAL_RETRYING;
 
 	int mUnsuccessfulConnectAttempts=0;
 	
