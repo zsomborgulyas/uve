@@ -278,7 +278,8 @@ public class MainActivity extends Activity implements
 		//UveLogger.Info("showing device content: "+u.getName());
 		mUveName.setText(u.getName());
 		mUveTopProgress.setVisibility(View.GONE);
-		if(u.isConnected()){
+		//if(u.isConnected()){
+		if(2>1){
 			refreshDeviceList();
 			
 			mUveTopLayout.setBackgroundColor(getResources().getColor(R.color.sun_yellow_fore));
