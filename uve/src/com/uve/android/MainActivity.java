@@ -32,6 +32,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -48,7 +52,9 @@ import com.uve.android.service.UveDeviceCommandListener;
 import com.uve.android.service.UveDeviceConstants;
 import com.uve.android.service.UveLogger;
 import com.uve.android.service.UveService;
+import com.uve.android.service.UveService.AlertMode;
 import com.uve.android.service.UveService.Command;
+import com.uve.android.service.UveService.MeasureMode;
 import com.uve.android.service.UveService.Question;
 import com.uve.android.tools.WeatherCallback;
 import com.uve.android.tools.WeatherGetter;
@@ -64,7 +70,7 @@ public class MainActivity extends Activity implements
 	BroadcastReceiver mBroadcastReceiver;
 
 	boolean read = false;
-
+boolean isRetryingAnimated=false;
 
 	TextView mNodevice;
 	
@@ -74,6 +80,7 @@ public class MainActivity extends Activity implements
 	public UveDevice mCurrentUveDevice;
 
 	RelativeLayout mUveLayout, mNoUveLayout, mUveTopLayout;
+	RotateAnimation anim1, anim2;
 	
 	DrawerLayout mDrawer;
 	
@@ -278,13 +285,79 @@ public class MainActivity extends Activity implements
 		mDeviceTimer.schedule(mDeviceTimerTask, 0, 500);	
 	}
 	
+	public void stopAnimateRetrying(){
+		if(!isRetryingAnimated) return;
+		
+		isRetryingAnimated=false;
+		mUveReconnect.clearAnimation();
+		anim1.setAnimationListener(null);
+		anim2.setAnimationListener(null);
+		anim1.cancel();
+		anim2.cancel();
+
+		UveLogger.Info("stop animate");
+	}
+	
+	
+	
+	public void startAnimateRetrying(){
+		if(isRetryingAnimated) {
+			UveLogger.Info("start animate return");
+			return;
+		}
+		UveLogger.Info("start animate");
+		isRetryingAnimated=true;
+		
+		anim1 = new RotateAnimation(00f, -270f,Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        anim1.setInterpolator(new LinearInterpolator());
+        anim1.setDuration(700);
+
+        anim2 = new RotateAnimation(-270f, -360f,Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        anim2.setInterpolator(new LinearInterpolator());
+        anim2.setDuration(700);
+        
+
+
+        
+        anim1.setAnimationListener(new AnimationListener(){
+
+            public void onAnimationEnd(Animation animation) {
+            	mUveReconnect.startAnimation(anim2);
+            }
+
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+
+            public void onAnimationStart(Animation animation) {
+
+            }});
+        anim2.setAnimationListener(new AnimationListener(){
+
+            public void onAnimationEnd(Animation animation) {
+            	mUveReconnect.startAnimation(anim1);
+            }
+
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+
+            public void onAnimationStart(Animation animation) {
+
+            }});
+     
+
+        mUveReconnect.startAnimation(anim1);
+	}
+	
 	public void showDeviceContent(UveDevice u){
 		//UveLogger.Info("showing device content: "+u.getName());
 		mUveName.setText(u.getName());
 		mUveTopProgress.setVisibility(View.GONE);
 		//if(u.isConnected()){
-		if(2>1){
+		if(u.isConnected()){
 			refreshDeviceList();
+			stopAnimateRetrying();
 			
 			mUveTopLayout.setBackgroundColor(getResources().getColor(R.color.sun_yellow_fore));
 			mUveContentLayout.setBackgroundColor(Color.WHITE);
@@ -339,6 +412,15 @@ public class MainActivity extends Activity implements
 			mUveReconnect.setVisibility(View.VISIBLE);
 			mUveReconnectText.setVisibility(View.VISIBLE);
 			
+			if(u.getPingingInterval()==UveDeviceConstants.PING_INTERVAL_RETRYING){
+				startAnimateRetrying();
+				anim1.setDuration(700);
+				anim2.setDuration(700);
+			} else {
+				startAnimateRetrying();
+				anim1.setDuration(2100);
+				anim2.setDuration(2100);
+			}
 		}
 	}
 	
@@ -726,7 +808,130 @@ public class MainActivity extends Activity implements
 				
 			}});
 		
+		updateModeAlertInDialog(dialog);
+		
+		dialog.findViewById(R.id.sunDialogMeasureMode).setOnClickListener(new OnClickListener(){
+
+			@Override
+			public void onClick(View arg0) {
+				Bundle b=new Bundle();
+				switch(mCurrentUveDevice.getMeasureMode()){
+				case Normal:
+					mCurrentUveDevice.setMeasureMode(MeasureMode.UVOnly);
+					b.putInt(UveDeviceConstants.COM_MEASURETYPE, 1);
+					break;
+				case UVOnly:
+					mCurrentUveDevice.setMeasureMode(MeasureMode.DoseOnly);
+					b.putInt(UveDeviceConstants.COM_MEASURETYPE, 2);
+					break;
+				case DoseOnly:
+					mCurrentUveDevice.setMeasureMode(MeasureMode.Solarium);
+					b.putInt(UveDeviceConstants.COM_MEASURETYPE, 3);
+					break;
+				case Solarium:
+					mCurrentUveDevice.setMeasureMode(MeasureMode.Normal);
+					b.putInt(UveDeviceConstants.COM_MEASURETYPE, 0);
+					break;
+				}
+				updateModeAlertInDialog(dialog);
+				dialog.findViewById(R.id.sunDialogMeasureMode).setEnabled(false);
+				
+				mCurrentUveDevice.sendCommand(Command.MeasureType, b, new UveDeviceCommandListener(){
+
+					@Override
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+						dialog.findViewById(R.id.sunDialogMeasureMode).setEnabled(true);
+						
+					}});
+			}});
+		
+		
+		dialog.findViewById(R.id.sunDialogAlertType).setOnClickListener(new OnClickListener(){
+
+			@Override
+			public void onClick(View arg0) {
+				Bundle b=new Bundle();
+				switch(mCurrentUveDevice.getAlertMode()){
+				case LightOnly:
+					mCurrentUveDevice.setAlertMode(AlertMode.ThreeShortVibrates);
+					b.putInt(UveDeviceConstants.COM_ALERTTYPE, 1);
+					break;
+				case ThreeShortVibrates:
+					mCurrentUveDevice.setAlertMode(AlertMode.ThreeLongVibrates);
+					b.putInt(UveDeviceConstants.COM_ALERTTYPE, 2);
+					break;
+				case ThreeLongVibrates:
+					mCurrentUveDevice.setAlertMode(AlertMode.OneLongVibrate);
+					b.putInt(UveDeviceConstants.COM_ALERTTYPE, 3);
+					break;
+				case OneLongVibrate:
+					mCurrentUveDevice.setAlertMode(AlertMode.NineShortVibrates);
+					b.putInt(UveDeviceConstants.COM_ALERTTYPE, 4);
+					break;
+				case NineShortVibrates:
+					mCurrentUveDevice.setAlertMode(AlertMode.ThreeShortDelayedVibrates);
+					b.putInt(UveDeviceConstants.COM_ALERTTYPE, 5);
+					break;
+				case ThreeShortDelayedVibrates:
+					mCurrentUveDevice.setAlertMode(AlertMode.LightOnly);
+					b.putInt(UveDeviceConstants.COM_ALERTTYPE, 0);
+					break;
+				}
+				updateModeAlertInDialog(dialog);
+				dialog.findViewById(R.id.sunDialogAlertType).setEnabled(false);
+				
+				mCurrentUveDevice.sendCommand(Command.AlertType, b, new UveDeviceCommandListener(){
+
+					@Override
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+						dialog.findViewById(R.id.sunDialogAlertType).setEnabled(true);
+						
+					}});
+			}});
+		
 		dialog.show();
+	}
+	
+	void updateModeAlertInDialog(Dialog d){
+		ImageView mMode=(ImageView)d.findViewById(R.id.sunDialogMeasureModePic);
+		ImageView mAlert=(ImageView)d.findViewById(R.id.sunDialogAlertTypePic);
+		switch (mCurrentUveDevice.getMeasureMode()) {
+		case Normal:
+			mMode.setImageResource(R.drawable.measure_mode_normal);
+			break;
+		case UVOnly:
+			mMode.setImageResource(R.drawable.measure_mode_uv);
+			break;
+		case DoseOnly:
+			mMode.setImageResource(R.drawable.measure_mode_dose);
+			break;
+		case Solarium:
+			mMode.setImageResource(R.drawable.measure_mode_sol);
+			break;
+		}
+
+		switch (mCurrentUveDevice.getAlertMode()) {
+		case LightOnly:
+			mAlert.setImageResource(R.drawable.alert_light);
+			break;
+		case ThreeShortVibrates:
+			mAlert.setImageResource(R.drawable.alert_three_short);
+			break;
+		case ThreeLongVibrates:
+			mAlert.setImageResource(R.drawable.alert_three_long);
+			break;
+		case OneLongVibrate:
+			mAlert.setImageResource(R.drawable.alert_one_long);
+			break;
+		case NineShortVibrates:
+			mAlert.setImageResource(R.drawable.alert_nine_short);
+			break;
+		case ThreeShortDelayedVibrates:
+			mAlert.setImageResource(R.drawable.alert_three_short_delayed);
+			break;
+		}
 	}
 	
 	private ServiceConnection mConnection = new ServiceConnection() {

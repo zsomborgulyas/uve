@@ -49,6 +49,11 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	public enum AlertMode {
 		LightOnly, ThreeShortVibrates, ThreeLongVibrates, OneLongVibrate, NineShortVibrates, ThreeShortDelayedVibrates
 	}
+	
+	public enum MeasureMode {
+		Normal, UVOnly, DoseOnly, Solarium
+	}
+
 
 	private static final int REQUEST_ENABLE_BT = 1;
 	private static final int BASE_NOTIFICATION_ID=99;

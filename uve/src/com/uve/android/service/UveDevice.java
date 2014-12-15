@@ -14,7 +14,9 @@ import android.content.Context;
 import android.os.Bundle;
 
 import com.uve.android.service.UveService.AlertMode;
+import com.uve.android.service.UveService.AlertType;
 import com.uve.android.service.UveService.Command;
+import com.uve.android.service.UveService.MeasureMode;
 import com.uve.android.service.UveService.Question;
 import com.uve.android.service.UveWakeUpAlert.AlertState;
 import com.uve.android.tools.ByteCascader;
@@ -38,10 +40,10 @@ public class UveDevice {
 	int mSkinRegenerationTime;
 	int mMeasureStart;
 	int mTimeBetweenMeasures;
-	int mMeasureMode;
+	MeasureMode mMeasureMode;
 	int mManual;
 	int mRealtimeFeedback;
-	int mAlertType;
+	AlertMode mAlertMode;
 	int mMorningAlertType;
 	int mSnooze;
 	int mMorningAlertStatus;
@@ -156,11 +158,11 @@ public class UveDevice {
 		this.mTimeBetweenMeasures = mTimeBetweenMeasures;
 	}
 
-	public int getMeasureMode() {
+	public MeasureMode getMeasureMode() {
 		return mMeasureMode;
 	}
 
-	public void setMeasureMode(int mMeasureMode) {
+	public void setMeasureMode(MeasureMode mMeasureMode) {
 		this.mMeasureMode = mMeasureMode;
 	}
 
@@ -180,12 +182,12 @@ public class UveDevice {
 		this.mRealtimeFeedback = mRealtimeFeedback;
 	}
 
-	public int getAlertType() {
-		return mAlertType;
+	public AlertMode getAlertMode() {
+		return mAlertMode;
 	}
 
-	public void setAlertType(int mAlertType) {
-		this.mAlertType = mAlertType;
+	public void setAlertMode(AlertMode mAlertType) {
+		this.mAlertMode = mAlertType;
 	}
 
 	public int getMorningAlertType() {
@@ -494,10 +496,28 @@ public class UveDevice {
 		mSkinRegenerationTime=b.getInt(UveDeviceConstants.ANS_ST_SKIN_REG);
 		mMeasureStart=b.getInt(UveDeviceConstants.ANS_ST_MEASURE_START);
 		mTimeBetweenMeasures=b.getInt(UveDeviceConstants.ANS_ST_TIME_BETWEEN_MEASURES);
-		mMeasureMode=b.getInt(UveDeviceConstants.ANS_ST_MEASURE_MODE);
+		int mTempMeasureMode=b.getInt(UveDeviceConstants.ANS_ST_MEASURE_MODE);
+		switch(mTempMeasureMode){
+			case 0: mMeasureMode = MeasureMode.Normal; break;
+			case 1: mMeasureMode = MeasureMode.UVOnly; break;
+			case 2: mMeasureMode = MeasureMode.DoseOnly; break;
+			case 3: mMeasureMode = MeasureMode.Solarium; break;
+			default: mMeasureMode = MeasureMode.Normal; break;
+		}
+		
 		mManual=b.getInt(UveDeviceConstants.ANS_ST_MANUAL);
 		mRealtimeFeedback=b.getInt(UveDeviceConstants.ANS_ST_REALTIME);
-		mAlertType=b.getInt(UveDeviceConstants.ANS_ST_ALERT_TYPE);
+		int mTempAlertType=b.getInt(UveDeviceConstants.ANS_ST_ALERT_TYPE);
+		switch(mTempAlertType){
+			case 0: mAlertMode = AlertMode.LightOnly; break;
+			case 1: mAlertMode = AlertMode.ThreeShortVibrates; break;
+			case 2: mAlertMode = AlertMode.ThreeLongVibrates; break;
+			case 3: mAlertMode = AlertMode.OneLongVibrate; break;
+			case 4: mAlertMode = AlertMode.NineShortVibrates; break;
+			case 5: mAlertMode = AlertMode.ThreeShortDelayedVibrates; break;
+			default: mAlertMode = AlertMode.LightOnly; break;
+		}
+		
 		mMorningAlertType=b.getInt(UveDeviceConstants.ANS_ST_MORNING_ALERT_TYPE);
 		mSnooze=b.getInt(UveDeviceConstants.ANS_ST_SNOOZE);
 		mMorningAlertStatus=b.getInt(UveDeviceConstants.ANS_ST_MORNING_ALERT);
