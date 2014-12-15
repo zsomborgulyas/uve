@@ -70,7 +70,7 @@ public class MainActivity extends Activity implements
 	BroadcastReceiver mBroadcastReceiver;
 
 	boolean read = false;
-boolean isRetryingAnimated=false;
+	boolean isRetryingAnimated=false;
 
 	TextView mNodevice;
 	
@@ -89,6 +89,7 @@ boolean isRetryingAnimated=false;
 	ImageView mUveBty;
 	ImageView mUveChild;
 	ImageView mUveBtySolar;
+	ImageView mUveSettings;
 	ImageView mUveProgressRays;
 	ProgressBar mUveTopProgress;
 	PieProgressbarView mUveProgress;
@@ -129,6 +130,7 @@ boolean isRetryingAnimated=false;
 	Timer mDeviceTimer;
 	TimerTask mDeviceTimerTask;
 
+	TwoButtonDialog mMeasureMelanin;
 	
 	/** Called when the activity is first created. */
 	@Override
@@ -165,6 +167,7 @@ boolean isRetryingAnimated=false;
 		mUveName=(TextView)findViewById(R.id.uveTopName);
 		mUveBty=(ImageView)findViewById(R.id.uveTopBattery);
 		mUveBtySolar=(ImageView)findViewById(R.id.uveTopBatterySolar);
+		mUveSettings=(ImageView)findViewById(R.id.uveTopSettings);
 		mUveProgress=(PieProgressbarView)findViewById(R.id.uveProgressBar);
 		mUveTopProgress=(ProgressBar)findViewById(R.id.uveTopProgress);
 		mUveProgressText=(TextView)findViewById(R.id.uveProgressText);
@@ -294,18 +297,13 @@ boolean isRetryingAnimated=false;
 		anim2.setAnimationListener(null);
 		anim1.cancel();
 		anim2.cancel();
-
-		UveLogger.Info("stop animate");
 	}
 	
 	
 	
 	public void startAnimateRetrying(){
-		if(isRetryingAnimated) {
-			UveLogger.Info("start animate return");
-			return;
-		}
-		UveLogger.Info("start animate");
+		if(isRetryingAnimated) return;
+
 		isRetryingAnimated=true;
 		
 		anim1 = new RotateAnimation(00f, -270f,Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
@@ -350,8 +348,54 @@ boolean isRetryingAnimated=false;
         mUveReconnect.startAnimation(anim1);
 	}
 	
+	public void askForMelaninIndex(){
+		boolean isShowing=false;
+		if(mMeasureMelanin!=null){
+			if(mMeasureMelanin.isShowing()) isShowing=true;
+		}
+		if(!isShowing){
+			mMeasureMelanin=new TwoButtonDialog(this, getResources().getString(R.string.gen_just_a_second), getResources().getString(R.string.first_measure_melanin_msg), false, false, getResources().getString(R.string.gen_ok), getResources().getString(R.string.gen_notnow), new TwoButtonDialogCallback(){
+
+				@Override
+				public void onBtn1() {
+					mCurrentUveDevice.getAnswer(MainActivity.this, Question.MeasureMelanin, new UveDeviceAnswerListener(){
+
+						@Override
+						public void onComplete(String add,
+								Question quest, Bundle data,
+								boolean isSuccessful) {
+							if(isSuccessful){
+								mCurrentUveDevice.getAnswer(null, Question.Statuses, new UveDeviceAnswerListener(){
+
+								@Override
+								public void onComplete(String add,
+										Question quest, Bundle data,
+										boolean isSuccessful) {
+									mMeasureMelanin.dismiss();
+									if(isSuccessful){
+										mCurrentUveDevice.setStatusesFromBundle(data);
+									}
+										
+								}});
+							} else {
+								mMeasureMelanin.dismiss();
+							}
+						}});
+					
+				}
+
+				@Override
+				public void onBtn2() {
+					mMeasureMelanin.dismiss();
+					
+				}});
+			
+			mMeasureMelanin.show();
+		}
+	}
+	
 	public void showDeviceContent(UveDevice u){
-		//UveLogger.Info("showing device content: "+u.getName());
+		UveLogger.Info("showing device content: "+u.getName());
 		mUveName.setText(u.getName());
 		mUveTopProgress.setVisibility(View.GONE);
 		//if(u.isConnected()){
@@ -369,6 +413,7 @@ boolean isRetryingAnimated=false;
 			if(solar>0) mUveBtySolar.setVisibility(View.VISIBLE);
 			else mUveBtySolar.setVisibility(View.GONE);
 			mUveBty.setVisibility(View.VISIBLE);
+			mUveSettings.setVisibility(View.VISIBLE);
 			
 			if(lipol>=240) mUveBty.setImageResource(R.drawable.bty_full);
 			if(lipol<240 && lipol>=190) mUveBty.setImageResource(R.drawable.bty_75);
@@ -393,11 +438,17 @@ boolean isRetryingAnimated=false;
 
 			double dosePercent=0;
 			if(u.getDailyDoseLimit()>0)
-				dosePercent=u.getDailyDose()/u.getDailyDoseLimit();
+				dosePercent=(double)u.getDailyDose()/(double)u.getDailyDoseLimit();
 			
+			UveLogger.Info("dose: " +u.getDailyDoseLimit()+" \\ "+u.getDailyDose());
+			UveLogger.Info("dose perc: " +dosePercent*100d);
 			mUveProgress.setProgress((int)Math.round((dosePercent*100d)));
-			this.mUveProgressText.setText(""+dosePercent*100d);
+			this.mUveProgressText.setText(""+Math.round((dosePercent*100d)));
 			this.mUveProgressTextUnit.setText("%");
+			
+			/*if(u.getMelaninIndex()<=0){
+				askForMelaninIndex();
+			}*/
 			
 		} else {
 			mUveTopLayout.setBackgroundColor(getResources().getColor(R.color.inactive_top));
@@ -405,6 +456,7 @@ boolean isRetryingAnimated=false;
 			mUveBottomLayout.setVisibility(View.GONE);
 			mUveBty.setVisibility(View.GONE);
 			mUveBtySolar.setVisibility(View.GONE);
+			mUveSettings.setVisibility(View.GONE);
 			mUveProgress.setVisibility(View.GONE);
 			mUveProgressText.setVisibility(View.GONE);
 			mUveProgressTextUnit.setVisibility(View.GONE);
@@ -416,10 +468,14 @@ boolean isRetryingAnimated=false;
 				startAnimateRetrying();
 				anim1.setDuration(700);
 				anim2.setDuration(700);
+				mUveReconnect.setImageResource(R.drawable.reconnect);
+				mUveReconnectText.setText(getResources().getString(R.string.reconnect_text_trying));
 			} else {
 				startAnimateRetrying();
-				anim1.setDuration(2100);
-				anim2.setDuration(2100);
+				anim1.setDuration(4200);
+				anim2.setDuration(1050);
+				mUveReconnect.setImageResource(R.drawable.offline);
+				mUveReconnectText.setText(getResources().getString(R.string.reconnect_text_rare));
 			}
 		}
 	}
@@ -448,7 +504,7 @@ boolean isRetryingAnimated=false;
 				return true;
 			} else {
 				
-				TwoButtonDialog dialog=new TwoButtonDialog(this, getResources().getString(R.string.bt_disabled_title), getResources().getString(R.string.bt_disabled), false, getResources().getString(R.string.gen_ok), getResources().getString(R.string.gen_notnow), new TwoButtonDialogCallback(){
+				TwoButtonDialog dialog=new TwoButtonDialog(this, getResources().getString(R.string.bt_disabled_title), getResources().getString(R.string.bt_disabled), false, true, getResources().getString(R.string.gen_ok), getResources().getString(R.string.gen_notnow), new TwoButtonDialogCallback(){
 
 					@Override
 					public void onBtn1() {
@@ -596,7 +652,7 @@ boolean isRetryingAnimated=false;
 		switch (arg0.getId()) {
 		case R.id.left_drawer_bottom_layout:
 			
-			TwoButtonDialog dialog=new TwoButtonDialog(this, getResources().getString(R.string.drawer_exit_dialog_title), "", true, getResources().getString(R.string.gen_yes), getResources().getString(R.string.gen_no), new TwoButtonDialogCallback(){
+			TwoButtonDialog dialog=new TwoButtonDialog(this, getResources().getString(R.string.drawer_exit_dialog_title), "", true, true, getResources().getString(R.string.gen_yes), getResources().getString(R.string.gen_no), new TwoButtonDialogCallback(){
 
 				@Override
 				public void onBtn1() {
@@ -609,6 +665,11 @@ boolean isRetryingAnimated=false;
 						public void run() {
 							if(mService!=null){
 								mService.stopSelf();
+							}
+							
+							while(isMyServiceRunning(UveService.class)) {
+								Intent intent = new Intent(MainActivity.this, UveService.class);
+								stopService(intent);
 							}
 							
 						}}, 0);
@@ -897,40 +958,56 @@ boolean isRetryingAnimated=false;
 	void updateModeAlertInDialog(Dialog d){
 		ImageView mMode=(ImageView)d.findViewById(R.id.sunDialogMeasureModePic);
 		ImageView mAlert=(ImageView)d.findViewById(R.id.sunDialogAlertTypePic);
-		switch (mCurrentUveDevice.getMeasureMode()) {
-		case Normal:
-			mMode.setImageResource(R.drawable.measure_mode_normal);
-			break;
-		case UVOnly:
-			mMode.setImageResource(R.drawable.measure_mode_uv);
-			break;
-		case DoseOnly:
-			mMode.setImageResource(R.drawable.measure_mode_dose);
-			break;
-		case Solarium:
-			mMode.setImageResource(R.drawable.measure_mode_sol);
-			break;
+		
+		TextView mTMode=(TextView)d.findViewById(R.id.sunDialogMeasureModeText);
+		TextView mTAlert=(TextView)d.findViewById(R.id.sunDialogAlertTypeText);
+		if(mCurrentUveDevice.getMeasureMode()!=null){
+			switch (mCurrentUveDevice.getMeasureMode()) {
+			case Normal:
+				mMode.setImageResource(R.drawable.measure_mode_normal);
+				mTMode.setText(getResources().getString(R.string.measure_mode_normal));
+				break;
+			case UVOnly:
+				mMode.setImageResource(R.drawable.measure_mode_uv);
+				mTMode.setText(getResources().getString(R.string.measure_mode_uv));
+				break;
+			case DoseOnly:
+				mMode.setImageResource(R.drawable.measure_mode_dose);
+				mTMode.setText(getResources().getString(R.string.measure_mode_dose));
+				break;
+			case Solarium:
+				mMode.setImageResource(R.drawable.measure_mode_sol);
+				mTMode.setText(getResources().getString(R.string.measure_mode_solarium));
+				break;
+			}
 		}
-
-		switch (mCurrentUveDevice.getAlertMode()) {
-		case LightOnly:
-			mAlert.setImageResource(R.drawable.alert_light);
-			break;
-		case ThreeShortVibrates:
-			mAlert.setImageResource(R.drawable.alert_three_short);
-			break;
-		case ThreeLongVibrates:
-			mAlert.setImageResource(R.drawable.alert_three_long);
-			break;
-		case OneLongVibrate:
-			mAlert.setImageResource(R.drawable.alert_one_long);
-			break;
-		case NineShortVibrates:
-			mAlert.setImageResource(R.drawable.alert_nine_short);
-			break;
-		case ThreeShortDelayedVibrates:
-			mAlert.setImageResource(R.drawable.alert_three_short_delayed);
-			break;
+		if(mCurrentUveDevice.getAlertMode()!=null){
+			switch (mCurrentUveDevice.getAlertMode()) {
+			case LightOnly:
+				mAlert.setImageResource(R.drawable.alert_light);
+				mTAlert.setText(getResources().getString(R.string.alert_mode_light));
+				break;
+			case ThreeShortVibrates:
+				mAlert.setImageResource(R.drawable.alert_three_short);
+				mTAlert.setText(getResources().getString(R.string.alert_mode_3short));
+				break;
+			case ThreeLongVibrates:
+				mAlert.setImageResource(R.drawable.alert_three_long);
+				mTAlert.setText(getResources().getString(R.string.alert_mode_3long));
+				break;
+			case OneLongVibrate:
+				mAlert.setImageResource(R.drawable.alert_one_long);
+				mTAlert.setText(getResources().getString(R.string.alert_mode_1long));
+				break;
+			case NineShortVibrates:
+				mAlert.setImageResource(R.drawable.alert_nine_short);
+				mTAlert.setText(getResources().getString(R.string.alert_mode_9short));
+				break;
+			case ThreeShortDelayedVibrates:
+				mAlert.setImageResource(R.drawable.alert_three_short_delayed);
+				mTAlert.setText(getResources().getString(R.string.alert_mode_3delayed));
+				break;
+			}
 		}
 	}
 	

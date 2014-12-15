@@ -53,6 +53,16 @@
                     android:textSize="22sp" />
 
                 <ImageView
+                    android:id="@+id/uveTopSettings"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="20dp"
+                    android:layout_toLeftOf="@+id/uveTopBattery"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/settings" />
+
+                <ImageView
                     android:id="@+id/uveTopBattery"
                     android:layout_width="15dp"
                     android:layout_height="45dp"
@@ -152,7 +162,7 @@
                     android:layout_marginTop="30dp"
                     android:fontFamily="sans-serif-light"
                     android:gravity="center"
-                    android:text="@string/reconnect_text"
+                    android:text="@string/reconnect_text_trying"
                     android:textColor="#fff"
                     android:textSize="20sp"
                     android:visibility="gone" />

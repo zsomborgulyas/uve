@@ -24,8 +24,9 @@ public class TwoButtonDialog extends Dialog implements OnClickListener {
 	String mTitle, mMsg, mBtn1, mBtn2;
 	boolean isBtnShown=false;
 	TwoButtonDialogCallback mCallback;
+	boolean mDismissOnClick=true;
 
-	public TwoButtonDialog(Activity a, String title, String msg, boolean cancelable, String btn1, String btn2, TwoButtonDialogCallback cb) {
+	public TwoButtonDialog(Activity a, String title, String msg, boolean cancelable, boolean doc, String btn1, String btn2, TwoButtonDialogCallback cb) {
 		super(a);
 		mActivity = a;
 		mTitle = title;
@@ -34,6 +35,7 @@ public class TwoButtonDialog extends Dialog implements OnClickListener {
 		mBtn2=btn2;
 		isBtnShown=cancelable;
 		mCallback=cb;
+		mDismissOnClick=doc;
 	}
 
 	@Override
@@ -86,7 +88,9 @@ public class TwoButtonDialog extends Dialog implements OnClickListener {
 
 	@Override
 	public void onClick(View v) {
-		this.dismiss();
+		if(mDismissOnClick)
+			this.dismiss();
+		
 		if (v.getId() == R.id.default_dialog_btn1)
 			mCallback.onBtn1();
 		if (v.getId() == R.id.default_dialog_btn2)

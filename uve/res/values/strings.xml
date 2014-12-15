@@ -102,7 +102,11 @@
     <string name="drawer_exit">Stop checking devices and exit</string>
     <string name="drawer_exit_dialog_title">Are you sure?</string>
     <string name="loading_weather">Loading weather info...</string>
-    <string name="reconnect_text">This is device is currently offline.\nMake sure it is charged and bring it closer.\nIf it is on, it will be connected automatically.</string>
+    <string name="reconnect_text_rare">This is device is currently offline.\nMake sure it is charged and bring it closer.\nIf it is on, it will be connected automatically.</string>
+    <string name="reconnect_text_trying">Connecting...</string>
+    <string name="gen_info">Information</string>
+    <string name="gen_error">Error</string>
+    <string name="gen_just_a_second">It is just a second...</string>
     <string name="sticky_notification_title">uve</string>
     <string name="sticky_notification_msg">Service is started.</string>
     <string name="sticky_notification_connected" formatted="false">Connected to: %d of %d device(s).</string>
@@ -116,5 +120,19 @@
     <string name="sun_dialog_protection" formatted="false">MILK</string>
     <string name="sun_dialog_reset" formatted="false">RESET</string>
     <string name="sun_dialog_start" formatted="false">START</string>
-        <string name="sun_dialog_alter" formatted="false">ALTER</string>
+    <string name="sun_dialog_alter" formatted="false">ALTER</string>
+    <string name="measure_mode_normal">NRM</string>
+    <string name="measure_mode_uv">UV</string>
+    <string name="measure_mode_dose">DOSE</string>
+    <string name="measure_mode_solarium">SOL</string>
+    <string name="alert_mode_light">LIGHT</string>
+    <string name="alert_mode_3short">3 VIBS</string>
+    <string name="alert_mode_3long">3 VIBS</string>
+    <string name="alert_mode_1long">1 VIB</string>
+    <string name="alert_mode_9short">9 VIBS</string>
+    <string name="alert_mode_3delayed">3 VIBS</string>
+    <string name="planned_back_front">Choose this measure mode, if you want to tan your back first, then your belly.</string>
+    <string name="planned_front_back">Choose this measure mode, if you want to tan your belly first, then your back.</string>
+    <string name="first_measure_melanin_msg">We have currently no information about your skin. Please stand by for measuring your melanin index.\nInstruction 1\nInstruction 2</string>
+
 </resources>
