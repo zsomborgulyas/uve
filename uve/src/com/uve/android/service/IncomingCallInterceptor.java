@@ -1,18 +1,11 @@
 package com.uve.android.service;
 
-import com.uve.android.MainActivity;
-import com.uve.android.service.UveService.MyBinder;
-
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.Binder;
-import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
-import android.widget.Toast;
+
+import com.uve.android.service.UveService.MyBinder;
 
 public class IncomingCallInterceptor extends BroadcastReceiver {                                    
 

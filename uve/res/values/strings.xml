@@ -98,6 +98,7 @@
     <string name="no_bt">Your device is not bluetooth capable. Sorry for that.\n:(</string>
     <string name="bt_disabled_title">Bluetooth</string>
     <string name="bt_disabled">Bluetooth is not enabled on your device. Would you like to enable it?</string>
+    <string name="bt_enabling">Bluetooth is being enabled. Please relaunch the app!</string>
     <string name="drawer_devices">Devices</string>
     <string name="drawer_exit">Stop checking devices and exit</string>
     <string name="drawer_exit_dialog_title">Are you sure?</string>
@@ -106,6 +107,7 @@
     <string name="reconnect_text_trying">Connecting...</string>
     <string name="gen_info">Information</string>
     <string name="gen_error">Error</string>
+    <string name="gen_back">Back</string>
     <string name="gen_just_a_second">It is just a second...</string>
     <string name="sticky_notification_title">uve</string>
     <string name="sticky_notification_msg">Service is started.</string>
@@ -114,6 +116,7 @@
     <string name="sticky_notification_none_connected">Connected to none of your device(s).</string>
     <string name="child_notification_title">Child alert</string>
     <string name="child_notification_water" formatted="false">WARNING: %s is in water!</string>
+    <string name="child_notification_away" formatted="false">WARNING: %s device is disconnected!</string>
     <string name="child_notification" formatted="false">WARNING: %s reached its UV dose!</string>
     <string name="sun_dialog_mode" formatted="false">MODE</string>
     <string name="sun_dialog_alert" formatted="false">ALERT</string>
@@ -121,6 +124,7 @@
     <string name="sun_dialog_reset" formatted="false">RESET</string>
     <string name="sun_dialog_start" formatted="false">START</string>
     <string name="sun_dialog_alter" formatted="false">ALTER</string>
+    <string name="sun_dialog_graph" formatted="false">STATS</string>
     <string name="measure_mode_normal">NRM</string>
     <string name="measure_mode_uv">UV</string>
     <string name="measure_mode_dose">DOSE</string>
@@ -131,8 +135,19 @@
     <string name="alert_mode_1long">1 VIB</string>
     <string name="alert_mode_9short">9 VIBS</string>
     <string name="alert_mode_3delayed">3 VIBS</string>
+    <string name="planned_title">Please choose measure mode!</string>
     <string name="planned_back_front">Choose this measure mode, if you want to tan your back first, then your belly.</string>
     <string name="planned_front_back">Choose this measure mode, if you want to tan your belly first, then your back.</string>
-    <string name="first_measure_melanin_msg">We have currently no information about your skin. Please stand by for measuring your melanin index.\nInstruction 1\nInstruction 2</string>
+    <string name="first_measure_melanin_msg">Please stand by for measuring your melanin index.\nInstruction 1\nInstruction 2</string>
+    <string name="first_measure_eritema_msg">Please stand by for measuring your eritema index.\nInstruction 1\nInstruction 2</string>
+    <string name="measure">Measure</string>
+    <string name="settings_title" formatted="false">%s\'s settings</string>
+    <string name="settings_child_away">Alert, when child is away</string>
+    <string name="settings_child_water">Alert, when child is in water</string>
+    <string name="settings_measure_melanin">Measure your melanine index</string>
+    <string name="settings_measure_eritema">Measure your eritema index</string>
+    <string name="settings_night_mode">Switch off in the dark</string>
+    <string name="settings_call_alert">Vibrate on an incoming call or SMS</string>
+    <string name="settings_sleep">Disconnect, go in sleep mode</string>
 
 </resources>

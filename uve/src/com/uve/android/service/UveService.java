@@ -76,6 +76,10 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	
 	private SharedPreferences mPreferences;
 	
+	public SharedPreferences getPrefs(){
+		return mPreferences;
+	}
+	
 	private final IBinder mBinder = new MyBinder();
 	
 	public class MyBinder extends Binder {
@@ -98,6 +102,11 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 			
 			mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 		}
+		
+		if(!mBtAdapter.isEnabled()){
+			stopSelf();
+		}
+		
 		if(mDevices==null){
 			mDevices = new ArrayList<UveDevice>();
 		}
@@ -120,9 +129,35 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	
 	public void incomingCall(){
 		for(UveDevice u : mDevices){
-			if(u.isConnected()){
+			if(u.isConnected() && u.isCallAlert()){
 				Bundle b=new Bundle();
 				b.putInt(UveDeviceConstants.COM_VIBRATE, 40);
+				u.sendCommand(Command.Vibrate, b, new UveDeviceCommandListener(){
+
+					@Override
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+					}});
+			}
+		}
+	}
+	
+	public void incomingSMS(){
+		for(UveDevice u : mDevices){
+			if(u.isConnected() && u.isCallAlert()){
+				Bundle b=new Bundle();
+				b.putInt(UveDeviceConstants.COM_VIBRATE, 30);
+				u.sendCommand(Command.Vibrate, b, new UveDeviceCommandListener(){
+
+					@Override
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+					}});
+				
+				try{
+					Thread.sleep(2000);
+				} catch(Exception e){}
+				
 				u.sendCommand(Command.Vibrate, b, new UveDeviceCommandListener(){
 
 					@Override
@@ -387,6 +422,10 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 						newUve.setStatusCallback(this);
 						newUve.setName(getNameFromAddress(device.getAddress()));
 						mDevices.add(newUve);
+						newUve.setAlertIfChildAway(getPrefs().getBoolean(newUve.getAddress()+"childAway", false));
+						newUve.setAlertIfChildWater(getPrefs().getBoolean(newUve.getAddress()+"childWater", false));
+						newUve.setCallAlert(getPrefs().getBoolean(newUve.getAddress()+"callAlert", false));			
+
 						UveLogger.Info("LOAD: added a device. "+newUve.getAddress()+" name: "+newUve.getName());
 					} 
 				}
@@ -603,7 +642,39 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	@Override
 	public void onPanic(UveDevice u, String add) {
 		updateStickyNotification();
-		
+		if(u.isAlertIfChildAway() && u.getChildProtectionStatus()==1){
+			UveLogger.Info("CHILD ALERT");
+			Intent intent = new Intent(this, MainActivity.class);
+			 
+		    PendingIntent pendingIntent = PendingIntent.getActivity(this,
+		    		BASE_NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		    String message="";
+		    
+		    message=String.format(getResources().getString(R.string.child_notification_away), u.getName());
+		    
+		    Notification.Builder builder = new Notification.Builder(this)
+		        .setContentTitle(getResources().getString(R.string.child_notification_title))
+		        .setContentText(message)
+		        .setContentIntent(pendingIntent)
+		        .setSmallIcon(R.drawable.child_on)
+		        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.child_off))
+		        ;
+		    Notification n;
+		    
+		    builder.setPriority(100);
+		    
+		 
+		    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+		        n = builder.build();
+		    } else {
+		        n = builder.getNotification();
+		    }
+		 
+		    
+		    //n.flags |= Notification.FLAG_NO_CLEAR | Notification.PRIORITY_MAX | Notification.f .FLAG_ONGOING_EVENT;
+		    
+		    mNotificationManager.notify(CHILD_NOTIFICATION_ID, n);
+		}
 	}
 
 	@Override
@@ -614,14 +685,14 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 
 	@Override
 	public void onChildAlert(UveDevice u, String add, boolean inWater) {
-		// TODO Auto-generated method stub
 		UveLogger.Info("CHILD ALERT");
 		Intent intent = new Intent(this, MainActivity.class);
 		 
 	    PendingIntent pendingIntent = PendingIntent.getActivity(this,
 	    		BASE_NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 	    String message="";
-	    if(inWater)
+	    
+	    if(inWater && u.isAlertIfChildWater())
 	    	message=String.format(getResources().getString(R.string.child_notification_water), u.getName());
 		else message=String.format(getResources().getString(R.string.child_notification), u.getName());
 	    

@@ -13,6 +13,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -22,6 +23,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -36,6 +38,9 @@ import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -59,6 +64,7 @@ import com.uve.android.service.UveService.Question;
 import com.uve.android.tools.WeatherCallback;
 import com.uve.android.tools.WeatherGetter;
 import com.uve.android.tools.ui.Converters;
+import com.uve.android.tools.ui.DefaultDialog;
 import com.uve.android.tools.ui.PieProgressbarView;
 import com.uve.android.tools.ui.TwoButtonDialog;
 import com.uve.android.tools.ui.TwoButtonDialogCallback;
@@ -85,6 +91,7 @@ public class MainActivity extends Activity implements
 	DrawerLayout mDrawer;
 	
 	ImageView mUveStatus;
+	ImageView mUveTopOpenDeviceList;
 	TextView mUveName;
 	ImageView mUveBty;
 	ImageView mUveChild;
@@ -95,6 +102,8 @@ public class MainActivity extends Activity implements
 	PieProgressbarView mUveProgress;
 	TextView mUveProgressText;
 	TextView mUveProgressTextUnit;
+	
+
 	
 	ImageView mWeatherImage;
 	TextView mWeatherTemp;
@@ -130,7 +139,9 @@ public class MainActivity extends Activity implements
 	Timer mDeviceTimer;
 	TimerTask mDeviceTimerTask;
 
-	TwoButtonDialog mMeasureMelanin;
+	TwoButtonDialog mMeasureMelanin, mMeasureEritema;
+	
+	Dialog mPleaseWaitDialog;
 	
 	/** Called when the activity is first created. */
 	@Override
@@ -140,6 +151,8 @@ public class MainActivity extends Activity implements
 		setContentView(R.layout.navidrawer);
 
 		mWeatherGetter=new WeatherGetter(this);
+		
+		
 		
 		
 		mBroadcastReceiver = new BroadcastReceiver() {
@@ -174,6 +187,7 @@ public class MainActivity extends Activity implements
 		mUveProgressTextUnit=(TextView)findViewById(R.id.uveProgressTextUnit);
 		mUveProgressRays=(ImageView)findViewById(R.id.uveSunRays);
 		mUveReconnect=(ImageView)findViewById(R.id.uveReconnect);
+		mUveTopOpenDeviceList=(ImageView)findViewById(R.id.uveTopOpenDeviceList);
 		
 		mUveReconnectText=(TextView)findViewById(R.id.uveReconnectText);
 		
@@ -196,17 +210,33 @@ public class MainActivity extends Activity implements
 		mUveReconnect.setOnClickListener(this);
 		mUveProgress.setOnClickListener(this);
 		mUveName.setOnClickListener(this);
-		
+		mUveSettings.setOnClickListener(this);
+		mUveTopOpenDeviceList.setOnClickListener(this);
 		mExit.setOnClickListener(this);
 		
 		mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 		
-		if(!isMyServiceRunning(UveService.class)) {
-			Intent intent = new Intent(this, UveService.class);
-			startService(intent);
+		if(checkBTState()) {
+		
+			if(!isMyServiceRunning(UveService.class)) {
+				Intent intent = new Intent(this, UveService.class);
+				startService(intent);
+			}
 		}
 	}
-
+	
+	public void showPleaseWaitDialog(String s) {
+		mPleaseWaitDialog = new DefaultDialog(this, getResources().getString(
+				R.string.gen_please_wait), s, false);
+		mPleaseWaitDialog.show();
+	}
+	
+	public void dismissPleaseWaitDialog() {
+		if (mPleaseWaitDialog != null) {
+			if (mPleaseWaitDialog.isShowing())
+				mPleaseWaitDialog.dismiss();
+		}
+	}
 	
 	public void promtForNewDeviceName(final String address){
 		AlertDialog.Builder alert = new AlertDialog.Builder(
@@ -260,7 +290,9 @@ public class MainActivity extends Activity implements
 		mService.startUVDosePing(u);
 		
 		mCurrentUveDevice=u;
+
 		
+	
 		if(mDeviceTimer!=null){
 			mDeviceTimer.cancel();
 			mDeviceTimer.purge();
@@ -354,16 +386,19 @@ public class MainActivity extends Activity implements
 			if(mMeasureMelanin.isShowing()) isShowing=true;
 		}
 		if(!isShowing){
-			mMeasureMelanin=new TwoButtonDialog(this, getResources().getString(R.string.gen_just_a_second), getResources().getString(R.string.first_measure_melanin_msg), false, false, getResources().getString(R.string.gen_ok), getResources().getString(R.string.gen_notnow), new TwoButtonDialogCallback(){
+			mMeasureMelanin=new TwoButtonDialog(this, getResources().getString(R.string.gen_just_a_second), getResources().getString(R.string.first_measure_melanin_msg), false, false, getResources().getString(R.string.measure), getResources().getString(R.string.gen_cancel), new TwoButtonDialogCallback(){
 
 				@Override
 				public void onBtn1() {
+					showPleaseWaitDialog("");
+					
 					mCurrentUveDevice.getAnswer(MainActivity.this, Question.MeasureMelanin, new UveDeviceAnswerListener(){
 
 						@Override
 						public void onComplete(String add,
 								Question quest, Bundle data,
 								boolean isSuccessful) {
+							dismissPleaseWaitDialog();
 							if(isSuccessful){
 								mCurrentUveDevice.getAnswer(null, Question.Statuses, new UveDeviceAnswerListener(){
 
@@ -394,8 +429,57 @@ public class MainActivity extends Activity implements
 		}
 	}
 	
+	
+	public void askForEritemaIndex(){
+		boolean isShowing=false;
+		if(mMeasureEritema!=null){
+			if(mMeasureEritema.isShowing()) isShowing=true;
+		}
+		if(!isShowing){
+			mMeasureEritema=new TwoButtonDialog(this, getResources().getString(R.string.gen_just_a_second), getResources().getString(R.string.first_measure_eritema_msg), false, false, getResources().getString(R.string.measure), getResources().getString(R.string.gen_cancel), new TwoButtonDialogCallback(){
+
+				@Override
+				public void onBtn1() {
+					showPleaseWaitDialog("");
+					mCurrentUveDevice.getAnswer(MainActivity.this, Question.MeasureEritema, new UveDeviceAnswerListener(){
+
+						@Override
+						public void onComplete(String add,
+								Question quest, Bundle data,
+								boolean isSuccessful) {
+							dismissPleaseWaitDialog();
+							if(isSuccessful){
+								mCurrentUveDevice.getAnswer(null, Question.Statuses, new UveDeviceAnswerListener(){
+
+								@Override
+								public void onComplete(String add,
+										Question quest, Bundle data,
+										boolean isSuccessful) {
+									mMeasureEritema.dismiss();
+									if(isSuccessful){
+										mCurrentUveDevice.setStatusesFromBundle(data);
+									}
+										
+								}});
+							} else {
+								mMeasureEritema.dismiss();
+							}
+						}});
+					
+				}
+
+				@Override
+				public void onBtn2() {
+					mMeasureEritema.dismiss();
+					
+				}});
+			
+			mMeasureEritema.show();
+		}
+	}
+	
 	public void showDeviceContent(UveDevice u){
-		UveLogger.Info("showing device content: "+u.getName());
+		//UveLogger.Info("showing device content: "+u.getName());
 		mUveName.setText(u.getName());
 		mUveTopProgress.setVisibility(View.GONE);
 		//if(u.isConnected()){
@@ -440,8 +524,8 @@ public class MainActivity extends Activity implements
 			if(u.getDailyDoseLimit()>0)
 				dosePercent=(double)u.getDailyDose()/(double)u.getDailyDoseLimit();
 			
-			UveLogger.Info("dose: " +u.getDailyDoseLimit()+" \\ "+u.getDailyDose());
-			UveLogger.Info("dose perc: " +dosePercent*100d);
+			//UveLogger.Info("dose: " +u.getDailyDoseLimit()+" \\ "+u.getDailyDose());
+			//UveLogger.Info("dose perc: " +dosePercent*100d);
 			mUveProgress.setProgress((int)Math.round((dosePercent*100d)));
 			this.mUveProgressText.setText(""+Math.round((dosePercent*100d)));
 			this.mUveProgressTextUnit.setText("%");
@@ -489,7 +573,8 @@ public class MainActivity extends Activity implements
 	}
 
 	private boolean checkBTState() {
-		if (mService.getAdapter() == null) {
+		final BluetoothAdapter adapter=BluetoothAdapter.getDefaultAdapter();
+		if (adapter == null) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 	        builder.setMessage(R.string.no_bt)
 	               .setPositiveButton(R.string.gen_ok, new DialogInterface.OnClickListener() {
@@ -500,7 +585,7 @@ public class MainActivity extends Activity implements
 	        builder.create().show();
 	        return false;
 		} else {
-			if (mService.getAdapter().isEnabled()) {
+			if (adapter.isEnabled()) {
 				return true;
 			} else {
 				
@@ -508,9 +593,66 @@ public class MainActivity extends Activity implements
 
 					@Override
 					public void onBtn1() {
-						mService.getAdapter().enable();
+						adapter.enable();
+						final DefaultDialog dd=new DefaultDialog(MainActivity.this, getResources().getString(R.string.gen_info), getResources().getString(R.string.bt_enabling), true);
 						
-						finish();
+						/*Timer t=new Timer();
+						t.schedule(new TimerTask(){
+
+							@Override
+							public void run() {
+								int cc=0;
+								while(true){
+									if(adapter.isEnabled()){
+										runOnUiThread(new Runnable(){
+	
+											@Override
+											public void run() {
+												dd.dismiss();
+												
+												if (Build.VERSION.SDK_INT >= 11) {
+												    recreate();
+												} else {
+												    Intent intent = getIntent();
+												    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+												    finish();
+												    overridePendingTransition(0, 0);
+
+												    startActivity(intent);
+												    overridePendingTransition(0, 0);
+												}
+												
+											}});
+										break;
+									} else {
+										cc++;
+										try{
+											Thread.sleep(100);
+										}catch(Exception e){}
+									}
+									if(cc>100) {
+										runOnUiThread(new Runnable(){
+											
+											@Override
+											public void run() {
+												finish();
+											}});
+										break;
+									}
+								}
+								
+							}}, 0);
+						
+						
+						*/
+						dd.show();
+						dd.setOnDismissListener(new OnDismissListener(){
+
+							@Override
+							public void onDismiss(DialogInterface arg0) {
+								finish();
+							}});
+						
 					}
 
 					@Override
@@ -520,24 +662,7 @@ public class MainActivity extends Activity implements
 					}});
 				
 				dialog.show();
-			/*	
-				AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		        builder.setMessage(R.string.bt_disabled)
-		               .setPositiveButton(R.string.gen_yes, new DialogInterface.OnClickListener() {
-		                   public void onClick(DialogInterface dialog, int id) {
-		                	   mService.getAdapter().enable();
-		                	   
-		                   }
-		               })
-		               .setNegativeButton(R.string.gen_notnow, new DialogInterface.OnClickListener() {
-		                   public void onClick(DialogInterface dialog, int id) {
-		                	  
-		                       finish();
-		                       
-		                   }
-		               });
-		        builder.create().show();
-*/
+			
 			}
 		}
 		return false;
@@ -685,8 +810,14 @@ public class MainActivity extends Activity implements
 
 			
 			break;
+		case R.id.uveTopOpenDeviceList:
+			this.mDrawer.openDrawer(R.id.left_drawer);
+			break;
 		case R.id.uveProgressBar:
 			showSunDialog();
+			break;
+		case R.id.uveTopSettings:
+			showSettingsDialog();
 			break;
 		case R.id.uveTorch:
 			b=new Bundle();
@@ -1011,6 +1142,111 @@ public class MainActivity extends Activity implements
 		}
 	}
 	
+	
+	
+	
+	public void showSettingsDialog(){
+		
+		final Dialog dialog = new Dialog(this);
+		dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+		dialog.setContentView(R.layout.settingsdialog);
+		dialog.getWindow().setBackgroundDrawable(
+				new ColorDrawable(Color.TRANSPARENT));
+		//dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+		WindowManager.LayoutParams wmlp = dialog.getWindow().getAttributes();
+
+		wmlp.gravity = Gravity.CENTER;
+	
+		((TextView)dialog.findViewById(R.id.settings_dialog_title)).setText(String.format(getResources().getString(R.string.settings_title),mCurrentUveDevice.getName()));
+		
+		dialog.findViewById(R.id.settings_dialog_ok).setOnClickListener(new OnClickListener(){
+
+			@Override
+			public void onClick(View arg0) {
+				dialog.dismiss();
+				
+			}});
+		
+		if(mCurrentUveDevice.getChildProtectionStatus()==0){
+			dialog.findViewById(R.id.settings_child_away).setEnabled(false);//.setVisibility(View.GONE);
+			dialog.findViewById(R.id.settings_child_water).setEnabled(false);//.setVisibility(View.GONE);
+		} else {
+			dialog.findViewById(R.id.settings_child_away).setEnabled(true);//.setVisibility(View.VISIBLE);
+			dialog.findViewById(R.id.settings_child_water).setEnabled(true);//.setVisibility(View.VISIBLE);
+		}
+		
+		((CheckBox)dialog.findViewById(R.id.settings_child_away)).setChecked(mCurrentUveDevice.isAlertIfChildAway());
+		((CheckBox)dialog.findViewById(R.id.settings_child_water)).setChecked(mCurrentUveDevice.isAlertIfChildWater());
+		((CheckBox)dialog.findViewById(R.id.settings_call_alert)).setChecked(mCurrentUveDevice.isCallAlert());
+		
+		((CheckBox)dialog.findViewById(R.id.settings_child_away)).setOnCheckedChangeListener(new OnCheckedChangeListener(){
+
+			@Override
+			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
+				Editor e=mService.getPrefs().edit();
+				e.putBoolean(mCurrentUveDevice.getAddress()+"childAway", arg1);
+				e.commit();
+				mCurrentUveDevice.setAlertIfChildAway(arg1);
+			}});
+		
+		((CheckBox)dialog.findViewById(R.id.settings_child_water)).setOnCheckedChangeListener(new OnCheckedChangeListener(){
+
+			@Override
+			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
+				Editor e=mService.getPrefs().edit();
+				e.putBoolean(mCurrentUveDevice.getAddress()+"childWater", arg1);
+				e.commit();
+				mCurrentUveDevice.setAlertIfChildWater(arg1);
+				
+			}});
+		
+		dialog.findViewById(R.id.settings_measure_melanin).setOnClickListener(new OnClickListener(){
+
+			@Override
+			public void onClick(View arg0) {
+				askForMelaninIndex();
+				
+			}});
+		
+		dialog.findViewById(R.id.settings_measure_eritema).setOnClickListener(new OnClickListener(){
+
+			@Override
+			public void onClick(View arg0) {
+				askForEritemaIndex();
+				
+			}});
+		
+		((CheckBox)dialog.findViewById(R.id.settings_call_alert)).setOnCheckedChangeListener(new OnCheckedChangeListener(){
+
+			@Override
+			public void onCheckedChanged(CompoundButton arg0, boolean arg1) {
+				Editor e=mService.getPrefs().edit();
+				e.putBoolean(mCurrentUveDevice.getAddress()+"callAlert", arg1);
+				e.commit();
+				mCurrentUveDevice.setCallAlert(arg1);
+				
+			}});
+		
+		dialog.findViewById(R.id.settings_go_sleep).setOnClickListener(new OnClickListener(){
+
+			@Override
+			public void onClick(View arg0) {
+				Bundle b=new Bundle();
+				b.putInt(UveDeviceConstants.COM_ENERGY, 0);
+				mCurrentUveDevice.sendCommand(Command.EnergySaver, b, new UveDeviceCommandListener(){
+
+					@Override
+					public void onComplete(String add, Command command,
+							Bundle data, boolean isSuccessful) {
+						
+						
+					}});
+				
+			}});
+		
+		dialog.show();
+	}
+	
 	private ServiceConnection mConnection = new ServiceConnection() {
 
 		public void onServiceConnected(ComponentName className, IBinder binder) {
@@ -1022,9 +1258,7 @@ public class MainActivity extends Activity implements
 					.getDefaultSharedPreferences(mService);
 			mEditor = mPreferences.edit();
 			
-			if(checkBTState()){
-				
-			}
+
 			
 			mService.checkForUnnamedDevices();
 			

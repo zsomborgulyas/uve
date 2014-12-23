@@ -56,6 +56,35 @@ public class UveDevice {
 	int mBatteryLevel;
 	int mSolarBattery;
 	boolean mIsTorchOn;
+	boolean mCallAlert;
+	
+	public boolean isAlertIfChildAway() {
+		return mAlertIfChildAway;
+	}
+
+	public void setAlertIfChildAway(boolean mAlertIfChildAway) {
+		this.mAlertIfChildAway = mAlertIfChildAway;
+	}
+
+	public boolean isAlertIfChildWater() {
+		return mAlertIfChildWater;
+	}
+
+	public void setAlertIfChildWater(boolean mAlertIfChildWater) {
+		this.mAlertIfChildWater = mAlertIfChildWater;
+	}
+
+	public boolean isCallAlert() {
+		// TODO Auto-generated method stub
+		return mCallAlert;
+	}
+
+	public void setCallAlert(boolean al) {
+		mCallAlert=al;
+	}
+
+	boolean mAlertIfChildAway=false;
+	boolean mAlertIfChildWater=false;
 	
 	int mRemainingMinutes=-1;
 	
@@ -617,15 +646,16 @@ public class UveDevice {
 	
 	
 
-	public ArrayList<Integer> waitForBytes(int byteCount) {
+	public ArrayList<Integer> waitForBytes(int byteCount, int timeout) {
 		UveLogger.Info("DEVICE "+getName()+" waiting for "+byteCount+" bytes...");
 		ArrayList<Integer> arr = new ArrayList<Integer>();
 		mISReaded.clear();
 		int sleepCounter = 0;
 		while (mISReaded.size() < byteCount) {
 			try {
-				
-				Thread.sleep(100);
+				if(timeout<100)
+					timeout=100;
+				Thread.sleep(timeout);
 				sleepCounter++;
 			} catch (Exception e) {
 			}
@@ -928,7 +958,7 @@ public class UveDevice {
 							break;
 						}
 
-						got = waitForBytes(4);
+						got = waitForBytes(4,0);
 						if (got == null) {
 							panic();
 							answerError(a, b, q, cb);
@@ -954,7 +984,7 @@ public class UveDevice {
 							break;
 						}
 
-						got = waitForBytes(1);
+						got = waitForBytes(1,0);
 						if (got == null) {
 							panic();
 							answerError(a, b, q, cb);
@@ -978,7 +1008,7 @@ public class UveDevice {
 							break;
 						}
 
-						got = waitForBytes(5);
+						got = waitForBytes(5,0);
 						if (got == null) {
 
 							answerError(a, b, q, cb);
@@ -1000,7 +1030,7 @@ public class UveDevice {
 							break;
 						}
 
-						got = waitForBytes(2);
+						got = waitForBytes(2,0);
 						if (got == null) {
 							//panic();
 							answerError(a, b, q, cb);
@@ -1023,7 +1053,7 @@ public class UveDevice {
 							answerError(a, b, q, cb);
 							break;
 						}
-						got = waitForBytes(28);
+						got = waitForBytes(28,0);
 						if (got == null) {
 							//panic();
 							answerError(a, b, q, cb);
@@ -1067,7 +1097,7 @@ public class UveDevice {
 							break;
 						}
 
-						got = waitForBytes(62);
+						got = waitForBytes(62,0);
 						if (got == null) {
 							answerError(a, b, q, cb);
 
@@ -1101,7 +1131,7 @@ public class UveDevice {
 							break;
 						}
 
-						got = waitForBytes(1);
+						got = waitForBytes(1,800);
 						if (got == null) {
 							//panic();
 							answerError(a, b, q, cb);
@@ -1109,6 +1139,29 @@ public class UveDevice {
 							break;
 						}
 						b.putInt(UveDeviceConstants.ANS_MESURE_MELANIN, got.get(0));
+
+						answer(a, b, q, cb);
+
+						break;
+					case MeasureEritema:
+						try {
+							mOS.write(UveDeviceConstants.QUE_MESURE_ERITEMA);
+							UveLogger.Info("DEVICE "+getName()+" sent: QUE_MESURE_ERITEMA");
+						} catch (Exception e) {
+							e.printStackTrace();
+							panic();
+							answerError(a, b, q, cb);
+							break;
+						}
+
+						got = waitForBytes(1,800);
+						if (got == null) {
+							//panic();
+							answerError(a, b, q, cb);
+
+							break;
+						}
+						b.putInt(UveDeviceConstants.ANS_MESURE_ERITEMA, got.get(0));
 
 						answer(a, b, q, cb);
 
@@ -1127,5 +1180,7 @@ public class UveDevice {
 		sendTimer.schedule(sendTimerTask, 0);
 
 	}
+
+
 
 }

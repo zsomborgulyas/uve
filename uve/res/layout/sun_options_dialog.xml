@@ -80,7 +80,7 @@
     </RelativeLayout>
 
     <RelativeLayout
-        android:id="@+id/sunDialogProtection"
+        android:id="@+id/sunDialogGraph"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_alignParentLeft="true"
@@ -89,21 +89,21 @@
         android:background="@drawable/sun_circle_dialog_button_bg" >
 
         <ImageView
-            android:id="@+id/sunDialogProtectionPic"
+            android:id="@+id/sunDialogGraphPic"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="5dp"
-            android:src="@drawable/lotion" />
+            android:src="@drawable/graph" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/sunDialogProtectionPic"
+            android:layout_below="@+id/sunDialogGraphPic"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="3dp"
-            android:text="@string/sun_dialog_protection"
+            android:text="@string/sun_dialog_graph"
             android:textColor="#000"
             android:textSize="11sp" />
     </RelativeLayout>
@@ -147,12 +147,12 @@
 
         <ImageView
             android:id="@+id/sunDialogStartPic"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp"
-            android:src="@drawable/status_off" />
+            android:layout_marginTop="10dp"
+            android:src="@drawable/planned_start" />
 
         <TextView
             android:layout_width="wrap_content"
