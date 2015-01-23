@@ -790,6 +790,7 @@ boolean isRaysAnimated=false;
 			showSunDialog();
 			break;
 		case R.id.uveTopSettings:
+			
 			showSettingsDialog();
 			break;
 		case R.id.uveTorch:

@@ -5,13 +5,19 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 
 import com.uve.android.service.UveService.AlertMode;
 import com.uve.android.service.UveService.AlertType;
@@ -31,7 +37,7 @@ public class UveDevice {
 	int mPingingInterval=UveDeviceConstants.PING_INTERVAL_RETRYING;
 
 	int mUnsuccessfulConnectAttempts=0;
-	
+	public int[] mPairCodes=new int[4];
 	int mMelaninIndex;
 	int mEritemaIndex;
 	int mDailyDose;
@@ -57,6 +63,43 @@ public class UveDevice {
 	int mSolarBattery;
 	boolean mIsTorchOn;
 	boolean mCallAlert;
+	
+	private BluetoothGatt mGatt;
+	private BluetoothGattCharacteristic mGattTx;
+	private BluetoothGattCharacteristic mGattRx;
+	
+	
+	public void setBLECallback(BluetoothGattCallback cb){
+		mBLECallback=cb;
+	}
+	
+	public BluetoothGattCallback getBLECallback(){
+		return mBLECallback;
+	}
+	
+	public void setGatt(BluetoothGatt bg){
+		mGatt=bg;
+	}
+	
+	public void setGattTx(BluetoothGattCharacteristic tx){
+		mGattTx=tx;
+	}
+	
+	public void setGattRx(BluetoothGattCharacteristic rx){
+		mGattRx=rx;
+	}
+	
+	public BluetoothGatt getGatt(){
+		return mGatt;
+	}
+	
+	public BluetoothGattCharacteristic getGattTx(){
+		return mGattTx;
+	}
+	
+	public BluetoothGattCharacteristic getGattRx(){
+		return mGattRx;
+	}
 	
 	public boolean isAlertIfChildAway() {
 		return mAlertIfChildAway;
@@ -332,6 +375,9 @@ public class UveDevice {
 
 	UveDeviceStatuskListener mStatusListener;
 
+
+	
+	
 	boolean mIsAnswering = false;
 
 	public Timer getPingTimer(){
@@ -425,9 +471,233 @@ public class UveDevice {
 		mContext = c;
 	}
 
+	BluetoothGattCallback mBLECallback=new BluetoothGattCallback(){
+		// Called whenever the device connection state changes, i.e. from
+		// disconnected to connected.
+		@Override
+		public void onConnectionStateChange(BluetoothGatt gatt, int status,
+				int newState) {
+			super.onConnectionStateChange(gatt, status, newState);
+			mGatt=gatt;
+			UveLogger.Debug("onConnectionStateChange " + newState);
+			if (newState == BluetoothGatt.STATE_CONNECTED) {
+				UveLogger.Debug("onConnectionStateChange gatt connected");
+				UveDevice.this.setConnected(false);
+				UveLogger.Debug("Connected!");
+				// Discover services.
+				if (!gatt.discoverServices()) {
+					UveLogger.Debug("Failed to start discovering services!");
+				}
+			} else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+				UveDevice.this.setConnected(false);
+				UveLogger.Debug("onConnectionStateChange gatt disconnected");
+				UveLogger.Debug("Disconnected!");
+			} else {
+				UveLogger.Debug("Connection state changed.  New state: " + newState);
+			}
+		}
+
+		// Called when services have been discovered on the remote device.
+		// It seems to be necessary to wait for this discovery to occur before
+		// manipulating any services or characteristics.
+		@Override
+		public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+			super.onServicesDiscovered(gatt, status);
+			UveLogger.Debug("onServicesDiscovered " + status);
+			if (status == BluetoothGatt.GATT_SUCCESS) {
+				UveLogger.Debug("onServicesDiscovered completed.");
+				UveLogger.Debug("Service discovery completed!");
+			} else {
+				UveLogger.Debug("onServicesDiscovered failed.");
+				UveLogger.Debug("Service discovery failed with status: " + status);
+			}
+			// Save reference to each characteristic.
+			mGattTx = mGatt.getService(UveService.UART_UUID).getCharacteristic(UveService.TX_UUID);
+			mGattRx = mGatt.getService(UveService.UART_UUID).getCharacteristic(UveService.RX_UUID);
+
+			UveLogger.Debug("onServicesDiscovered got tx/rx.");
+
+			// Setup notifications on RX characteristic changes (i.e. data
+			// received).
+			// First call setCharacteristicNotification to enable notification.
+			if (!gatt.setCharacteristicNotification(mGattRx, true)) {
+				UveLogger.Debug("Couldn't set notifications for RX characteristic!");
+			}
+			// Next update the RX characteristic's client descriptor to enable
+			// notifications.
+			if (mGattRx.getDescriptor(UveService.CLIENT_UUID) != null) {
+				BluetoothGattDescriptor desc = mGattRx.getDescriptor(UveService.CLIENT_UUID);
+				desc.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+				UveLogger.Debug("onServicesDiscovered rx setting value.");
+				if (!gatt.writeDescriptor(desc)) {
+					UveLogger.Debug("onServicesDiscovered rx fail.");
+					UveLogger.Debug("Couldn't write RX client descriptor value!");
+				} else {
+					UveLogger.Debug("onServicesDiscovered rx enabled.");
+					
+					Timer t=new Timer();
+					t.schedule(new TimerTask(){
+
+						@Override
+						public void run() {
+							initPairing();
+							
+						}}, 100);
+				}
+			} else {
+				UveLogger.Debug("Couldn't get RX client descriptor!");
+			}
+		}
+
+		// Called when a remote characteristic changes (like the RX
+		// characteristic).
+		@Override
+		public void onCharacteristicChanged(BluetoothGatt gatt,
+				BluetoothGattCharacteristic characteristic) {
+			super.onCharacteristicChanged(gatt, characteristic);
+			handleIncomingRx((int)characteristic.getValue()[0]);
+			
+			
+		}
+	};
+	
+	
+	public void initPairing(){
+		try{
+			Thread.sleep(100);
+		} catch(Exception e){}
+
+		if(sendPairCode()){
+			UveLogger.Info("code sent.");
+			
+			
+			mIsAnswering = true;
+			ArrayList<Integer> got = waitForBytes(1,0);
+			mIsAnswering = false;
+			if (got == null) {
+				//panic();
+				UveLogger.Debug("Code CHECK FAILED.");
+				
+			} else {
+				UveDevice.this.setConnected(true);
+				Bundle data=new Bundle();
+				data.putString("connected", "true");
+				UveDevice.this.mStatusListener.onDataReaded(UveDevice.this, null, null, data);
+				
+				if(got.get(0)==1){
+					UveLogger.Debug("Code SAVED.");
+				} 
+				if(got.get(0)==2){
+					UveLogger.Debug("Code ACCEPTED.");
+					
+					
+					getAnswer(null, Question.Statuses, new UveDeviceAnswerListener(){
+	
+						@Override
+						public void onComplete(String add, Question quest, Bundle data,
+								boolean isSuccessful) {
+							if(isSuccessful)
+								setStatusesFromBundle(data);
+						}});
+					
+					
+					
+					
+					
+					
+					Bundle b=new Bundle();
+					
+					b.putString("connected", "true");
+					mStatusListener.onDataReaded(UveDevice.this, "", null, b);
+					
+					UveDevice.this.setConnected(true);
+					
+				}
+				if(got.get(0)==3){
+					UveLogger.Debug("Code WRONG.");
+				}
+			}
+		
+		} else {
+			UveLogger.Debug("Couldnt send code.");
+		}
+		
+	}
+	
 	public UveDevice() {
 		mISReaded = new ArrayList<Integer>();
 		mISStatusReaded = new ArrayList<Integer>();
+		
+	}
+	
+	public boolean sendPairCode(){
+		
+		
+		UveLogger.Debug("sending pair code: "+mPairCodes[0]+" "+mPairCodes[1]+" "+mPairCodes[2]+" "+mPairCodes[3]);
+		
+		if(writeTx(this.mPairCodes[0]) && writeTx(this.mPairCodes[1]) && writeTx(this.mPairCodes[2]) && writeTx(this.mPairCodes[3])){
+			UveLogger.Debug("sending pair code: ok "+mPairCodes[0]+" "+mPairCodes[1]+" "+mPairCodes[2]+" "+mPairCodes[3]);
+			return true;
+		}
+		
+		/*UveLogger.Debug("code1: "+ writeTx(this.mPairCodes[0]));
+		UveLogger.Debug("code2: "+ writeTx(this.mPairCodes[1]));
+		UveLogger.Debug("code3: "+ writeTx(this.mPairCodes[2]));
+		UveLogger.Debug("code4: "+ writeTx(this.mPairCodes[3]));
+		/*writeTx(this.mPairCodes[0]);
+		writeTx(this.mPairCodes[1]);
+		writeTx(this.mPairCodes[2]);
+		writeTx(this.mPairCodes[3]);*/
+		UveLogger.Debug("sending pair code: FAIL "+mPairCodes[0]+" "+mPairCodes[1]+" "+mPairCodes[2]+" "+mPairCodes[3]);
+		return false;
+	}
+	
+	public void handleIncomingRx(int readed){
+		
+
+		UveLogger.Info("DEVICE "+getName()+" "+(mIsAnswering==true ? "A":"D")+" byte got: " + readed);
+
+		if (!mIsAnswering) {
+			if (mISStatusReaded.size() == 0) {
+				if (readed == 0)
+					mISStatusReaded.add(readed);
+				else {
+					mStatusListener.onUVFeedback(UveDevice.this, mAddress, readed);
+				}
+
+			} else {
+				if (mISStatusReaded.size() == 1) {
+					if (readed == 0 || readed == 1 || readed == 2) {
+						mISStatusReaded.add(readed);
+					}
+				} else {
+					if (mISStatusReaded.size() == 2) {
+						mISStatusReaded.add(readed);
+					}
+				}
+			}
+		} else {
+			mISReaded.add(readed);
+		}
+
+		if (mISStatusReaded.size() == 3) {
+			if (mISStatusReaded.get(0) == 0
+					&& mISStatusReaded.get(1) == 0) {
+				mStatusListener.onWakeUpAlert(UveDevice.this, mAddress,
+						mISStatusReaded.get(2));
+			}
+			if (mISStatusReaded.get(0) == 0
+					&& mISStatusReaded.get(1) == 1) {
+				mStatusListener.onChildAlert(UveDevice.this,mAddress,
+						mISStatusReaded.get(2) == 0 ? false : true);
+			}
+			if (mISStatusReaded.get(0) == 0
+					&& mISStatusReaded.get(1) == 2) {
+				mStatusListener.onUVAlert(UveDevice.this,mAddress,
+						mISStatusReaded.get(2) == 1 ? true : false);
+			}
+			mISStatusReaded.clear();
+		}
 	}
 
 
@@ -477,8 +747,28 @@ public class UveDevice {
 		return false;
 	}
 
-	void panic() {
+	void panicBLE(){
 		mIsAnswering = false;
+		if (mGatt != null) {
+			// For better reliability be careful to disconnect and close the
+			// connection.
+			mGatt.disconnect();
+			mGatt.close();
+			mGatt = null;
+			mGattTx = null;
+			mGattRx = null;
+		}
+		setConnected(false);
+		mStatusListener.onPanic(this, mAddress);
+	}
+	
+	void panic() {
+		
+		panicBLE();
+		
+		/*mIsAnswering = false;
+		
+		
 		UveLogger.Error("DEVICE "+getName()+ " PANIC");
 		
 		if (mIS != null) {
@@ -512,7 +802,7 @@ public class UveDevice {
 		
 		
 		setConnected(false);
-		mStatusListener.onPanic(this, mAddress);
+		mStatusListener.onPanic(this, mAddress);*/
 	}
 
 	public void setStatusesFromBundle(Bundle b){
@@ -670,163 +960,178 @@ public class UveDevice {
 		arr = mISReaded;
 		return arr;
 	}
+	
+	public boolean writeTx(int b){
+		if (mGattTx == null) return false;
+		byte[] comm = new byte[1];
+		comm[0]=(byte)b;
+		mGattTx.setValue(comm);
+		if (mGatt.writeCharacteristic(mGattTx)) {
+			try{
+				Thread.sleep(20);
+			}catch(Exception e){}
+			return true;
+		} else {
+			return false;
+		}		
+	}
 
 	public void sendCommand(final Command c, Bundle data, final UveDeviceCommandListener cl) {
 		try {
 			switch (c) {
 			case EnergySaver:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_ENERGY+")");
-				mOS.write(UveDeviceConstants.COMS_ENERGY);
-				mOS.write(data.getInt(UveDeviceConstants.COM_ENERGY));
+				writeTx(UveDeviceConstants.COMS_ENERGY);
+				writeTx(data.getInt(UveDeviceConstants.COM_ENERGY));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Timeout:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_TIMEOUT+")");
-				mOS.write(UveDeviceConstants.COMS_TIMEOUT);
-				mOS.write(data.getInt(UveDeviceConstants.COM_TIMEOUT));
+				writeTx(UveDeviceConstants.COMS_TIMEOUT);
+				writeTx(data.getInt(UveDeviceConstants.COM_TIMEOUT));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case MeasureType:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_MEASURETYPE+")");
-				mOS.write(UveDeviceConstants.COMS_MEASURETYPE);
-				mOS.write(data.getInt(UveDeviceConstants.COM_MEASURETYPE));
+				writeTx(UveDeviceConstants.COMS_MEASURETYPE);
+				writeTx(data.getInt(UveDeviceConstants.COM_MEASURETYPE));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case MeasureManual:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_MEASUREMANUAL+")");
-				mOS.write(UveDeviceConstants.COMS_MEASUREMANUAL);
-				mOS.write(data.getInt(UveDeviceConstants.COM_MEASUREMANUAL));
+				writeTx(UveDeviceConstants.COMS_MEASUREMANUAL);
+				writeTx(data.getInt(UveDeviceConstants.COM_MEASUREMANUAL));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case RestartMeasure:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_RESTART_MEASURE+")");
-				mOS.write(UveDeviceConstants.COMS_RESTART_MEASURE);
+				writeTx(UveDeviceConstants.COMS_RESTART_MEASURE);
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case DeleteMeasures:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_DELETE_MESAURES+")");
-				mOS.write(UveDeviceConstants.COMS_DELETE_MESAURES);
+				writeTx(UveDeviceConstants.COMS_DELETE_MESAURES);
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case SetTime:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_TIME+")");
-				mOS.write(UveDeviceConstants.COMS_TIME);
-				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_DAY));
-				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_HOUR));
-				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_MIN));
-				mOS.write(data.getInt(UveDeviceConstants.COM_TIME_SEC));
+				writeTx(UveDeviceConstants.COMS_TIME);
+				writeTx(data.getInt(UveDeviceConstants.COM_TIME_DAY));
+				writeTx(data.getInt(UveDeviceConstants.COM_TIME_HOUR));
+				writeTx(data.getInt(UveDeviceConstants.COM_TIME_MIN));
+				writeTx(data.getInt(UveDeviceConstants.COM_TIME_SEC));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case StartTimedMeasure:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_TIMED_TIME+")");
-				mOS.write(UveDeviceConstants.COMS_TIMED_TIME);
-				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_DAY));
-				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_HOUR));
-				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_MIN));
-				mOS.write(data.getInt(UveDeviceConstants.COM_TIMED_TIME_SEC));
+				writeTx(UveDeviceConstants.COMS_TIMED_TIME);
+				writeTx(data.getInt(UveDeviceConstants.COM_TIMED_TIME_DAY));
+				writeTx(data.getInt(UveDeviceConstants.COM_TIMED_TIME_HOUR));
+				writeTx(data.getInt(UveDeviceConstants.COM_TIMED_TIME_MIN));
+				writeTx(data.getInt(UveDeviceConstants.COM_TIMED_TIME_SEC));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Reset:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_SOFT_RESET+")");
-				mOS.write(UveDeviceConstants.COMS_SOFT_RESET);
+				writeTx(UveDeviceConstants.COMS_SOFT_RESET);
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case DeleteUvDose:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_DELETE_UV_DOSE+")");
-				mOS.write(UveDeviceConstants.COMS_DELETE_UV_DOSE);
+				writeTx(UveDeviceConstants.COMS_DELETE_UV_DOSE);
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case RealTimeFeedback:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_FEEDBACK+")");
-				mOS.write(UveDeviceConstants.COMS_FEEDBACK);
-				mOS.write(data.getInt(UveDeviceConstants.COM_FEEDBACK));
+				writeTx(UveDeviceConstants.COMS_FEEDBACK);
+				writeTx(data.getInt(UveDeviceConstants.COM_FEEDBACK));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case IllnessParameters:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_ILLNESS+")");
-				mOS.write(UveDeviceConstants.COMS_ILLNESS);
-				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_1));
-				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_2));
-				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_3));
-				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_4));
-				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_INTENSE));
-				mOS.write(data.getInt(UveDeviceConstants.COM_ILLNESS_REGEN));
+				writeTx(UveDeviceConstants.COMS_ILLNESS);
+				writeTx(data.getInt(UveDeviceConstants.COM_ILLNESS_1));
+				writeTx(data.getInt(UveDeviceConstants.COM_ILLNESS_2));
+				writeTx(data.getInt(UveDeviceConstants.COM_ILLNESS_3));
+				writeTx(data.getInt(UveDeviceConstants.COM_ILLNESS_4));
+				writeTx(data.getInt(UveDeviceConstants.COM_ILLNESS_INTENSE));
+				writeTx(data.getInt(UveDeviceConstants.COM_ILLNESS_REGEN));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case AlertType:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_ALERTTYPE+")");
-				mOS.write(UveDeviceConstants.COMS_ALERTTYPE);
-				mOS.write(data.getInt(UveDeviceConstants.COM_ALERTTYPE));
+				writeTx(UveDeviceConstants.COMS_ALERTTYPE);
+				writeTx(data.getInt(UveDeviceConstants.COM_ALERTTYPE));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Wakeup:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_WAKEUP+")");
-				mOS.write(UveDeviceConstants.COMS_WAKEUP);
-				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP));
+				writeTx(UveDeviceConstants.COMS_WAKEUP);
+				writeTx(data.getInt(UveDeviceConstants.COM_WAKEUP));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case WakeupParameters:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_WAKEUP_PARAMS+")");
-				mOS.write(UveDeviceConstants.COMS_WAKEUP_PARAMS);
-				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_DAY));
-				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_HOUR));
-				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_MIN));
-				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_SEC));
-				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_ALERTTYPE));
-				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_REPEATTYPE));
-				mOS.write(data.getInt(UveDeviceConstants.COM_WAKEUP_SNOOZE5SEC));
+				writeTx(UveDeviceConstants.COMS_WAKEUP_PARAMS);
+				writeTx(data.getInt(UveDeviceConstants.COM_WAKEUP_DAY));
+				writeTx(data.getInt(UveDeviceConstants.COM_WAKEUP_HOUR));
+				writeTx(data.getInt(UveDeviceConstants.COM_WAKEUP_MIN));
+				writeTx(data.getInt(UveDeviceConstants.COM_WAKEUP_SEC));
+				writeTx(data.getInt(UveDeviceConstants.COM_WAKEUP_ALERTTYPE));
+				writeTx(data.getInt(UveDeviceConstants.COM_WAKEUP_REPEATTYPE));
+				writeTx(data.getInt(UveDeviceConstants.COM_WAKEUP_SNOOZE5SEC));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case ChildAlert:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_CHILD+")");
-				mOS.write(UveDeviceConstants.COMS_CHILD);
-				mOS.write(data.getInt(UveDeviceConstants.COM_CHILD));
+				writeTx(UveDeviceConstants.COMS_CHILD);
+				writeTx(data.getInt(UveDeviceConstants.COM_CHILD));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case NightMode:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_NIGHT+")");
-				mOS.write(UveDeviceConstants.COMS_NIGHT);
-				mOS.write(data.getInt(UveDeviceConstants.COM_NIGHT));
+				writeTx(UveDeviceConstants.COMS_NIGHT);
+				writeTx(data.getInt(UveDeviceConstants.COM_NIGHT));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Vibrate:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_VIBRATE+")");
-				mOS.write(UveDeviceConstants.COMS_VIBRATE);
-				mOS.write(data.getInt(UveDeviceConstants.COM_VIBRATE));
+				writeTx(UveDeviceConstants.COMS_VIBRATE);
+				writeTx(data.getInt(UveDeviceConstants.COM_VIBRATE));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case RBG:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_RGB+")");
-				mOS.write(UveDeviceConstants.COMS_RGB);
-				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_R));
-				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_G));
-				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_B));
-				mOS.write(data.getInt(UveDeviceConstants.COM_RGB_TIME));
+				writeTx(UveDeviceConstants.COMS_RGB);
+				writeTx(data.getInt(UveDeviceConstants.COM_RGB_R));
+				writeTx(data.getInt(UveDeviceConstants.COM_RGB_G));
+				writeTx(data.getInt(UveDeviceConstants.COM_RGB_B));
+				writeTx(data.getInt(UveDeviceConstants.COM_RGB_TIME));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Speaker:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_BUZZER+")");
-				mOS.write(UveDeviceConstants.COMS_BUZZER);
-				mOS.write(data.getInt(UveDeviceConstants.COM_BUZZER_FREQ));
-				mOS.write(data.getInt(UveDeviceConstants.COM_BUZZER_TIME));
+				writeTx(UveDeviceConstants.COMS_BUZZER);
+				writeTx(data.getInt(UveDeviceConstants.COM_BUZZER_FREQ));
+				writeTx(data.getInt(UveDeviceConstants.COM_BUZZER_TIME));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case Torch:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_TORCH+")");
-				mOS.write(UveDeviceConstants.COMS_TORCH);
-				mOS.write(data.getInt(UveDeviceConstants.COM_TORCH));
+				writeTx(UveDeviceConstants.COMS_TORCH);
+				writeTx(data.getInt(UveDeviceConstants.COM_TORCH));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case DisableWakeups:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+UveDeviceConstants.COMS_DISABLE_WAKEUPS+")");
-				mOS.write(UveDeviceConstants.COMS_DISABLE_WAKEUPS);
+				writeTx(UveDeviceConstants.COMS_DISABLE_WAKEUPS);
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case PlannedMeasureParameters:
 				UveLogger.Info("DEVICE "+getName()+ " sending command: " + c + " ("+")");
-				mOS.write(data.getInt(UveDeviceConstants.COM_MELANIN_PRE_FRONT));
-				mOS.write(data.getInt(UveDeviceConstants.COM_MELANIN_PRE_BACK));
-				mOS.write(data.getInt(UveDeviceConstants.COM_MODE));
+				writeTx(data.getInt(UveDeviceConstants.COM_MELANIN_PRE_FRONT));
+				writeTx(data.getInt(UveDeviceConstants.COM_MELANIN_PRE_BACK));
+				writeTx(data.getInt(UveDeviceConstants.COM_MODE));
 				cl.onComplete(mAddress, c, null, true);
 				break;
 			case AlterPlannedMeasureParameters:
@@ -838,11 +1143,11 @@ public class UveDevice {
 									Bundle data, boolean succ) {
 								if (succ) {
 									try {
-										mOS.write(data
+										writeTx(data
 												.getInt(UveDeviceConstants.COM_MELANIN_PRE_FRONT));
-										mOS.write(data
+										writeTx(data
 												.getInt(UveDeviceConstants.COM_MELANIN_PRE_BACK));
-										mOS.write(data.getInt(UveDeviceConstants.COM_MODE));
+										writeTx(data.getInt(UveDeviceConstants.COM_MODE));
 										cl.onComplete(mAddress, c, null, true);
 									} catch (Exception e) {
 										panic();
@@ -949,7 +1254,7 @@ public class UveDevice {
 					switch (q) {
 					case Serial:
 						try {
-							mOS.write(UveDeviceConstants.QUE_SERIAL);
+							writeTx(UveDeviceConstants.QUE_SERIAL);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_SERIAL");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -975,7 +1280,7 @@ public class UveDevice {
 						break;
 					case Ping:
 						try {
-							mOS.write(UveDeviceConstants.QUE_PING);
+							writeTx(UveDeviceConstants.QUE_PING);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_PING");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -999,7 +1304,7 @@ public class UveDevice {
 						
 					case DailyDose:
 						try {
-							mOS.write(UveDeviceConstants.QUE_DAILY_DOSE);
+							writeTx(UveDeviceConstants.QUE_DAILY_DOSE);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_DAILY_DOSE");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -1021,7 +1326,7 @@ public class UveDevice {
 						break;
 					case Battery:
 						try {
-							mOS.write(UveDeviceConstants.QUE_BATTERY);
+							writeTx(UveDeviceConstants.QUE_BATTERY);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_BATTERY");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -1045,7 +1350,7 @@ public class UveDevice {
 						break;
 					case Statuses:
 						try {
-							mOS.write(UveDeviceConstants.QUE_STATUSES);
+							writeTx(UveDeviceConstants.QUE_STATUSES);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_STATUSES");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -1088,7 +1393,7 @@ public class UveDevice {
 						
 					case WakeupDump:
 						try {
-							mOS.write(UveDeviceConstants.QUE_WAKEUP_DUMP);
+							writeTx(UveDeviceConstants.QUE_WAKEUP_DUMP);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_WAKEUP_DUMP");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -1122,7 +1427,7 @@ public class UveDevice {
 						
 					case MeasureMelanin:
 						try {
-							mOS.write(UveDeviceConstants.QUE_MESURE_MELANIN);
+							writeTx(UveDeviceConstants.QUE_MESURE_MELANIN);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_MESURE_MELANIN");
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -1145,7 +1450,7 @@ public class UveDevice {
 						break;
 					case MeasureEritema:
 						try {
-							mOS.write(UveDeviceConstants.QUE_MESURE_ERITEMA);
+							writeTx(UveDeviceConstants.QUE_MESURE_ERITEMA);
 							UveLogger.Info("DEVICE "+getName()+" sent: QUE_MESURE_ERITEMA");
 						} catch (Exception e) {
 							e.printStackTrace();

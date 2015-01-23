@@ -1,7 +1,11 @@
 package com.uve.android.service;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -12,7 +16,12 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothAdapter.LeScanCallback;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +33,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.uve.android.MainActivity;
 import com.uve.android.R;
@@ -63,8 +73,24 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	
 	private BluetoothAdapter mBtAdapter = null;
 	private ArrayList<UveDevice> mDevices;
+	private ArrayList<BluetoothDevice> mCapableDevices;
 	private static final UUID MY_UUID = UUID
 			.fromString("00001101-0000-1000-8000-00805F9B34FB");
+	
+	
+	public static UUID UART_UUID = UUID
+			.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E");
+	public static UUID TX_UUID = UUID
+			.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E");
+	public static UUID RX_UUID = UUID
+			.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E");
+	// UUID for the BTLE client characteristic which is necessary for
+	// notifications.
+	public static UUID CLIENT_UUID = UUID
+			.fromString("00002902-0000-1000-8000-00805f9b34fb");
+	
+	
+	
 	
 	private static final UUID MY_UUID2 = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
 	
@@ -118,10 +144,10 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		
 		mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
-		loadDevicesFromAdapter();
+	/*	loadDevicesFromAdapter();
 		tryConnectToEachBondedDevice();
-		startPingingAllDevices();
-
+		startPingingAllDevices();*/
+		this.discoveryNearbyDevices();
 		
 		
 		return Service.START_STICKY;
@@ -251,6 +277,69 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		}
 		mNotificationManager.cancelAll();
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	public void connectToDevice(final UveDevice u, final UveDeviceConnectListener cl){
 		Timer t=new Timer();
@@ -271,9 +360,34 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 			}}, 0);
 	}
 
+	public boolean connectToBLEDevice(final UveDevice u){
+		UveLogger.Info("CONNECT: trying to: "+u.getAddress()+" name:"+u.getName());
+
+		if(u.getAdapter()==null) u.setAdapter(mBtAdapter);
+		UveLogger.Info("CONNECT: set a new adapter. "+u.getAddress());
+		/*if(u.getDevice()==null) u.setDevice(mBtAdapter.getRemoteDevice(u.getAddress()));
+		UveLogger.Info("CONNECT: set a new bt device. "+u.getAddress());*/
+		if(u.getGatt()!=null){
+			u.getGatt().disconnect();
+			u.getGatt().close();
+			u.setGatt(null);
+			u.setGattRx(null);
+			u.setGattTx(null);
+		}
+		
+		u.setGatt(u.getDevice().connectGatt(this, true, u.getBLECallback()));
+
+		
+		
+		
+		return false;
+	}
 		
 	public boolean connectToDevice(final UveDevice u){
-		UveLogger.Info("CONNECT: trying to: "+u.getAddress()+" name:"+u.getName());
+		return  connectToBLEDevice(u);
+		
+		
+		/*UveLogger.Info("CONNECT: trying to: "+u.getAddress()+" name:"+u.getName());
 
 		if(u.getAdapter()==null) u.setAdapter(mBtAdapter);
 		UveLogger.Info("CONNECT: set a new adapter. "+u.getAddress());
@@ -349,7 +463,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 			}
 			return u.isConnected();
 		}
-
+*/
 	}
 	
 	public void saveDevicesFromPreferences(){
@@ -377,6 +491,43 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		return savedName;
 	}
 	
+	public void setCode(UveDevice u){
+		int savedCode1 = mPreferences.getInt("Code1"+u.getAddress(), -1);
+		int savedCode2 = mPreferences.getInt("Code2"+u.getAddress(), -1);
+		int savedCode3 = mPreferences.getInt("Code3"+u.getAddress(), -1);
+		int savedCode4 = mPreferences.getInt("Code4"+u.getAddress(), -1);
+		u.mPairCodes[0]=savedCode1;
+		 u.mPairCodes[1]=savedCode2;
+		 u.mPairCodes[2]=savedCode3;
+		 u.mPairCodes[3]=savedCode4;
+		UveLogger.Debug("saved code for device "+u.getName()+" is: "+savedCode1+" "+savedCode2+" "+savedCode3+ " "+savedCode4);
+		if(savedCode1+savedCode2+savedCode3+savedCode4 < 0){
+			 Random rand = new Random();
+			 savedCode1 = rand.nextInt((9 - 0) + 1) + 0;
+			 rand = new Random();
+			 savedCode2 = rand.nextInt((9 - 0) + 1) + 0;
+			 rand = new Random();
+			 savedCode3 = rand.nextInt((9 - 0) + 1) + 0;
+			 rand = new Random();
+			 savedCode4 = rand.nextInt((9 - 0) + 1) + 0;
+			 
+			 UveLogger.Debug("NEW code for device "+u.getName()+" is: "+savedCode1+" "+savedCode2+" "+savedCode3+ " "+savedCode4);
+			 
+			 u.mPairCodes[0]=savedCode1;
+			 u.mPairCodes[1]=savedCode2;
+			 u.mPairCodes[2]=savedCode3;
+			 u.mPairCodes[3]=savedCode4;
+			 
+			 
+			 Editor e=mPreferences.edit();
+				e.putInt("Code1"+u.getAddress(), savedCode1);
+				e.putInt("Code2"+u.getAddress(), savedCode2);
+				e.putInt("Code3"+u.getAddress(), savedCode3);
+				e.putInt("Code4"+u.getAddress(), savedCode4);
+				e.commit();
+		}
+	}
+	
 	public void checkForUnnamedDevices(){
 		Set<BluetoothDevice> pairedDevices = getPairedDevices();
 		boolean isFoundInOurList=false;
@@ -397,14 +548,77 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		}
 	}
 	
+	
+	
+	
+	
+	// BTLE device scanning callback.
+	private LeScanCallback scanCallback = new LeScanCallback() {
+		// Called when a device is found.
+		@Override
+		public void onLeScan(BluetoothDevice bluetoothDevice, int i,
+				byte[] bytes) {
+			//writeLine("Found device: " + bluetoothDevice.getAddress());
+			UveLogger.Debug("onLeScan got device");
+			
+			// Check if the device has the UART service.
+			if (parseUUIDs(bytes).contains(UART_UUID)) {
+				UveLogger.Debug("onLeScan got ble uart device - "
+						+ bluetoothDevice.getName());
+				// Found a device, stop the scan.
+				mBtAdapter.stopLeScan(scanCallback);
+				
+				
+				if(mDevices.size()>0) return;
+				
+				UveDevice newUve=new UveDevice();
+				newUve.setAdapter(mBtAdapter);
+				newUve.setAddress(bluetoothDevice.getAddress());
+				newUve.setConnected(false);
+				newUve.setContext(getApplicationContext());
+				newUve.setStatusCallback(UveService.this);
+				newUve.setName(getNameFromAddress(bluetoothDevice.getAddress()));
+				newUve.setDevice(bluetoothDevice);
+				newUve.setAlertIfChildAway(getPrefs().getBoolean(newUve.getAddress()+"childAway", false));
+				newUve.setAlertIfChildWater(getPrefs().getBoolean(newUve.getAddress()+"childWater", false));
+				newUve.setCallAlert(getPrefs().getBoolean(newUve.getAddress()+"callAlert", false));			
+				setCode(newUve);
+				mDevices.add(newUve);
+			
+				
+				UveLogger.Info("LOAD: added a BLE device. "+newUve.getAddress()+" name: "+newUve.getName());
+			
+		
+				tryConnectToEachBondedDevice();
+				
+				
+				
+				
+				
+				
+				startPingingAllDevices();
+				
+				
+			}
+		}
+	};
+	
+	public void discoveryNearbyDevices(){
+		this.mBtAdapter.startLeScan(scanCallback);
+	}
+	
+	
 	public void loadDevicesFromAdapter(){
 		if(mDevices==null) mDevices=new ArrayList<UveDevice>();
+
+		
+		
 		Set<BluetoothDevice> pairedDevices = getPairedDevices();
 		boolean isFoundInOurList=false;
 		if (pairedDevices.size() > 0) {
 			for (BluetoothDevice device : pairedDevices) {
 				String deviceBTName = device.getName();
-				if (deviceBTName.toLowerCase().contains("uve")) {
+				if (deviceBTName.toLowerCase().contains("My")) {
 					UveLogger.Info("LOAD: got an uve device. "+device.getAddress());
 					isFoundInOurList=false;
 					for(UveDevice savedUve : mDevices){
@@ -635,7 +849,9 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	@Override
 	public void onDataReaded(UveDevice u, String add, Question quest,
 			Bundle data) {
-		// TODO Auto-generated method stub
+		if(data.getString("connected").equals("true")){
+			this.startPinging(u,UveDeviceConstants.PING_INTERVAL_INUSE);
+		}
 		
 	}
 
@@ -733,4 +949,56 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 
 
+	private List<UUID> parseUUIDs(final byte[] advertisedData) {
+		List<UUID> uuids = new ArrayList<UUID>();
+
+		int offset = 0;
+		while (offset < (advertisedData.length - 2)) {
+			int len = advertisedData[offset++];
+			if (len == 0)
+				break;
+
+			int type = advertisedData[offset++];
+			switch (type) {
+			case 0x02: // Partial list of 16-bit UUIDs
+			case 0x03: // Complete list of 16-bit UUIDs
+				while (len > 1) {
+					int uuid16 = advertisedData[offset++];
+					uuid16 += (advertisedData[offset++] << 8);
+					len -= 2;
+					uuids.add(UUID.fromString(String.format(
+							"%08x-0000-1000-8000-00805f9b34fb", uuid16)));
+				}
+				break;
+			case 0x06:// Partial list of 128-bit UUIDs
+			case 0x07:// Complete list of 128-bit UUIDs
+				// Loop through the advertised 128-bit UUID's.
+				while (len >= 16) {
+					try {
+						// Wrap the advertised bits and order them.
+						ByteBuffer buffer = ByteBuffer.wrap(advertisedData,
+								offset++, 16).order(ByteOrder.LITTLE_ENDIAN);
+						long mostSignificantBit = buffer.getLong();
+						long leastSignificantBit = buffer.getLong();
+						uuids.add(new UUID(leastSignificantBit,
+								mostSignificantBit));
+					} catch (IndexOutOfBoundsException e) {
+						// Defensive programming.
+						// Log.e(LOG_TAG, e.toString());
+						continue;
+					} finally {
+						// Move the offset to read the next uuid.
+						offset += 15;
+						len -= 16;
+					}
+				}
+				break;
+			default:
+				offset += (len - 1);
+				break;
+			}
+		}
+		return uuids;
+	}
+	
 }

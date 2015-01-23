@@ -6,9 +6,9 @@ public class UveDeviceConstants {
 	public static final UUID MY_UUID = UUID
 			.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-	public static final int PING_INTERVAL_RETRYING = 1000;
-	public static final int PING_INTERVAL_INUSE = 15000;
-	public static final int PING_INTERVAL_RARE = 20000;
+	public static final int PING_INTERVAL_RETRYING = 10000;
+	public static final int PING_INTERVAL_INUSE = 30000;
+	public static final int PING_INTERVAL_RARE = 60000;
 	public static final int PING_INTERVAL_UV = 40000;
 	
 	// question commands
