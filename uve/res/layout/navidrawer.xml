@@ -30,14 +30,14 @@
                 android:layout_height="70dp"
                 android:background="@color/sun_yellow_fore"
                 android:paddingTop="0dp" >
-                
-                                <ImageView
+
+                <ImageView
                     android:id="@+id/uveTopOpenDeviceList"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
+                    android:layout_alignParentLeft="true"
                     android:layout_centerVertical="true"
                     android:layout_marginLeft="0dp"
-                    android:layout_alignParentLeft="true"
                     android:paddingBottom="20dp"
                     android:paddingLeft="20dp"
                     android:paddingRight="20dp"
@@ -70,17 +70,15 @@
                     android:id="@+id/uveTopSettings"
                     android:layout_width="55dp"
                     android:layout_height="60dp"
+                    android:layout_alignParentRight="true"
                     android:layout_centerVertical="true"
                     android:layout_marginRight="0dp"
-                    android:layout_alignParentRight="true"
                     android:paddingBottom="20dp"
                     android:paddingLeft="20dp"
                     android:paddingRight="15dp"
                     android:paddingTop="20dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/options" />
-
-               
             </RelativeLayout>
 
             <RelativeLayout
@@ -88,14 +86,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
                 android:layout_below="@+id/uveTopLayout" >
-                
-                 <ImageView
+
+                <ImageView
                     android:id="@+id/uveTopBattery"
                     android:layout_width="15dp"
                     android:layout_height="45dp"
                     android:layout_alignParentRight="true"
-                    android:layout_marginTop="10dp"
                     android:layout_marginRight="17dp"
+                    android:layout_marginTop="10dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/bty_0"
                     android:visibility="visible" />
@@ -105,8 +103,8 @@
                     android:layout_width="15dp"
                     android:layout_height="45dp"
                     android:layout_alignParentRight="true"
-                    android:layout_marginTop="10dp"
                     android:layout_marginRight="17dp"
+                    android:layout_marginTop="10dp"
                     android:paddingLeft="2dp"
                     android:paddingRight="2dp"
                     android:scaleType="fitCenter"
@@ -115,8 +113,8 @@
 
                 <ImageView
                     android:id="@+id/uveSunRays"
-                    android:layout_width="210dp"
-                    android:layout_height="210dp"
+                    android:layout_width="250dp"
+                    android:layout_height="250dp"
                     android:layout_centerHorizontal="true"
                     android:layout_centerVertical="true"
                     android:src="@drawable/sun_rays" />

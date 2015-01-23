@@ -36,8 +36,10 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
+import android.view.animation.AnimationUtils;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
+import android.view.animation.ScaleAnimation;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -77,6 +79,7 @@ public class MainActivity extends Activity implements
 
 	boolean read = false;
 	boolean isRetryingAnimated=false;
+boolean isRaysAnimated=false;
 
 	TextView mNodevice;
 	
@@ -103,7 +106,7 @@ public class MainActivity extends Activity implements
 	TextView mUveProgressText;
 	TextView mUveProgressTextUnit;
 	
-
+	Animation mRaysAnimation;
 	
 	ImageView mWeatherImage;
 	TextView mWeatherTemp;
@@ -189,7 +192,9 @@ public class MainActivity extends Activity implements
 		mUveReconnect=(ImageView)findViewById(R.id.uveReconnect);
 		mUveTopOpenDeviceList=(ImageView)findViewById(R.id.uveTopOpenDeviceList);
 		
+		mRaysAnimation=AnimationUtils.loadAnimation(this, R.anim.sunrays);
 		mUveReconnectText=(TextView)findViewById(R.id.uveReconnectText);
+		
 		
 		mUveBottomLayout=(RelativeLayout)findViewById(R.id.uveBottomLayout);
 		mUveBottomWeatherLayoutShadow=(ImageView)findViewById(R.id.uveBottomWeatherLayoutShadow);
@@ -290,7 +295,8 @@ public class MainActivity extends Activity implements
 		mService.startUVDosePing(u);
 		
 		mCurrentUveDevice=u;
-
+		
+		startRaysAnimation();
 		
 	
 		if(mDeviceTimer!=null){
@@ -478,6 +484,20 @@ public class MainActivity extends Activity implements
 		}
 	}
 	
+	public void startRaysAnimation(){
+		if(isRaysAnimated) return;
+		isRaysAnimated=true;
+		mUveProgressRays.startAnimation(mRaysAnimation);
+		
+	}
+	
+	public void stopRaysAnimation(){
+		if(!isRaysAnimated) return;
+		isRaysAnimated=false;
+		mUveProgressRays.clearAnimation();
+	}
+	
+	
 	public void showDeviceContent(UveDevice u){
 		//UveLogger.Info("showing device content: "+u.getName());
 		mUveName.setText(u.getName());
@@ -486,9 +506,10 @@ public class MainActivity extends Activity implements
 		if(u.isConnected()){
 			refreshDeviceList();
 			stopAnimateRetrying();
+			startRaysAnimation();
 			
 			mUveTopLayout.setBackgroundColor(getResources().getColor(R.color.sun_yellow_fore));
-			mUveContentLayout.setBackgroundColor(Color.WHITE);
+			mUveContentLayout.setBackgroundColor(Color.rgb(255, 255,255));
 			mUveBottomLayout.setVisibility(View.VISIBLE);
 			
 			int lipol=u.getBatteryLevel();
@@ -535,6 +556,7 @@ public class MainActivity extends Activity implements
 			}*/
 			
 		} else {
+			stopRaysAnimation();
 			mUveTopLayout.setBackgroundColor(getResources().getColor(R.color.inactive_top));
 			mUveContentLayout.setBackgroundColor(getResources().getColor(R.color.gray1));
 			mUveBottomLayout.setVisibility(View.GONE);
@@ -595,56 +617,7 @@ public class MainActivity extends Activity implements
 					public void onBtn1() {
 						adapter.enable();
 						final DefaultDialog dd=new DefaultDialog(MainActivity.this, getResources().getString(R.string.gen_info), getResources().getString(R.string.bt_enabling), true);
-						
-						/*Timer t=new Timer();
-						t.schedule(new TimerTask(){
-
-							@Override
-							public void run() {
-								int cc=0;
-								while(true){
-									if(adapter.isEnabled()){
-										runOnUiThread(new Runnable(){
-	
-											@Override
-											public void run() {
-												dd.dismiss();
-												
-												if (Build.VERSION.SDK_INT >= 11) {
-												    recreate();
-												} else {
-												    Intent intent = getIntent();
-												    intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-												    finish();
-												    overridePendingTransition(0, 0);
-
-												    startActivity(intent);
-												    overridePendingTransition(0, 0);
-												}
-												
-											}});
-										break;
-									} else {
-										cc++;
-										try{
-											Thread.sleep(100);
-										}catch(Exception e){}
-									}
-									if(cc>100) {
-										runOnUiThread(new Runnable(){
-											
-											@Override
-											public void run() {
-												finish();
-											}});
-										break;
-									}
-								}
-								
-							}}, 0);
-						
-						
-						*/
+					
 						dd.show();
 						dd.setOnDismissListener(new OnDismissListener(){
 
@@ -1199,21 +1172,22 @@ public class MainActivity extends Activity implements
 				mCurrentUveDevice.setAlertIfChildWater(arg1);
 				
 			}});
-		
+		((TextView)dialog.findViewById(R.id.settings_measure_melanin)).setText(getResources().getString(R.string.settings_measure_melanin)+" ("+mCurrentUveDevice.getMelaninIndex()+")");
 		dialog.findViewById(R.id.settings_measure_melanin).setOnClickListener(new OnClickListener(){
 
 			@Override
 			public void onClick(View arg0) {
 				askForMelaninIndex();
-				
+				dialog.dismiss();
 			}});
 		
+		((TextView)dialog.findViewById(R.id.settings_measure_eritema)).setText(getResources().getString(R.string.settings_measure_eritema)+" ("+mCurrentUveDevice.getEritemaIndex()+")");		
 		dialog.findViewById(R.id.settings_measure_eritema).setOnClickListener(new OnClickListener(){
 
 			@Override
 			public void onClick(View arg0) {
 				askForEritemaIndex();
-				
+				dialog.dismiss();
 			}});
 		
 		((CheckBox)dialog.findViewById(R.id.settings_call_alert)).setOnCheckedChangeListener(new OnCheckedChangeListener(){

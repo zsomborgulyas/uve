@@ -132,9 +132,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.175"
-     inkscape:cx="-3268.9504"
-     inkscape:cy="-747.98534"
+     inkscape:zoom="0.030935922"
+     inkscape:cx="-11372.418"
+     inkscape:cy="1421.6325"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -3373,5 +3373,144 @@ jDHGGGOMMcaYBf4PiYBDkvX4RxAAAAAASUVORK5CYII=
        inkscape:export-filename="D:\git\uve\uve\uve\res\drawable\graph.png"
        inkscape:export-xdpi="90"
        inkscape:export-ydpi="90" />
+    <path
+       sodipodi:type="arc"
+       style="fill:#27272b;fill-opacity:1;stroke:none"
+       id="path3162-2-8-3"
+       sodipodi:cx="82.832504"
+       sodipodi:cy="1056.4028"
+       sodipodi:rx="208.09142"
+       sodipodi:ry="254.55844"
+       d="m 290.92392,1056.4028 a 208.09142,254.55844 0 1 1 -416.18283,0 208.09142,254.55844 0 1 1 416.18283,0 z"
+       transform="matrix(0.91393493,0,0,0.7471055,-8373.9858,-1953.7269)"
+       inkscape:export-filename="D:\git\uve\uve\uve\res\drawable\planned_start.png"
+       inkscape:export-xdpi="30.014103"
+       inkscape:export-ydpi="30.014103" />
+    <rect
+       style="fill:#27272b;fill-opacity:1;stroke:none"
+       id="rect4489-1"
+       width="123.79572"
+       height="84.539742"
+       x="-8360.1797"
+       y="-997.38007"
+       inkscape:export-filename="D:\git\uve\uve\uve\res\drawable\planned_start.png"
+       inkscape:export-xdpi="30.014103"
+       inkscape:export-ydpi="30.014103" />
+    <g
+       id="g4786-3-3"
+       transform="matrix(-1.2043872,0,0,-1.2043872,-12326.742,2532.4454)"
+       inkscape:export-filename="D:\git\uve\uve\uve\res\drawable\planned_start.png"
+       inkscape:export-xdpi="30.014103"
+       inkscape:export-ydpi="30.014103">
+      <rect
+         transform="matrix(0.78564552,-0.61867691,0.59783231,0.80162119,0,0)"
+         y="-48.841434"
+         x="-5084.1406"
+         height="128.83734"
+         width="503.45026"
+         id="rect4740-7-2-3"
+         style="fill:#f09910;fill-opacity:1;stroke:none" />
+      <path
+         transform="matrix(0.81915205,-0.64506245,0.57357645,0.76909695,-3260.5702,-717.45471)"
+         d="m -2402.8571,2926.648 2.4628,-215.9724 -4.417,-222.8994 185.8062,110.119 195.245,107.6245 -188.2689,105.8534 z"
+         inkscape:randomized="0"
+         inkscape:rounded="0"
+         inkscape:flatsided="false"
+         sodipodi:arg2="3.1089261"
+         sodipodi:arg1="2.0899424"
+         sodipodi:r2="123.3173"
+         sodipodi:r1="253.38524"
+         sodipodi:cy="2706.6479"
+         sodipodi:cx="-2277.1428"
+         sodipodi:sides="3"
+         id="path4742-8-5-4"
+         style="fill:#f09910;fill-opacity:1;stroke:none"
+         sodipodi:type="star" />
+    </g>
+    <rect
+       style="fill:#27272b;fill-opacity:1;stroke:none"
+       id="rect4489-9-0"
+       width="452.09531"
+       height="631.67108"
+       x="-8524.3301"
+       y="-935.90912"
+       inkscape:export-filename="D:\git\uve\uve\uve\res\drawable\planned_start.png"
+       inkscape:export-xdpi="30.014103"
+       inkscape:export-ydpi="30.014103" />
+    <rect
+       style="fill:#27272b;fill-opacity:1;stroke:none"
+       id="rect4489-3-81"
+       width="146.64729"
+       height="624.77393"
+       x="-6668.9946"
+       y="-4846.1113"
+       transform="matrix(0.8660254,-0.5,0.5,0.8660254,0,0)"
+       inkscape:export-filename="D:\git\uve\uve\uve\res\drawable\planned_start.png"
+       inkscape:export-xdpi="30.014103"
+       inkscape:export-ydpi="30.014103" />
+    <rect
+       style="fill:#27272b;fill-opacity:1;stroke:none"
+       id="rect4489-3-4-0"
+       width="146.64729"
+       height="624.77393"
+       x="7703.5342"
+       y="3452.176"
+       transform="matrix(-0.8660254,-0.5,-0.5,0.8660254,0,0)"
+       inkscape:export-filename="D:\git\uve\uve\uve\res\drawable\planned_start.png"
+       inkscape:export-xdpi="30.014103"
+       inkscape:export-ydpi="30.014103" />
+    <rect
+       style="fill:#27272b;fill-opacity:1;stroke:none"
+       id="rect4489-9-4-92"
+       width="224.01048"
+       height="631.87909"
+       x="-8235.9971"
+       y="-998.84564"
+       transform="matrix(0.99649675,-0.08363153,0.09082609,0.99586677,0,0)"
+       inkscape:export-filename="D:\git\uve\uve\uve\res\drawable\planned_start.png"
+       inkscape:export-xdpi="30.014103"
+       inkscape:export-ydpi="30.014103" />
+    <rect
+       style="fill:#27272b;fill-opacity:1;stroke:none"
+       id="rect4489-9-4-6-4"
+       width="226.27541"
+       height="631.93243"
+       x="8289.3916"
+       y="382.53662"
+       transform="matrix(-0.99656665,-0.08279441,-0.0917431,0.99578271,0,0)"
+       inkscape:export-filename="D:\git\uve\uve\uve\res\drawable\planned_start.png"
+       inkscape:export-xdpi="30.014103"
+       inkscape:export-ydpi="30.014103" />
+    <g
+       id="g4786-9"
+       transform="matrix(1.2043872,0,0,1.2043872,-4187.6989,-4014.0284)"
+       inkscape:export-filename="D:\git\uve\uve\uve\res\drawable\planned_start.png"
+       inkscape:export-xdpi="30.014103"
+       inkscape:export-ydpi="30.014103">
+      <rect
+         transform="matrix(0.78564552,-0.61867691,0.59783231,0.80162119,0,0)"
+         y="-48.841434"
+         x="-5084.1406"
+         height="128.83734"
+         width="503.45026"
+         id="rect4740-7-1"
+         style="fill:#f09910;fill-opacity:1;stroke:none" />
+      <path
+         transform="matrix(0.81915205,-0.64506245,0.57357645,0.76909695,-3260.5702,-717.45471)"
+         d="m -2402.8571,2926.648 2.4628,-215.9724 -4.417,-222.8994 185.8062,110.119 195.245,107.6245 -188.2689,105.8534 z"
+         inkscape:randomized="0"
+         inkscape:rounded="0"
+         inkscape:flatsided="false"
+         sodipodi:arg2="3.1089261"
+         sodipodi:arg1="2.0899424"
+         sodipodi:r2="123.3173"
+         sodipodi:r1="253.38524"
+         sodipodi:cy="2706.6479"
+         sodipodi:cx="-2277.1428"
+         sodipodi:sides="3"
+         id="path4742-8-57"
+         style="fill:#f09910;fill-opacity:1;stroke:none"
+         sodipodi:type="star" />
+    </g>
   </g>
 </svg>
