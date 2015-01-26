@@ -1,5 +1,6 @@
 package com.uve.android;
 
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -79,7 +80,7 @@ public class MainActivity extends Activity implements
 
 	boolean read = false;
 	boolean isRetryingAnimated=false;
-boolean isRaysAnimated=false;
+	boolean isRaysAnimated=false;
 
 	TextView mNodevice;
 	
@@ -88,10 +89,11 @@ boolean isRaysAnimated=false;
 	
 	public UveDevice mCurrentUveDevice;
 
-	RelativeLayout mUveLayout, mNoUveLayout, mUveTopLayout;
+	RelativeLayout mUveLayout, mNoUveLayout, mUveTopLayout, mSplashLayout;
 	RotateAnimation anim1, anim2;
 	
 	DrawerLayout mDrawer;
+	ImageView mAddDevice;
 	
 	ImageView mUveStatus;
 	ImageView mUveTopOpenDeviceList;
@@ -176,9 +178,11 @@ boolean isRaysAnimated=false;
 		
 		
 		mDeviceList = (ListView)findViewById(R.id.left_drawer_list);
+		mAddDevice = (ImageView)findViewById(R.id.left_drawer_add);
 		mExit = (RelativeLayout)findViewById(R.id.left_drawer_bottom_layout);
 		mUveContentLayout=(FrameLayout)findViewById(R.id.content_frame);
 		
+		mSplashLayout = (RelativeLayout)findViewById(R.id.splash_layout);
 		mUveTopLayout = (RelativeLayout)findViewById(R.id.uveTopLayout);
 		mUveName=(TextView)findViewById(R.id.uveTopName);
 		mUveBty=(ImageView)findViewById(R.id.uveTopBattery);
@@ -218,6 +222,9 @@ boolean isRaysAnimated=false;
 		mUveSettings.setOnClickListener(this);
 		mUveTopOpenDeviceList.setOnClickListener(this);
 		mExit.setOnClickListener(this);
+		mAddDevice.setOnClickListener(this);
+		
+		mSplashLayout.setVisibility(View.VISIBLE);
 		
 		mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 		
@@ -286,6 +293,8 @@ boolean isRaysAnimated=false;
 		UveLogger.Info("showdevice: "+u.getName());
 		
 		if(u==null) return;
+		
+		mSplashLayout.setVisibility(View.GONE);
 		
 		mDrawer.closeDrawers();
 		
@@ -748,6 +757,9 @@ boolean isRaysAnimated=false;
 	public void onClick(View arg0) {
 		Bundle b=new Bundle();
 		switch (arg0.getId()) {
+		case R.id.left_drawer_add:
+			mService.discoveryNearbyDevices();
+			break;
 		case R.id.left_drawer_bottom_layout:
 			
 			TwoButtonDialog dialog=new TwoButtonDialog(this, getResources().getString(R.string.drawer_exit_dialog_title), "", true, true, getResources().getString(R.string.gen_yes), getResources().getString(R.string.gen_no), new TwoButtonDialogCallback(){
@@ -790,7 +802,7 @@ boolean isRaysAnimated=false;
 			showSunDialog();
 			break;
 		case R.id.uveTopSettings:
-			
+		
 			showSettingsDialog();
 			break;
 		case R.id.uveTorch:
@@ -1222,6 +1234,25 @@ boolean isRaysAnimated=false;
 		dialog.show();
 	}
 	
+	public void onNoDevice(){
+		mSplashLayout.setVisibility(View.VISIBLE);
+	}
+	
+	public void onDiscovering(){
+		
+	}
+	
+	public void onNewDeviceFound(){
+		
+	}
+	
+	public void onShowDevice(int pos){
+		mSplashLayout.setVisibility(View.GONE);
+		showADevice(pos);
+	}
+	
+
+	
 	private ServiceConnection mConnection = new ServiceConnection() {
 
 		public void onServiceConnected(ComponentName className, IBinder binder) {
@@ -1239,8 +1270,13 @@ boolean isRaysAnimated=false;
 			
 			refreshDeviceList();
 			
-			if(mService.getUveDevices().size()>0)
+			if(mService.getUveDevices().size()>0){
 				showADevice(0);
+				mSplashLayout.setVisibility(View.GONE);
+			} else {
+				mService.discoveryNearbyDevices();
+				mSplashLayout.setVisibility(View.VISIBLE);
+			}
 		}
 
 		public void onServiceDisconnected(ComponentName className) {

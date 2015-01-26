@@ -352,6 +352,21 @@
                     android:textSize="17sp"
                     android:visibility="gone" />
             </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/splash_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/gray1" >
+
+                <ImageView
+                    android:layout_width="150dp"
+                    android:layout_height="150dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_launcher" />
+            </RelativeLayout>
         </RelativeLayout>
     </FrameLayout>
     <!-- The navigation drawer -->

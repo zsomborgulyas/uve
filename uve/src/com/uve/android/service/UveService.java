@@ -45,7 +45,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 
 	public enum Question {
-		Serial, StartUV, DailyDose, DailyInteses, PreviousMelanin, MeasureMelanin, PreviousEritema, MeasureEritema, Battery, DeviceTime, ChildProtection, StartPlannedMeasure, AlterPlannedMeasure, Ping, WakeupDump, Statuses
+		PairCode, Serial, StartUV, DailyDose, DailyInteses, PreviousMelanin, MeasureMelanin, PreviousEritema, MeasureEritema, Battery, DeviceTime, ChildProtection, StartPlannedMeasure, AlterPlannedMeasure, Ping, WakeupDump, Statuses
 	}
 
 	public enum Command {
@@ -144,11 +144,16 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		
 		mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
-	/*	loadDevicesFromAdapter();
-		tryConnectToEachBondedDevice();
-		startPingingAllDevices();*/
-		this.discoveryNearbyDevices();
+
+		int devs=loadDevicesFromList();
 		
+		tryConnectToEachBondedDevice();	
+		startPingingAllDevices();
+		
+		if(mActivity!=null && devs>0){
+			mActivity.onShowDevice(0);
+		}
+			
 		
 		return Service.START_STICKY;
 	}
@@ -359,14 +364,57 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 				
 			}}, 0);
 	}
+	
+	public boolean restoreConenctionToBLEDevice(final UveDevice u){
+		
+		
+		if(u.getGattState()==BluetoothGatt.STATE_DISCONNECTED){
+			u.setGatt(u.getDevice().connectGatt(this, true, u.getBLECallback()));
+			u.setConnected(false);
+			return false;
+		}
+		
+		if(u.getGattState()==BluetoothGatt.STATE_DISCONNECTING){
+			u.setConnected(false);
+			return false;
+		}
+		
+		if(u.getGattState()==BluetoothGatt.STATE_CONNECTED || u.getGattState()==BluetoothGatt.STATE_CONNECTING){
+			u.setConnected(true);
+			return true;
+		}
+		
+		/*if(u.getGatt()!=null){
+			u.getGatt().disconnect();
+			u.getGatt().close();
+			u.setGatt(null);
+			u.setGattRx(null);
+			u.setGattTx(null);
+		}
+		
+		u.setGatt(u.getDevice().connectGatt(this, true, u.getBLECallback()));*/
+		
+		return false;
+	}
+	
+	public void reconnectToBLEDevice(final UveDevice u){
+		if(u.getGatt()!=null){
+			u.getGatt().disconnect();
+			u.getGatt().close();
+			u.setGatt(null);
+			u.setGattRx(null);
+			u.setGattTx(null);
+		}
+		
+		u.setGatt(u.getDevice().connectGatt(this, true, u.getBLECallback()));
+	}
 
 	public boolean connectToBLEDevice(final UveDevice u){
 		UveLogger.Info("CONNECT: trying to: "+u.getAddress()+" name:"+u.getName());
 
 		if(u.getAdapter()==null) u.setAdapter(mBtAdapter);
 		UveLogger.Info("CONNECT: set a new adapter. "+u.getAddress());
-		/*if(u.getDevice()==null) u.setDevice(mBtAdapter.getRemoteDevice(u.getAddress()));
-		UveLogger.Info("CONNECT: set a new bt device. "+u.getAddress());*/
+		
 		if(u.getGatt()!=null){
 			u.getGatt().disconnect();
 			u.getGatt().close();
@@ -481,6 +529,59 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		}
 	}
 	
+	public ArrayList<String> loadStoredDeviceAddresses(){
+		ArrayList<String> list=new ArrayList<String>();
+		String slist=mPreferences.getString("Addresses", "");
+		String[] arr=slist.split(",");
+		for(String s : arr){
+			list.add(s);
+		}
+		return list;
+	}
+
+	public void deleteDeviceAddress(String addr){
+		ArrayList<String> list= loadStoredDeviceAddresses();
+		boolean foundAlready=false;
+		for(String s:list){
+			if(s.equals(addr)) foundAlready=true;
+		}
+		if(foundAlready){
+			list.remove(addr);
+			saveStoredDeviceAddresses(list);
+		}
+		
+		loadDevicesFromList();
+
+	}
+	
+	public void saveNewDeviceAddress(String addr){
+		ArrayList<String> list= loadStoredDeviceAddresses();
+		boolean foundAlready=false;
+		for(String s:list){
+			if(s.equals(addr)) foundAlready=true;
+		}
+		if(!foundAlready){
+			list.add(addr);
+			saveStoredDeviceAddresses(list);
+		}
+	}
+
+	
+	public void saveStoredDeviceAddresses(ArrayList<String> list){
+		String conc="";
+		for(String s:list){
+			conc=conc+s+",";
+		}
+		if(conc.length()>0){
+			conc=conc.substring(0, conc.length()-1); //remove comma
+		}
+		
+		Editor e=mPreferences.edit();
+		e.putString("Addresses", conc);
+		e.commit();
+
+	}
+	
 	public String getNameFromAddress(String address){ 
 		String savedName = mPreferences.getString("Name"+address, "");
 		if(savedName.equals("")){
@@ -586,18 +687,13 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 				mDevices.add(newUve);
 			
 				
-				UveLogger.Info("LOAD: added a BLE device. "+newUve.getAddress()+" name: "+newUve.getName());
+				UveLogger.Info("DISCOVER: discovered a BLE device. "+newUve.getAddress()+" name: "+newUve.getName());
 			
 		
-				tryConnectToEachBondedDevice();
-				
-				
-				
-				
-				
+				connectToBLEDevice(newUve);
 				
 				startPingingAllDevices();
-				
+				saveNewDeviceAddress(bluetoothDevice.getAddress());
 				
 			}
 		}
@@ -605,6 +701,49 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	
 	public void discoveryNearbyDevices(){
 		this.mBtAdapter.startLeScan(scanCallback);
+	}
+	
+	public int loadDevicesFromList(){
+		if(mDevices==null) mDevices=new ArrayList<UveDevice>();
+		ArrayList<String> stored=loadStoredDeviceAddresses();
+		for(String addr:stored){
+			if(addr.equals("")) continue;
+			
+			boolean isFoundInOurList=false;
+			
+			UveLogger.Info("LOAD: got an uve device. "+addr);
+			isFoundInOurList=false;
+			for(UveDevice savedUve : mDevices){
+				if(savedUve.getAddress().equals(addr)){
+					isFoundInOurList=true;
+					UveLogger.Info("LOAD: got in mDevices. "+addr);
+				}
+			}
+			if(!isFoundInOurList){
+				UveDevice newUve=new UveDevice();
+				newUve.setAdapter(mBtAdapter);
+				newUve.setAddress(addr);
+				newUve.setConnected(false);
+				newUve.setContext(getApplicationContext());
+				newUve.setStatusCallback(this);
+				newUve.setName(getNameFromAddress(addr));
+				newUve.setDevice(mBtAdapter.getRemoteDevice(addr));
+				newUve.setAlertIfChildAway(getPrefs().getBoolean(newUve.getAddress()+"childAway", false));
+				newUve.setAlertIfChildWater(getPrefs().getBoolean(newUve.getAddress()+"childWater", false));
+				newUve.setCallAlert(getPrefs().getBoolean(newUve.getAddress()+"callAlert", false));			
+				setCode(newUve);
+				UveLogger.Info("LOAD: added a device. "+newUve.getAddress()+" name: "+newUve.getName());
+				mDevices.add(newUve);
+				saveNewDeviceAddress(addr);
+			} 
+		}
+		
+		if(mDevices.size()==0){
+			if(mActivity!=null)
+				mActivity.onNoDevice();
+		}
+		
+		return mDevices.size();
 	}
 	
 	
@@ -673,7 +812,13 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		startPinging(u, u.getPingingInterval());
 	}
 	
+	
+	
+	
+	
 	public void startPinging(final UveDevice u, final long interval){
+		
+		
 		UveLogger.Info("starting pinging "+u.getName()+" interval:"+interval);
 		if(u.getPingTimerTask()!=null){
 			u.getPingTimerTask().cancel();
@@ -745,7 +890,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 							u.setUnsuccessfulConnectAttempts(att);
 							
 							updateStickyNotification();
-							connectToDevice(u);
+							restoreConenctionToBLEDevice(u);
 							
 							if(u.getPingingInterval()==UveDeviceConstants.PING_INTERVAL_INUSE){
 								u.setPingingInterval(UveDeviceConstants.PING_INTERVAL_RETRYING);
@@ -849,10 +994,18 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	@Override
 	public void onDataReaded(UveDevice u, String add, Question quest,
 			Bundle data) {
+		if(data==null || u==null || add==null) return;
+		
 		if(data.getString("connected").equals("true")){
 			this.startPinging(u,UveDeviceConstants.PING_INTERVAL_INUSE);
 		}
 		
+		/*if(data.getString("disconnected").equals("true")){
+			this.startPinging(u,UveDeviceConstants.PING_INTERVAL_RETRYING);
+		}*/
+		if(data.getString("wrongCode").equals("true")){
+			this.deleteDeviceAddress(add);
+		}
 	}
 
 	@Override

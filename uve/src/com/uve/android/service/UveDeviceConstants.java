@@ -6,8 +6,8 @@ public class UveDeviceConstants {
 	public static final UUID MY_UUID = UUID
 			.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-	public static final int PING_INTERVAL_RETRYING = 10000;
-	public static final int PING_INTERVAL_INUSE = 30000;
+	public static final int PING_INTERVAL_RETRYING = 5000;
+	public static final int PING_INTERVAL_INUSE = 12000;
 	public static final int PING_INTERVAL_RARE = 60000;
 	public static final int PING_INTERVAL_UV = 40000;
 	
@@ -30,6 +30,7 @@ public class UveDeviceConstants {
 	
 	// answer constants
 	public static final String ANS_SERIAL = "ans_serial";
+	public static final String ANS_PAIR_CODE = "ans_pcode";
 	public static final String ANS_MEASURE_UV = "ans_measureuv";
 	public static final String ANS_DAILY_DOSE_COUNT = "ans_dosec";
 	public static final String ANS_DAILY_DOSE= "ans_dose";
