@@ -15,7 +15,8 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="match_parent"
+            android:background="#fff" >
 
             <RelativeLayout
                 android:id="@+id/uveShadow"
@@ -357,14 +358,16 @@
                 android:id="@+id/splash_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:visibility="gone"
                 android:background="@color/gray1" >
 
                 <ImageView
-                    android:layout_width="150dp"
-                    android:layout_height="150dp"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
                     android:layout_centerHorizontal="true"
                     android:layout_centerVertical="true"
                     android:scaleType="centerCrop"
+                    
                     android:src="@drawable/ic_launcher" />
             </RelativeLayout>
         </RelativeLayout>

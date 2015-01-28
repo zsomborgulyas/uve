@@ -116,6 +116,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	
 	public void setActivity(MainActivity m){
 		mActivity=m;
+		
+		loadDevicesFromList();
 	}
 	
 	public BluetoothAdapter getAdapter(){
@@ -587,7 +589,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		if(savedName.equals("")){
 			if(mActivity!=null){
 				mActivity.promtForNewDeviceName(address);
-			}
+			} 
 		}
 		return savedName;
 	}
@@ -630,25 +632,20 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 	
 	public void checkForUnnamedDevices(){
-		Set<BluetoothDevice> pairedDevices = getPairedDevices();
-		boolean isFoundInOurList=false;
-		if (pairedDevices.size() > 0) {
-			for (BluetoothDevice device : pairedDevices) {
-				String deviceBTName = device.getName();
-				if (deviceBTName.toLowerCase().contains("uve")) {
-					UveLogger.Info("CHECK: got an uve device. "+device.getAddress());
-					isFoundInOurList=false;
-					for(UveDevice savedUve : mDevices){
-						if(savedUve.getAddress().equals(device.getAddress())){
-							savedUve.setName(getNameFromAddress(device.getAddress()));
-							UveLogger.Info("CHECK: got in mDevices. "+device.getAddress());
-						}
-					}
+		ArrayList<String> stored=loadStoredDeviceAddresses();
+		for(String addr:stored){
+			if(addr.equals("")) continue;
+			
+			for(UveDevice savedUve : mDevices){
+				if(savedUve.getAddress().equals(addr)){
+					savedUve.setName(getNameFromAddress(savedUve.getAddress()));
+					
 				}
 			}
 		}
 	}
 	
+
 	
 	
 	
@@ -741,6 +738,9 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 		if(mDevices.size()==0){
 			if(mActivity!=null)
 				mActivity.onNoDevice();
+		} else {
+			if(mActivity!=null)
+				mActivity.showADevice(0);
 		}
 		
 		return mDevices.size();
@@ -813,12 +813,112 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	}
 	
 	
+	public void startPingingBLE(final UveDevice u, final long interval){
+		
+		
+		UveLogger.Info("starting pinging "+u.getName()+" interval:"+interval);
+		if(u.getPingTimerTask()!=null){
+			u.getPingTimerTask().cancel();
+		}
+		if(u.getPingTimer()!=null){
+			u.getPingTimer().cancel();
+			u.getPingTimer().purge();
+		}
+		
+		
+		u.setPingTimerTask(new TimerTask(){
+
+			@Override
+			public void run() {
+				if(u.isConnected()){
+					u.getAnswer(null, Question.Battery, new UveDeviceAnswerListener(){
 	
+						@Override
+						public void onComplete(String add, Question quest, Bundle data,
+								boolean isSuccessful) {
+							if(isSuccessful){
+								u.setBatteryLevel(data.getInt(UveDeviceConstants.ANS_BATTERY_LP));
+								u.setSolarBattery(data.getInt(UveDeviceConstants.ANS_BATTERY_SC));
+								updateStickyNotification();
+								u.setUnsuccessfulConnectAttempts(0);
+								
+								if(u.getPingingInterval()!=UveDeviceConstants.PING_INTERVAL_INUSE){
+									u.setPingingInterval(UveDeviceConstants.PING_INTERVAL_INUSE);
+									startPinging(u, u.getPingingInterval());
+									
+									Bundle timeBundle=new Bundle();
+									Calendar c = Calendar.getInstance(); 
+									int day=0;
+									
+									switch(c.get(Calendar.DAY_OF_WEEK)){
+										case Calendar.MONDAY:
+											day=1; break;
+										case Calendar.TUESDAY:
+											day=2; break;
+										case Calendar.WEDNESDAY:
+											day=3; break;
+										case Calendar.THURSDAY:
+											day=4; break;
+										case Calendar.FRIDAY:
+											day=5; break;
+										case Calendar.SATURDAY:
+											day=6; break;
+										case Calendar.SUNDAY:
+											day=7; break;
+									}
+									timeBundle.putInt(UveDeviceConstants.COM_TIME_HOUR, c.get(Calendar.HOUR_OF_DAY));
+									timeBundle.putInt(UveDeviceConstants.COM_TIME_MIN, c.get(Calendar.MINUTE));
+									timeBundle.putInt(UveDeviceConstants.COM_TIME_SEC, c.get(Calendar.SECOND));
+									timeBundle.putInt(UveDeviceConstants.COM_TIME_DAY, day);
+									
+									u.sendCommand(Command.SetTime, timeBundle, new UveDeviceCommandListener(){
+	
+										@Override
+										public void onComplete(String add,
+												Command command, Bundle data,
+												boolean isSuccessful) {
+												UveLogger.Info("time set: "+u.getName());
+											
+										}});
+									
+									
+								}
+							
+						} else {
+							
+						}	
+					}});
+				} else {
+					int att=u.getUnsuccessfulConnectAttempts()+1;
+					UveLogger.Info("connection attempts pinging "+u.getName()+" "+att);
+					u.setUnsuccessfulConnectAttempts(att);
+					
+					updateStickyNotification();
+					restoreConenctionToBLEDevice(u);
+					
+					if(u.getPingingInterval()==UveDeviceConstants.PING_INTERVAL_INUSE){
+						u.setPingingInterval(UveDeviceConstants.PING_INTERVAL_RETRYING);
+						startPinging(u, u.getPingingInterval());
+					} 
+					
+					if(u.getPingingInterval()==UveDeviceConstants.PING_INTERVAL_RETRYING){
+						if(att>10){
+							u.setPingingInterval(UveDeviceConstants.PING_INTERVAL_RARE);
+							startPinging(u, u.getPingingInterval());
+						}
+					}
+				}
+			}});
+		
+		u.getPingTimer().scheduleAtFixedRate(u.getPingTimerTask(), 0, interval);
+	}
 	
 	
 	public void startPinging(final UveDevice u, final long interval){
+		startPingingBLE(u, interval);
 		
 		
+		/*
 		UveLogger.Info("starting pinging "+u.getName()+" interval:"+interval);
 		if(u.getPingTimerTask()!=null){
 			u.getPingTimerTask().cancel();
@@ -909,7 +1009,7 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 					}});			
 			}});
 		
-		u.getPingTimer().scheduleAtFixedRate(u.getPingTimerTask(), 0, interval);
+		u.getPingTimer().scheduleAtFixedRate(u.getPingTimerTask(), 0, interval);*/
 	}
 	
 	public void stopPinging(UveDevice u){
@@ -995,7 +1095,8 @@ public class UveService extends Service implements UveDeviceStatuskListener {
 	public void onDataReaded(UveDevice u, String add, Question quest,
 			Bundle data) {
 		if(data==null || u==null || add==null) return;
-		
+		if(data.getString("connected")==null) return;
+		if(data.getString("wrongCode")==null) return;
 		if(data.getString("connected").equals("true")){
 			this.startPinging(u,UveDeviceConstants.PING_INTERVAL_INUSE);
 		}

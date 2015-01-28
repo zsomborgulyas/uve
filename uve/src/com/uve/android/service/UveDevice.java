@@ -2,6 +2,7 @@ package com.uve.android.service;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -33,7 +34,8 @@ public class UveDevice {
 	String mAddress;
 	BluetoothDevice mBtDevice;
 	boolean mIsConnected;
-
+	boolean mAreStatusesSet=false;
+	
 	int mPingingInterval=UveDeviceConstants.PING_INTERVAL_RETRYING;
 
 	int mGattState=-1;
@@ -451,7 +453,16 @@ public class UveDevice {
 		mIsConnected = b;
 		UveLogger.Info("DEVICE "+getName()+ " set connected: "+b);
 	}
+	
 
+	public boolean areStatusesSet() {
+		return mAreStatusesSet;
+	}
+
+	public void setAreStatusesSet(boolean b) {
+		mAreStatusesSet = b;
+	}
+	
 	public BluetoothDevice getDevice() {
 		return mBtDevice;
 	}
@@ -565,7 +576,8 @@ public class UveDevice {
 		public void onCharacteristicChanged(BluetoothGatt gatt,
 				BluetoothGattCharacteristic characteristic) {
 			super.onCharacteristicChanged(gatt, characteristic);
-			handleIncomingRx((int)characteristic.getValue()[0]);
+			handleIncomingRx(byteArrayToInt(characteristic.getValue()));
+			//handleIncomingRx((int)characteristic.getValue()[0]);
 		}
 		
 		@Override
@@ -575,6 +587,23 @@ public class UveDevice {
 			mDirtyTxPipe=false;
 		}
 	};
+	
+	public static int byteArrayToInt(byte[] b) {
+		final int length = b.length;
+		int value = 0;
+		  
+		for (int i = 0; i < length; i++) {
+		int shift = (length - 1 - i) * 8;
+		 
+		if(b[i] < 0 && i == 0) {
+		value += (b[i] | 0xFFFFFF00) << shift;
+		} else {
+		value += (b[i] & 0x000000FF) << shift;
+		}
+		}
+		 
+		return value;
+		}
 	
 	
 	public void initPairing(){
@@ -634,7 +663,7 @@ public class UveDevice {
 		
 		
 		
-		mIsAnswering = true;
+		/*mIsAnswering = true;
 		ArrayList<Integer> got = waitForBytes(1,1000);
 		mIsAnswering = false;
 		
@@ -689,7 +718,7 @@ public class UveDevice {
 		
 		} else {
 			UveLogger.Debug("Couldnt send code.");
-		}
+		}*/
 		
 	}
 	
@@ -916,6 +945,7 @@ public class UveDevice {
 		mDelayedMeasureStatus=b.getInt(UveDeviceConstants.ANS_ST_DELAYED_MEASURE);
 		mIllnessSet=b.getInt(UveDeviceConstants.ANS_ST_ILLNESS);
 
+		mAreStatusesSet=true;
 	}
 	
 	public void setWakeUpAlertsFromBundle(Bundle b){
@@ -1418,7 +1448,7 @@ public class UveDevice {
 							break;
 						}
 
-						got = waitForBytes(5,0);
+						got = waitForBytes(5,1000);
 						if (got == null) {
 
 							answerError(a, b, q, cb);
@@ -1463,7 +1493,7 @@ public class UveDevice {
 							answerError(a, b, q, cb);
 							break;
 						}
-						got = waitForBytes(28,0);
+						got = waitForBytes(28,1000);
 						if (got == null) {
 							//panic();
 							answerError(a, b, q, cb);

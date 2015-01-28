@@ -807,7 +807,7 @@ public class MainActivity extends Activity implements
 			break;
 		case R.id.uveTorch:
 			b=new Bundle();
-			b.putInt(UveDeviceConstants.COM_TORCH, 40);
+			b.putInt(UveDeviceConstants.COM_TORCH, 45);
 			if(!mCurrentUveDevice.getTorchStatus()){
 				mCurrentUveDevice.setTorchStatus(true);
 				PieProgressbarView.animatePieProgressbarView(mUveTorch, 0, 100, 400, MainActivity.this);
@@ -964,7 +964,8 @@ public class MainActivity extends Activity implements
 	}
 	
 	public void showSunDialog(){
-	
+		if(!mCurrentUveDevice.areStatusesSet()) return;
+		
 		final Dialog dialog = new Dialog(this);
 		dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		dialog.setContentView(R.layout.sun_options_dialog);
@@ -978,7 +979,7 @@ public class MainActivity extends Activity implements
 
 		wmlp.y = (int) (mUveProgress.getTop() + this.mUveTopLayout.getHeight() + mUveProgress.getHeight()/2 - Converters.convertDpToPixel(125, this)); // y position
 		dialog.findViewById(R.id.sunDialogContentBackground).setOnClickListener(null);
-		dialog.findViewById(R.id.sunDialogRoot).setOnClickListener(new OnClickListener(){
+		dialog.findViewById(R.id.sunDialogContentBackground).setOnClickListener(new OnClickListener(){
 
 			@Override
 			public void onClick(View arg0) {
@@ -992,6 +993,8 @@ public class MainActivity extends Activity implements
 
 			@Override
 			public void onClick(View arg0) {
+				
+				
 				Bundle b=new Bundle();
 				switch(mCurrentUveDevice.getMeasureMode()){
 				case Normal:
